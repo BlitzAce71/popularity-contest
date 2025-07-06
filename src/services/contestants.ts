@@ -1,5 +1,5 @@
 import { supabase, uploadFile, deleteFile, getFileUrl } from '@/lib/supabase';
-import { Contestant, CreateContestantData } from '@/types';
+import type { Contestant, CreateContestantData } from '@/types';
 
 export class ContestantService {
   // Get contestants for a tournament
@@ -192,7 +192,7 @@ export class ContestantService {
 
   // Update contestant positions (for reordering)
   static async updateContestantPositions(
-    tournamentId: string,
+    _tournamentId: string,
     positionUpdates: { id: string; position: number }[]
   ): Promise<void> {
     try {
@@ -233,7 +233,7 @@ export class ContestantService {
       const fileName = `${tournamentId}/${timestamp}_${random}.${fileExtension}`;
 
       // Upload to Supabase Storage
-      const uploadData = await uploadFile('contestant-images', fileName, file, { upsert: false });
+      await uploadFile('contestant-images', fileName, file, { upsert: false });
 
       return fileName;
     } catch (error) {
@@ -298,7 +298,7 @@ export class ContestantService {
 
   // Seed contestants (set tournament seeding)
   static async seedContestants(
-    tournamentId: string,
+    _tournamentId: string,
     seedings: { id: string; seed: number }[]
   ): Promise<void> {
     try {

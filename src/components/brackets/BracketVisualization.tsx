@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useBracketData } from '@/hooks/tournaments/useTournament';
 import { useLiveVoteCounts } from '@/hooks/voting/useVoting';
-import { BracketRound, BracketMatchup } from '@/types';
+import type { BracketRound, BracketMatchup } from '@/types';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import MatchupCard from './MatchupCard';
 import { Trophy, Users } from 'lucide-react';
@@ -58,16 +58,16 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
   const getBracketLayout = (): BracketRound[] => {
     const layout: BracketRound[] = [];
     
-    rounds.forEach((round: BracketRound, roundIndex: number) => {
+    rounds.forEach((round: BracketRound) => {
       const roundData = {
         ...round,
         isActive: round.status === 'active',
         matchups: round.matchups.map((matchup: BracketMatchup) => ({
           ...matchup,
-          voteCounts: voteCounts[matchup.id] || {
-            contestant1Votes: matchup.contestant1_votes || 0,
-            contestant2Votes: matchup.contestant2_votes || 0,
-            totalVotes: matchup.total_votes || 0,
+          vote_counts: voteCounts[matchup.id] || {
+            contestant1_votes: matchup.contestant1_votes || 0,
+            contestant2_votes: matchup.contestant2_votes || 0,
+            total_votes: matchup.total_votes || 0,
           },
         })),
       };

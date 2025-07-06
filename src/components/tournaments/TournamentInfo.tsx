@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tournament } from '@/types';
+import type { Tournament } from '@/types';
 import { useTournamentContestants } from '@/hooks/tournaments/useTournament';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { 

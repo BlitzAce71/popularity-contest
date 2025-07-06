@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import Button from '@/components/ui/Button';
-import { Trophy, User, LogOut, Menu, X, Settings } from 'lucide-react';
+import { Trophy, User, LogOut, Menu, X } from 'lucide-react';
 
 const Navigation: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -50,7 +50,7 @@ const Navigation: React.FC = () => {
               </Link>
             ))}
 
-            {user?.isAdmin && (
+            {user?.is_admin && (
               <div className="flex items-center space-x-4">
                 <span className="text-gray-300">|</span>
                 {adminNavigation.map((item) => (
@@ -139,7 +139,7 @@ const Navigation: React.FC = () => {
               </Link>
             ))}
 
-            {user?.isAdmin && (
+            {user?.is_admin && (
               <>
                 <div className="border-t border-gray-200 my-2" />
                 {adminNavigation.map((item) => (

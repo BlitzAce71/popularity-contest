@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import { Vote, UserVoteHistory, VotingFormData } from '@/types';
+import type { Vote, UserVoteHistory } from '@/types';
 
 export class VotingService {
   // Submit a vote with optimistic updates and rollback capability
@@ -18,7 +18,9 @@ export class VotingService {
         id: `temp-${Date.now()}`,
         user_id: user.user.id,
         matchup_id: matchupId,
-        contestant_id: selectedContestantId,
+        selected_contestant_id: selectedContestantId,
+        is_admin_vote: false,
+        weight: 1,
         created_at: new Date().toISOString(),
       };
 

@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import { Tournament, CreateTournamentData, FilterOptions, SortOptions, PaginatedResponse } from '@/types';
+import type { Tournament, CreateTournamentData, FilterOptions, SortOptions, PaginatedResponse } from '@/types';
 
 export class TournamentService {
   // Get tournaments with filtering, sorting, and pagination

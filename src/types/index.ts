@@ -2,145 +2,153 @@ export interface User {
   id: string;
   email: string;
   username: string;
-  firstName: string;
-  lastName: string;
-  avatarUrl?: string;
-  isAdmin: boolean;
-  createdAt: string;
-  updatedAt: string;
+  first_name: string;
+  last_name: string;
+  avatar_url?: string;
+  is_admin: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Tournament {
   id: string;
-  title: string;
+  name: string;
   description: string;
-  imageUrl?: string;
-  status: 'draft' | 'active' | 'completed';
-  startDate: string;
-  endDate?: string;
-  maxParticipants: number;
-  currentParticipants: number;
-  bracketType: 'single-elimination' | 'double-elimination' | 'round-robin';
-  isPublic: boolean;
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
+  image_url?: string;
+  status: 'draft' | 'registration' | 'active' | 'completed' | 'cancelled';
+  tournament_start_date: string;
+  tournament_end_date?: string;
+  max_contestants: number;
+  current_contestants: number;
+  bracket_type: 'single-elimination' | 'double-elimination' | 'round-robin';
+  is_public: boolean;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Contestant {
   id: string;
-  tournamentId: string;
+  tournament_id: string;
   name: string;
   description?: string;
-  imageUrl?: string;
+  image_url?: string;
   seed: number;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Round {
   id: string;
-  tournamentId: string;
-  roundNumber: number;
-  roundType: 'preliminary' | 'quarterfinal' | 'semifinal' | 'final';
-  status: 'upcoming' | 'active' | 'completed';
-  startDate: string;
-  endDate?: string;
-  createdAt: string;
-  updatedAt: string;
+  tournament_id: string;
+  round_number: number;
+  name: string;
+  description?: string;
+  status: 'upcoming' | 'active' | 'completed' | 'paused';
+  total_matchups: number;
+  completed_matchups: number;
+  start_date?: string;
+  end_date?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Match {
   id: string;
-  roundId: string;
-  tournamentId: string;
-  matchNumber: number;
-  contestant1Id: string;
-  contestant2Id: string;
-  winnerId?: string;
-  contestant1Votes: number;
-  contestant2Votes: number;
-  status: 'upcoming' | 'active' | 'completed';
-  startDate: string;
-  endDate?: string;
-  createdAt: string;
-  updatedAt: string;
+  round_id: string;
+  tournament_id: string;
+  position: number;
+  contestant1_id?: string;
+  contestant2_id?: string;
+  winner_id?: string;
+  contestant1_votes: number;
+  contestant2_votes: number;
+  total_votes: number;
+  status: 'upcoming' | 'active' | 'completed' | 'cancelled';
+  is_tie: boolean;
+  start_date?: string;
+  end_date?: string;
+  completed_at?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Vote {
   id: string;
-  matchId: string;
-  userId: string;
-  contestantId: string;
-  createdAt: string;
+  matchup_id: string;
+  user_id: string;
+  selected_contestant_id: string;
+  is_admin_vote: boolean;
+  weight: number;
+  created_at: string;
 }
 
 export interface BracketPosition {
   id: string;
-  tournamentId: string;
-  roundId: string;
-  matchId?: string;
-  contestantId?: string;
+  tournament_id: string;
+  round_id: string;
+  match_id?: string;
+  contestant_id?: string;
   position: number;
   x: number;
   y: number;
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface TournamentStats {
-  totalVotes: number;
-  totalMatches: number;
-  completedMatches: number;
-  activeMatches: number;
-  totalParticipants: number;
-  mostVotedMatch?: Match;
-  topContestant?: Contestant;
+  total_votes: number;
+  total_matches: number;
+  completed_matches: number;
+  active_matches: number;
+  total_participants: number;
+  most_voted_match?: Match;
+  top_contestant?: Contestant;
 }
 
 export interface UserVoteHistory {
-  matchId: string;
-  contestantId: string;
-  tournamentTitle: string;
-  votedAt: string;
+  matchup_id: string;
+  selected_contestant_id: string;
+  tournament_title: string;
+  voted_at: string;
 }
 
 export interface AdminDashboardData {
-  totalTournaments: number;
-  activeTournaments: number;
-  totalUsers: number;
-  totalVotes: number;
-  recentActivity: ActivityLog[];
+  total_tournaments: number;
+  active_tournaments: number;
+  total_users: number;
+  total_votes: number;
+  recent_activity: ActivityLog[];
 }
 
 export interface ActivityLog {
   id: string;
-  userId: string;
+  user_id: string;
   action: 'tournament_created' | 'vote_cast' | 'match_completed' | 'user_registered';
   details: string;
   timestamp: string;
 }
 
 export interface CreateTournamentData {
-  title: string;
+  name: string;
   description: string;
-  imageUrl?: string;
-  startDate: string;
-  endDate?: string;
-  maxParticipants: number;
-  bracketType: 'single-elimination' | 'double-elimination' | 'round-robin';
-  isPublic: boolean;
+  image_url?: string;
+  tournament_start_date: string;
+  tournament_end_date?: string;
+  max_contestants: number;
+  bracket_type: 'single-elimination' | 'double-elimination' | 'round-robin';
+  is_public: boolean;
 }
 
 export interface CreateContestantData {
   name: string;
   description?: string;
-  imageUrl?: string;
+  image_url?: string;
 }
 
 export interface VotingFormData {
-  contestantId: string;
+  selected_contestant_id: string;
 }
 
 export interface AuthData {
@@ -150,15 +158,15 @@ export interface AuthData {
 
 export interface SignUpData extends AuthData {
   username: string;
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
 }
 
 export interface UpdateProfileData {
   username?: string;
-  firstName?: string;
-  lastName?: string;
-  avatarUrl?: string;
+  first_name?: string;
+  last_name?: string;
+  avatar_url?: string;
 }
 
 export interface ApiResponse<T> {
@@ -177,14 +185,14 @@ export interface PaginatedResponse<T> {
 
 export interface FilterOptions {
   status?: Tournament['status'];
-  bracketType?: Tournament['bracketType'];
-  isPublic?: boolean;
-  createdBy?: string;
+  bracket_type?: Tournament['bracket_type'];
+  is_public?: boolean;
+  created_by?: string;
   search?: string;
 }
 
 export interface SortOptions {
-  field: 'title' | 'createdAt' | 'startDate' | 'currentParticipants';
+  field: 'name' | 'created_at' | 'tournament_start_date' | 'current_contestants';
   direction: 'asc' | 'desc';
 }
 
@@ -220,19 +228,16 @@ export interface BracketMatchup extends Match {
   contestant1?: Contestant;
   contestant2?: Contestant;
   winner?: Contestant;
-  voteCounts: {
-    contestant1Votes: number;
-    contestant2Votes: number;
-    totalVotes: number;
+  vote_counts: {
+    contestant1_votes: number;
+    contestant2_votes: number;
+    total_votes: number;
   };
-  is_tie?: boolean;
 }
 
 export interface BracketRound extends Round {
   matchups: BracketMatchup[];
-  isActive: boolean;
-  completed_matchups: number;
-  total_matchups: number;
+  is_active: boolean;
 }
 
 export interface BracketData {
@@ -242,25 +247,25 @@ export interface BracketData {
 
 export interface VoteCounts {
   [matchupId: string]: {
-    contestant1Votes: number;
-    contestant2Votes: number;
-    totalVotes: number;
+    contestant1_votes: number;
+    contestant2_votes: number;
+    total_votes: number;
   };
 }
 
 export interface VotingStatus {
-  totalMatchups: number;
-  votedMatchups: number;
-  availableMatchups: number;
-  completionPercentage: number;
+  total_matchups: number;
+  voted_matchups: number;
+  available_matchups: number;
+  completion_percentage: number;
 }
 
 export interface TournamentStatistics {
-  totalParticipants: number;
-  totalVotes: number;
-  completedMatchups: number;
-  totalMatchups: number;
-  completionPercentage: number;
-  mostPopularContestant?: Contestant;
-  participationRate: number;
+  total_participants: number;
+  total_votes: number;
+  completed_matchups: number;
+  total_matchups: number;
+  completion_percentage: number;
+  most_popular_contestant?: Contestant;
+  participation_rate: number;
 }

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import Button from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { CheckCircle, XCircle, AlertTriangle, Database, Shield, Upload } from 'lucide-react';
+import { CheckCircle, XCircle, AlertTriangle, Database, Shield } from 'lucide-react';
 
 interface TestResult {
   name: string;
@@ -39,7 +39,7 @@ const ConnectionTest: React.FC = () => {
     updateTest('Basic Connection', 'pending', 'Testing connection to Supabase...');
     
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('users')
         .select('count')
         .limit(1);
@@ -246,7 +246,7 @@ const ConnectionTest: React.FC = () => {
       )}
 
       <div className="space-y-4">
-        {tests.map((test, index) => (
+        {tests.map((test) => (
           <div 
             key={test.name}
             className={`border rounded-lg p-4 ${getStatusColor(test.status)}`}

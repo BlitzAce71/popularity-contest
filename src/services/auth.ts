@@ -1,5 +1,5 @@
 import { supabase, uploadFile, deleteFile, getFileUrl } from '@/lib/supabase';
-import { User, SignUpData, AuthData, UpdateProfileData } from '@/types';
+import type { User, SignUpData, AuthData, UpdateProfileData } from '@/types';
 
 export class AuthService {
   // Sign up new user
@@ -92,9 +92,9 @@ export class AuthService {
           {
             id: authUser.id,
             email: authUser.email,
-            username: authUser.user_metadata?.username || authUser.email.split('@')[0],
-            first_name: authUser.user_metadata?.firstName || '',
-            last_name: authUser.user_metadata?.lastName || '',
+            username: authUser.user_metadata?.username || authUser.email?.split('@')[0] || 'user',
+            first_name: authUser.user_metadata?.first_name || '',
+            last_name: authUser.user_metadata?.last_name || '',
             avatar_url: authUser.user_metadata?.avatar_url,
             is_admin: false,
           },

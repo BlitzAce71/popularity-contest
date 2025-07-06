@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import { AdminDashboardData, ActivityLog, User } from '@/types';
+import type { AdminDashboardData, ActivityLog, User } from '@/types';
 
 export class AdminService {
   // Check if current user is admin
