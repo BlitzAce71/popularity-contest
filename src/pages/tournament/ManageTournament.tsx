@@ -31,8 +31,6 @@ const ManageTournament: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'contestants' | 'settings' | 'bracket'>('contestants');
   const [showAddContestant, setShowAddContestant] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [editingContestant, setEditingContestant] = useState<string | null>(null);
-  const [editSeed, setEditSeed] = useState<number>(1);
 
   const { tournament, loading: tournamentLoading, error: tournamentError, refresh } = useTournament(id);
 
@@ -251,6 +249,8 @@ const ContestantManagement: React.FC<{
   const [contestants, setContestants] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editingContestant, setEditingContestant] = useState<string | null>(null);
+  const [editSeed, setEditSeed] = useState<number>(1);
 
   const fetchContestants = async () => {
     try {
