@@ -18,14 +18,14 @@ export class TournamentService {
       if (filters?.status) {
         query = query.eq('status', filters.status);
       }
-      if (filters?.bracketType) {
-        query = query.eq('bracket_type', filters.bracketType);
+      if (filters?.bracket_type) {
+        query = query.eq('bracket_type', filters.bracket_type);
       }
-      if (filters?.isPublic !== undefined) {
-        query = query.eq('is_public', filters.isPublic);
+      if (filters?.is_public !== undefined) {
+        query = query.eq('is_public', filters.is_public);
       }
-      if (filters?.createdBy) {
-        query = query.eq('created_by', filters.createdBy);
+      if (filters?.created_by) {
+        query = query.eq('created_by', filters.created_by);
       }
       if (filters?.search) {
         query = query.or(`name.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
@@ -102,15 +102,14 @@ export class TournamentService {
         .from('tournaments')
         .insert([
           {
-            name: tournamentData.title,
+            name: tournamentData.name,
             description: tournamentData.description,
-            image_url: tournamentData.imageUrl,
-            start_date: tournamentData.startDate,
-            end_date: tournamentData.endDate,
-            max_contestants: tournamentData.maxParticipants,
-            bracket_type: tournamentData.bracketType,
-            is_public: tournamentData.isPublic,
-            size: tournamentData.maxParticipants, // For now, size = max_contestants
+            image_url: tournamentData.image_url,
+            start_date: tournamentData.tournament_start_date,
+            end_date: tournamentData.tournament_end_date,
+            max_contestants: tournamentData.max_contestants,
+            bracket_type: tournamentData.bracket_type,
+            is_public: tournamentData.is_public,
             created_by: user.user.id,
           },
         ])
@@ -133,17 +132,16 @@ export class TournamentService {
     try {
       const updateData: Record<string, any> = {};
 
-      if (updates.title) updateData.name = updates.title;
+      if (updates.name) updateData.name = updates.name;
       if (updates.description !== undefined) updateData.description = updates.description;
-      if (updates.imageUrl !== undefined) updateData.image_url = updates.imageUrl;
-      if (updates.startDate) updateData.start_date = updates.startDate;
-      if (updates.endDate !== undefined) updateData.end_date = updates.endDate;
-      if (updates.maxParticipants) {
-        updateData.max_contestants = updates.maxParticipants;
-        updateData.size = updates.maxParticipants;
+      if (updates.image_url !== undefined) updateData.image_url = updates.image_url;
+      if (updates.tournament_start_date) updateData.start_date = updates.tournament_start_date;
+      if (updates.tournament_end_date !== undefined) updateData.end_date = updates.tournament_end_date;
+      if (updates.max_contestants) {
+        updateData.max_contestants = updates.max_contestants;
       }
-      if (updates.bracketType) updateData.bracket_type = updates.bracketType;
-      if (updates.isPublic !== undefined) updateData.is_public = updates.isPublic;
+      if (updates.bracket_type) updateData.bracket_type = updates.bracket_type;
+      if (updates.is_public !== undefined) updateData.is_public = updates.is_public;
 
       const { data, error } = await supabase
         .from('tournaments')
