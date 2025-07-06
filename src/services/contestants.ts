@@ -10,7 +10,7 @@ export class ContestantService {
         .select('*')
         .eq('tournament_id', tournamentId)
         .eq('is_active', true)
-        .order('position');
+        .order('seed');
 
       if (error) throw error;
       return data || [];
@@ -53,15 +53,15 @@ export class ContestantService {
         imageUrl = await this.uploadContestantImage(tournamentId, imageFile);
       }
 
-      // Get next position
+      // Get next seed number
       const { data: existingContestants } = await supabase
         .from('contestants')
-        .select('position')
+        .select('seed')
         .eq('tournament_id', tournamentId)
-        .order('position', { ascending: false })
+        .order('seed', { ascending: false })
         .limit(1);
 
-      const nextPosition = existingContestants?.[0]?.position ? existingContestants[0].position + 1 : 1;
+      const nextSeed = existingContestants?.[0]?.seed ? existingContestants[0].seed + 1 : 1;
 
       const { data, error } = await supabase
         .from('contestants')
@@ -71,7 +71,7 @@ export class ContestantService {
             name: contestantData.name,
             description: contestantData.description,
             image_url: imageUrl,
-            position: nextPosition,
+            seed: nextSeed,
           },
         ])
         .select()
@@ -160,21 +160,21 @@ export class ContestantService {
     contestants: CreateContestantData[]
   ): Promise<Contestant[]> {
     try {
-      // Get starting position
+      // Get starting seed number
       const { data: existingContestants } = await supabase
         .from('contestants')
-        .select('position')
+        .select('seed')
         .eq('tournament_id', tournamentId)
-        .order('position', { ascending: false })
+        .order('seed', { ascending: false })
         .limit(1);
 
-      let nextPosition = existingContestants?.[0]?.position ? existingContestants[0].position + 1 : 1;
+      let nextSeed = existingContestants?.[0]?.seed ? existingContestants[0].seed + 1 : 1;
 
       const contestantData = contestants.map((contestant) => ({
         tournament_id: tournamentId,
         name: contestant.name,
         description: contestant.description,
-        position: nextPosition++,
+        seed: nextSeed++,
       }));
 
       const { data, error } = await supabase
@@ -190,14 +190,14 @@ export class ContestantService {
     }
   }
 
-  // Update contestant positions (for reordering)
-  static async updateContestantPositions(
+  // Update contestant seeds (for reordering)
+  static async updateContestantSeeds(
     _tournamentId: string,
-    positionUpdates: { id: string; position: number }[]
+    seedUpdates: { id: string; seed: number }[]
   ): Promise<void> {
     try {
-      const updatePromises = positionUpdates.map(({ id, position }) =>
-        supabase.from('contestants').update({ position }).eq('id', id)
+      const updatePromises = seedUpdates.map(({ id, seed }) =>
+        supabase.from('contestants').update({ seed }).eq('id', id)
       );
 
       const results = await Promise.all(updatePromises);
@@ -206,8 +206,8 @@ export class ContestantService {
         if (result.error) throw result.error;
       }
     } catch (error) {
-      console.error('Error updating contestant positions:', error);
-      throw new Error(error instanceof Error ? error.message : 'Failed to update positions');
+      console.error('Error updating contestant seeds:', error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to update seeds');
     }
   }
 
