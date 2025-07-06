@@ -22,6 +22,7 @@ import {
   GripVertical,
   Image
 } from 'lucide-react';
+import BracketView from '@/components/tournament/BracketView';
 import { CreateContestantData } from '@/types';
 
 const ManageTournament: React.FC = () => {
@@ -315,21 +316,6 @@ const ContestantManagement: React.FC<{
     }
   };
 
-  const handleAutoSeed = async (method: 'random' | 'alphabetical' | 'reverse-alphabetical') => {
-    if (!window.confirm('This will reassign all contestant seeds. Continue?')) return;
-    
-    try {
-      setLoading(true);
-      await ContestantService.autoSeedContestants(tournament.id, method);
-      await fetchContestants();
-      onRefresh();
-    } catch (error) {
-      console.error('Error auto-seeding contestants:', error);
-      setError(error instanceof Error ? error.message : 'Failed to auto-seed contestants');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (loading && contestants.length === 0) {
     return (
@@ -358,17 +344,6 @@ const ContestantManagement: React.FC<{
             <Plus className="w-4 h-4" />
             Add Contestant
           </Button>
-          {contestants.length > 1 && (
-            <Button
-              onClick={() => handleAutoSeed('random')}
-              variant="outline"
-              className="flex items-center gap-2"
-              disabled={loading}
-            >
-              <GripVertical className="w-4 h-4" />
-              Auto-Seed
-            </Button>
-          )}
         </div>
       </div>
 
@@ -448,7 +423,10 @@ const ContestantManagement: React.FC<{
                         </button>
                       </div>
                     ) : (
-                      <p className="text-sm text-gray-500">Seed #{contestant.seed || index + 1}</p>
+                      <div className="text-sm text-gray-500">
+                        <p>Seed #{contestant.seed || index + 1}</p>
+                        <p>Quadrant {contestant.quadrant || 1}</p>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -491,6 +469,8 @@ const AddContestantForm: React.FC<{
   const [formData, setFormData] = useState<CreateContestantData>({
     name: '',
     description: '',
+    seed: 1,
+    quadrant: 1,
   });
   const [imageFile, setImageFile] = useState<File | undefined>();
 
@@ -526,6 +506,35 @@ const AddContestantForm: React.FC<{
             rows={3}
             placeholder="Optional description..."
           />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Seed *</label>
+            <input
+              type="number"
+              value={formData.seed}
+              onChange={(e) => setFormData({ ...formData, seed: parseInt(e.target.value) || 1 })}
+              className="input-field mt-1"
+              min="1"
+              max="999"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Quadrant *</label>
+            <select
+              value={formData.quadrant}
+              onChange={(e) => setFormData({ ...formData, quadrant: parseInt(e.target.value) as 1 | 2 | 3 | 4 })}
+              className="input-field mt-1"
+              required
+            >
+              <option value={1}>Quadrant 1 (Top Left)</option>
+              <option value={2}>Quadrant 2 (Top Right)</option>
+              <option value={3}>Quadrant 3 (Bottom Left)</option>
+              <option value={4}>Quadrant 4 (Bottom Right)</option>
+            </select>
+          </div>
         </div>
 
         <div>
@@ -579,13 +588,61 @@ const TournamentSettings: React.FC<{ tournament: any; onRefresh: () => void }> =
   </div>
 );
 
-const BracketManagement: React.FC<{ tournament: any; onRefresh: () => void }> = ({ tournament }) => (
-  <div className="space-y-6">
-    <h2 className="text-xl font-semibold text-gray-900">Bracket Management</h2>
-    <div className="card p-6">
-      <p className="text-gray-600">Bracket management will be implemented here.</p>
+const BracketManagement: React.FC<{ tournament: any; onRefresh: () => void }> = ({ tournament, onRefresh }) => {
+  const [contestants, setContestants] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchContestants = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await ContestantService.getContestants(tournament.id);
+      setContestants(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch contestants');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchContestants();
+  }, [tournament.id]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-96">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-red-600 mb-4">Error: {error}</div>
+        <Button onClick={fetchContestants} variant="outline">
+          Try Again
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900">Bracket Visualization</h2>
+          <p className="text-gray-600">
+            Visual representation of tournament bracket with {contestants.length} contestants
+          </p>
+        </div>
+      </div>
+      
+      <BracketView contestants={contestants} tournament={tournament} />
     </div>
-  </div>
-);
+  );
+};
 
 export default ManageTournament;

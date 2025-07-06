@@ -280,6 +280,33 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 GRANT EXECUTE ON FUNCTION public.generate_single_elimination_bracket(UUID) TO authenticated;
 
 -- =============================================================================
+-- FIX 6: Add quadrant field to contestants table
+-- =============================================================================
+
+-- Add quadrant column if it doesn't exist
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM information_schema.columns 
+        WHERE table_name = 'contestants' 
+        AND column_name = 'quadrant'
+    ) THEN
+        ALTER TABLE public.contestants ADD COLUMN quadrant INTEGER DEFAULT 1 CHECK (quadrant IN (1, 2, 3, 4));
+        
+        -- Update existing contestants to have quadrant 1 as default
+        UPDATE public.contestants SET quadrant = 1 WHERE quadrant IS NULL;
+        
+        -- Make quadrant NOT NULL
+        ALTER TABLE public.contestants ALTER COLUMN quadrant SET NOT NULL;
+        
+        RAISE NOTICE 'Added quadrant column to contestants table';
+    ELSE
+        RAISE NOTICE 'Quadrant column already exists in contestants table';
+    END IF;
+END $$;
+
+-- =============================================================================
 -- VERIFICATION QUERIES
 -- =============================================================================
 
@@ -297,3 +324,13 @@ AND routine_name IN (
     'generate_single_elimination_bracket'
 )
 ORDER BY routine_name;
+
+-- Verify quadrant column was added
+SELECT 
+    column_name,
+    data_type,
+    is_nullable,
+    column_default
+FROM information_schema.columns 
+WHERE table_name = 'contestants' 
+AND column_name = 'quadrant';

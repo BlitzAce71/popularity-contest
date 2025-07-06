@@ -84,7 +84,8 @@ export class ContestantService {
             name: contestantData.name,
             description: contestantData.description,
             image_url: imageUrl,
-            seed: nextSeed,
+            seed: contestantData.seed,
+            quadrant: contestantData.quadrant,
           },
         ])
         .select()

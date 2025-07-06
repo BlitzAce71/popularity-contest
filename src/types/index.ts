@@ -33,6 +33,7 @@ export interface Contestant {
   description?: string;
   image_url?: string;
   seed: number;
+  quadrant: 1 | 2 | 3 | 4;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -144,6 +145,8 @@ export interface CreateContestantData {
   name: string;
   description?: string;
   image_url?: string;
+  seed: number;
+  quadrant: 1 | 2 | 3 | 4;
 }
 
 export interface VotingFormData {

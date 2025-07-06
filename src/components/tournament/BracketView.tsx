@@ -1,0 +1,152 @@
+import React from 'react';
+import { Contestant } from '@/types';
+import { Image } from 'lucide-react';
+
+interface BracketViewProps {
+  contestants: Contestant[];
+  tournament: any;
+}
+
+const BracketView: React.FC<BracketViewProps> = ({ contestants, tournament }) => {
+  // Group contestants by quadrant
+  const quadrants = {
+    1: contestants.filter(c => c.quadrant === 1).sort((a, b) => a.seed - b.seed),
+    2: contestants.filter(c => c.quadrant === 2).sort((a, b) => a.seed - b.seed),
+    3: contestants.filter(c => c.quadrant === 3).sort((a, b) => a.seed - b.seed),
+    4: contestants.filter(c => c.quadrant === 4).sort((a, b) => a.seed - b.seed),
+  };
+
+  const ContestantCard: React.FC<{ contestant: Contestant; position: 'left' | 'right' }> = ({ 
+    contestant, 
+    position 
+  }) => (
+    <div className={`flex items-center gap-2 p-2 bg-white border rounded-lg shadow-sm ${
+      position === 'right' ? 'flex-row-reverse' : ''
+    }`}>
+      <div className="flex-shrink-0">
+        {contestant.image_url ? (
+          <img
+            src={contestant.image_url}
+            alt={contestant.name}
+            className="w-8 h-8 rounded-full object-cover"
+          />
+        ) : (
+          <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+            <Image className="w-4 h-4 text-gray-400" />
+          </div>
+        )}
+      </div>
+      <div className={`flex-1 ${position === 'right' ? 'text-right' : ''}`}>
+        <div className="font-medium text-sm text-gray-900 truncate">{contestant.name}</div>
+        <div className="text-xs text-gray-500">#{contestant.seed}</div>
+      </div>
+    </div>
+  );
+
+  const QuadrantBracket: React.FC<{ 
+    quadrant: number; 
+    contestants: Contestant[]; 
+    title: string;
+    position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+  }> = ({ quadrant, contestants, title, position }) => {
+    const isLeft = position.includes('left');
+    const isTop = position.includes('top');
+    
+    return (
+      <div className={`p-4 ${isLeft ? 'border-r' : 'border-l'} ${isTop ? 'border-b' : 'border-t'} border-gray-200`}>
+        <div className={`text-center mb-4 ${isLeft ? 'text-left' : 'text-right'}`}>
+          <h3 className="font-semibold text-gray-900">{title}</h3>
+          <p className="text-sm text-gray-500">{contestants.length} contestants</p>
+        </div>
+        
+        <div className="space-y-3">
+          {contestants.map((contestant, index) => (
+            <div key={contestant.id} className="relative">
+              <ContestantCard 
+                contestant={contestant} 
+                position={isLeft ? 'left' : 'right'} 
+              />
+              
+              {/* Connection line to next round (simplified) */}
+              {index % 2 === 0 && index + 1 < contestants.length && (
+                <div className={`absolute ${isTop ? 'top-full' : 'bottom-full'} ${
+                  isLeft ? 'left-full' : 'right-full'
+                } w-8 h-8 border-2 border-gray-300 ${
+                  isTop ? 'border-t-0 border-l-0' : 'border-b-0 border-l-0'
+                } ${isLeft ? '' : 'transform scale-x-[-1]'}`} />
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  if (contestants.length === 0) {
+    return (
+      <div className="text-center py-12 bg-gray-50 rounded-lg">
+        <div className="text-gray-500 mb-2">No contestants in bracket yet</div>
+        <p className="text-sm text-gray-400">Add contestants to see the bracket visualization</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-lg border overflow-hidden">
+      <div className="p-4 border-b bg-gray-50">
+        <h2 className="text-xl font-semibold text-gray-900">Tournament Bracket</h2>
+        <p className="text-sm text-gray-600 mt-1">
+          {contestants.length} contestants across 4 quadrants
+        </p>
+      </div>
+      
+      <div className="grid grid-cols-2 grid-rows-2 min-h-96">
+        {/* Quadrant 1 - Top Left */}
+        <QuadrantBracket
+          quadrant={1}
+          contestants={quadrants[1]}
+          title="Quadrant 1"
+          position="top-left"
+        />
+        
+        {/* Quadrant 2 - Top Right */}
+        <QuadrantBracket
+          quadrant={2}
+          contestants={quadrants[2]}
+          title="Quadrant 2"
+          position="top-right"
+        />
+        
+        {/* Quadrant 3 - Bottom Left */}
+        <QuadrantBracket
+          quadrant={3}
+          contestants={quadrants[3]}
+          title="Quadrant 3"
+          position="bottom-left"
+        />
+        
+        {/* Quadrant 4 - Bottom Right */}
+        <QuadrantBracket
+          quadrant={4}
+          contestants={quadrants[4]}
+          title="Quadrant 4"
+          position="bottom-right"
+        />
+      </div>
+      
+      {/* Center Championship Area */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="w-full h-full flex items-center justify-center">
+          <div className="bg-yellow-100 border-2 border-yellow-300 rounded-lg p-4 pointer-events-auto">
+            <div className="text-center">
+              <div className="text-lg font-bold text-yellow-800">Championship</div>
+              <div className="text-sm text-yellow-600">Final match here</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default BracketView;
