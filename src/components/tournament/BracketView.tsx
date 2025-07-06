@@ -105,7 +105,7 @@ const BracketView: React.FC<BracketViewProps> = ({ contestants, tournament }) =>
         <QuadrantBracket
           quadrant={1}
           contestants={quadrants[1]}
-          title="Quadrant 1"
+          title={tournament.quadrant_names?.[0] || "Quadrant 1"}
           position="top-left"
         />
         
@@ -113,7 +113,7 @@ const BracketView: React.FC<BracketViewProps> = ({ contestants, tournament }) =>
         <QuadrantBracket
           quadrant={2}
           contestants={quadrants[2]}
-          title="Quadrant 2"
+          title={tournament.quadrant_names?.[1] || "Quadrant 2"}
           position="top-right"
         />
         
@@ -121,7 +121,7 @@ const BracketView: React.FC<BracketViewProps> = ({ contestants, tournament }) =>
         <QuadrantBracket
           quadrant={3}
           contestants={quadrants[3]}
-          title="Quadrant 3"
+          title={tournament.quadrant_names?.[2] || "Quadrant 3"}
           position="bottom-left"
         />
         
@@ -129,7 +129,7 @@ const BracketView: React.FC<BracketViewProps> = ({ contestants, tournament }) =>
         <QuadrantBracket
           quadrant={4}
           contestants={quadrants[4]}
-          title="Quadrant 4"
+          title={tournament.quadrant_names?.[3] || "Quadrant 4"}
           position="bottom-right"
         />
       </div>

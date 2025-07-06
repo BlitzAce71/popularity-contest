@@ -307,6 +307,57 @@ BEGIN
 END $$;
 
 -- =============================================================================
+-- FIX 7: Add quadrant_names field to tournaments table
+-- =============================================================================
+
+-- Add quadrant_names column if it doesn't exist
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM information_schema.columns 
+        WHERE table_name = 'tournaments' 
+        AND column_name = 'quadrant_names'
+    ) THEN
+        ALTER TABLE public.tournaments ADD COLUMN quadrant_names TEXT[];
+        
+        -- Set default quadrant names for existing tournaments
+        UPDATE public.tournaments 
+        SET quadrant_names = ARRAY['Region A', 'Region B', 'Region C', 'Region D'] 
+        WHERE quadrant_names IS NULL;
+        
+        RAISE NOTICE 'Added quadrant_names column to tournaments table';
+    ELSE
+        RAISE NOTICE 'Quadrant_names column already exists in tournaments table';
+    END IF;
+END $$;
+
+-- =============================================================================
+-- FIX 8: Add unique constraint for (tournament_id, quadrant, seed)
+-- =============================================================================
+
+-- Add unique constraint to prevent duplicate seeds within the same quadrant
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM pg_constraint 
+        WHERE conname = 'contestants_tournament_quadrant_seed_unique'
+    ) THEN
+        ALTER TABLE public.contestants 
+        ADD CONSTRAINT contestants_tournament_quadrant_seed_unique 
+        UNIQUE (tournament_id, quadrant, seed);
+        
+        RAISE NOTICE 'Added unique constraint for tournament_id, quadrant, seed';
+    ELSE
+        RAISE NOTICE 'Unique constraint already exists';
+    END IF;
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE NOTICE 'Note: Unique constraint may conflict with existing data. Clean up duplicates first if needed.';
+END $$;
+
+-- =============================================================================
 -- VERIFICATION QUERIES
 -- =============================================================================
 
@@ -334,3 +385,13 @@ SELECT
 FROM information_schema.columns 
 WHERE table_name = 'contestants' 
 AND column_name = 'quadrant';
+
+-- Verify quadrant_names column was added
+SELECT 
+    column_name,
+    data_type,
+    is_nullable,
+    column_default
+FROM information_schema.columns 
+WHERE table_name = 'tournaments' 
+AND column_name = 'quadrant_names';

@@ -21,6 +21,7 @@ export interface Tournament {
   current_contestants: number;
   bracket_type: 'single-elimination' | 'double-elimination' | 'round-robin';
   is_public: boolean;
+  quadrant_names?: [string, string, string, string]; // [Q1, Q2, Q3, Q4] custom names
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -139,6 +140,7 @@ export interface CreateTournamentData {
   max_contestants: number;
   bracket_type: 'single-elimination' | 'double-elimination' | 'round-robin';
   is_public: boolean;
+  quadrant_names?: [string, string, string, string]; // [Q1, Q2, Q3, Q4] custom names
 }
 
 export interface CreateContestantData {

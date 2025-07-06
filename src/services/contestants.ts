@@ -66,43 +66,51 @@ export class ContestantService {
         imageUrl = await this.uploadContestantImage(tournamentId, imageFile);
       }
 
-      // Validate and handle seed conflicts
+      // Validate and handle seed conflicts per quadrant
       let finalSeed = contestantData.seed;
+      let finalQuadrant = contestantData.quadrant || 1;
       
-      // Check if the seed is already taken
+      // Check if the seed is already taken in this quadrant
       const { data: existingWithSameSeed } = await supabase
         .from('contestants')
         .select('id')
         .eq('tournament_id', tournamentId)
         .eq('seed', finalSeed)
+        .eq('quadrant', finalQuadrant)
         .eq('is_active', true);
 
       if (existingWithSameSeed && existingWithSameSeed.length > 0) {
-        // Find the next available seed
-        const { data: allSeeds } = await supabase
+        // Find the next available seed in this quadrant
+        const { data: quadrantSeeds } = await supabase
           .from('contestants')
           .select('seed')
           .eq('tournament_id', tournamentId)
+          .eq('quadrant', finalQuadrant)
           .eq('is_active', true)
           .order('seed', { ascending: true });
 
-        const usedSeeds = new Set((allSeeds || []).map(c => c.seed));
+        const usedSeeds = new Set((quadrantSeeds || []).map(c => c.seed));
         finalSeed = 1;
         while (usedSeeds.has(finalSeed)) {
           finalSeed++;
         }
         
-        console.warn(`Seed ${contestantData.seed} was taken, assigned seed ${finalSeed} instead`);
+        console.warn(`Seed ${contestantData.seed} was taken in quadrant ${finalQuadrant}, assigned seed ${finalSeed} instead`);
       }
 
-      // Prepare insert data without quadrant for now (until database is updated)
-      const insertData = {
+      // Prepare insert data with quadrant (will be added to database soon)
+      const insertData: any = {
         tournament_id: tournamentId,
         name: contestantData.name,
         description: contestantData.description,
         image_url: imageUrl,
         seed: finalSeed,
       };
+
+      // Add quadrant if provided (handle gracefully if column doesn't exist yet)
+      if (finalQuadrant) {
+        insertData.quadrant = finalQuadrant;
+      }
 
       const { data, error } = await supabase
         .from('contestants')

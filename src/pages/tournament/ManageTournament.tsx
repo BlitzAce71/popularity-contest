@@ -360,6 +360,7 @@ const ContestantManagement: React.FC<{
           onCancel={() => onToggleAddForm(false)}
           loading={loading}
           contestants={contestants}
+          tournament={tournament}
         />
       )}
 
@@ -426,7 +427,7 @@ const ContestantManagement: React.FC<{
                     ) : (
                       <div className="text-sm text-gray-500">
                         <p>Seed #{contestant.seed || index + 1}</p>
-                        <p>Quadrant {contestant.quadrant || 1}</p>
+                        <p>{tournament.quadrant_names?.[contestant.quadrant - 1] || `Quadrant ${contestant.quadrant || 1}`}</p>
                       </div>
                     )}
                   </div>
@@ -467,11 +468,13 @@ const AddContestantForm: React.FC<{
   onCancel: () => void;
   loading: boolean;
   contestants: any[];
-}> = ({ onSubmit, onCancel, loading, contestants }) => {
-  // Calculate next available seed
-  const getNextSeed = () => {
-    if (contestants.length === 0) return 1;
-    const usedSeeds = new Set(contestants.map(c => c.seed));
+  tournament: any;
+}> = ({ onSubmit, onCancel, loading, contestants, tournament }) => {
+  // Calculate next available seed for selected quadrant
+  const getNextSeedForQuadrant = (quadrant: number) => {
+    const quadrantContestants = contestants.filter(c => c.quadrant === quadrant);
+    if (quadrantContestants.length === 0) return 1;
+    const usedSeeds = new Set(quadrantContestants.map(c => c.seed));
     let nextSeed = 1;
     while (usedSeeds.has(nextSeed)) {
       nextSeed++;
@@ -482,15 +485,18 @@ const AddContestantForm: React.FC<{
   const [formData, setFormData] = useState<CreateContestantData>({
     name: '',
     description: '',
-    seed: getNextSeed(),
+    seed: 1,
     quadrant: 1,
   });
   const [imageFile, setImageFile] = useState<File | undefined>();
 
-  // Update seed when contestants change
+  // Update seed when quadrant changes or contestants change
   React.useEffect(() => {
-    setFormData(prev => ({ ...prev, seed: getNextSeed() }));
-  }, [contestants.length]);
+    setFormData(prev => ({ 
+      ...prev, 
+      seed: getNextSeedForQuadrant(prev.quadrant || 1) 
+    }));
+  }, [contestants.length, formData.quadrant]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -539,9 +545,9 @@ const AddContestantForm: React.FC<{
               required
             />
             <p className="text-xs text-gray-500 mt-1">
-              {contestants.some(c => c.seed === formData.seed) 
-                ? '⚠️ This seed is already taken - will auto-assign next available' 
-                : `Next suggested: ${getNextSeed()}`
+              {contestants.some(c => c.seed === formData.seed && c.quadrant === formData.quadrant) 
+                ? '⚠️ This seed is already taken in this quadrant - will auto-assign next available' 
+                : `Next suggested for this quadrant: ${getNextSeedForQuadrant(formData.quadrant || 1)}`
               }
             </p>
           </div>
@@ -549,13 +555,21 @@ const AddContestantForm: React.FC<{
             <label className="block text-sm font-medium text-gray-700">Quadrant</label>
             <select
               value={formData.quadrant || 1}
-              onChange={(e) => setFormData({ ...formData, quadrant: parseInt(e.target.value) as 1 | 2 | 3 | 4 })}
+              onChange={(e) => {
+                const newQuadrant = parseInt(e.target.value) as 1 | 2 | 3 | 4;
+                setFormData({ 
+                  ...formData, 
+                  quadrant: newQuadrant,
+                  seed: getNextSeedForQuadrant(newQuadrant)
+                });
+              }}
               className="input-field mt-1"
             >
-              <option value={1}>Quadrant 1 (Top Left)</option>
-              <option value={2}>Quadrant 2 (Top Right)</option>
-              <option value={3}>Quadrant 3 (Bottom Left)</option>
-              <option value={4}>Quadrant 4 (Bottom Right)</option>
+              {(tournament.quadrant_names || ['Region A', 'Region B', 'Region C', 'Region D']).map((name, index) => (
+                <option key={index + 1} value={index + 1}>
+                  {name} (Quadrant {index + 1})
+                </option>
+              ))}
             </select>
             <p className="text-xs text-gray-500 mt-1">Note: Quadrant assignment coming soon</p>
           </div>
@@ -602,15 +616,125 @@ const AddContestantForm: React.FC<{
   );
 };
 
-// Placeholder components for other tabs
-const TournamentSettings: React.FC<{ tournament: any; onRefresh: () => void }> = ({ tournament }) => (
-  <div className="space-y-6">
-    <h2 className="text-xl font-semibold text-gray-900">Tournament Settings</h2>
-    <div className="card p-6">
-      <p className="text-gray-600">Tournament settings will be implemented here.</p>
+// Tournament Settings Component
+const TournamentSettings: React.FC<{ tournament: any; onRefresh: () => void }> = ({ tournament, onRefresh }) => {
+  const [quadrantNames, setQuadrantNames] = useState<[string, string, string, string]>(
+    tournament.quadrant_names || ['Region A', 'Region B', 'Region C', 'Region D']
+  );
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSaveQuadrantNames = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      await TournamentService.updateTournament(tournament.id, {
+        quadrant_names: quadrantNames
+      });
+      
+      onRefresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update quadrant names');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-xl font-semibold text-gray-900">Tournament Settings</h2>
+      
+      <div className="card p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Bracket Quadrant Names</h3>
+        <p className="text-sm text-gray-600 mb-6">
+          Customize the names of your tournament's four quadrants/regions. These names will be shown 
+          when contestants select their quadrant placement.
+        </p>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-sm text-red-600">{error}</p>
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Quadrant 1 (Top Left)
+            </label>
+            <input
+              type="text"
+              value={quadrantNames[0]}
+              onChange={(e) => setQuadrantNames([e.target.value, quadrantNames[1], quadrantNames[2], quadrantNames[3]])}
+              className="input-field"
+              placeholder="e.g., Region A, North Division, etc."
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Quadrant 2 (Top Right)
+            </label>
+            <input
+              type="text"
+              value={quadrantNames[1]}
+              onChange={(e) => setQuadrantNames([quadrantNames[0], e.target.value, quadrantNames[2], quadrantNames[3]])}
+              className="input-field"
+              placeholder="e.g., Region B, South Division, etc."
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Quadrant 3 (Bottom Left)
+            </label>
+            <input
+              type="text"
+              value={quadrantNames[2]}
+              onChange={(e) => setQuadrantNames([quadrantNames[0], quadrantNames[1], e.target.value, quadrantNames[3]])}
+              className="input-field"
+              placeholder="e.g., Region C, East Division, etc."
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Quadrant 4 (Bottom Right)
+            </label>
+            <input
+              type="text"
+              value={quadrantNames[3]}
+              onChange={(e) => setQuadrantNames([quadrantNames[0], quadrantNames[1], quadrantNames[2], e.target.value])}
+              className="input-field"
+              placeholder="e.g., Region D, West Division, etc."
+            />
+          </div>
+        </div>
+
+        <Button
+          onClick={handleSaveQuadrantNames}
+          disabled={loading}
+          className="flex items-center gap-2"
+        >
+          {loading ? (
+            <>
+              <LoadingSpinner size="sm" />
+              Saving...
+            </>
+          ) : (
+            'Save Quadrant Names'
+          )}
+        </Button>
+      </div>
+
+      <div className="card p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Other Settings</h3>
+        <p className="text-gray-600">Additional tournament settings will be added here.</p>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const BracketManagement: React.FC<{ tournament: any; onRefresh: () => void }> = ({ tournament, onRefresh }) => {
   const [contestants, setContestants] = useState<any[]>([]);
