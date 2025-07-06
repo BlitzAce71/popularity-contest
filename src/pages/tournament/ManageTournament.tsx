@@ -522,18 +522,18 @@ const AddContestantForm: React.FC<{
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Quadrant *</label>
+            <label className="block text-sm font-medium text-gray-700">Quadrant</label>
             <select
-              value={formData.quadrant}
+              value={formData.quadrant || 1}
               onChange={(e) => setFormData({ ...formData, quadrant: parseInt(e.target.value) as 1 | 2 | 3 | 4 })}
               className="input-field mt-1"
-              required
             >
               <option value={1}>Quadrant 1 (Top Left)</option>
               <option value={2}>Quadrant 2 (Top Right)</option>
               <option value={3}>Quadrant 3 (Bottom Left)</option>
               <option value={4}>Quadrant 4 (Bottom Right)</option>
             </select>
+            <p className="text-xs text-gray-500 mt-1">Note: Quadrant assignment coming soon</p>
           </div>
         </div>
 

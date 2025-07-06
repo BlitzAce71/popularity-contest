@@ -50,7 +50,7 @@ export const useAuth = () => {
         setError('Failed to initialize authentication');
       }
     } finally {
-      if (retryCount >= MAX_RETRIES || !err) {
+      if (retryCount >= MAX_RETRIES) {
         setLoading(false);
       }
     }

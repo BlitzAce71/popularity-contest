@@ -76,18 +76,18 @@ export class ContestantService {
 
       const nextSeed = existingContestants?.[0]?.seed ? existingContestants[0].seed + 1 : 1;
 
+      // Prepare insert data without quadrant for now (until database is updated)
+      const insertData = {
+        tournament_id: tournamentId,
+        name: contestantData.name,
+        description: contestantData.description,
+        image_url: imageUrl,
+        seed: contestantData.seed,
+      };
+
       const { data, error } = await supabase
         .from('contestants')
-        .insert([
-          {
-            tournament_id: tournamentId,
-            name: contestantData.name,
-            description: contestantData.description,
-            image_url: imageUrl,
-            seed: contestantData.seed,
-            quadrant: contestantData.quadrant,
-          },
-        ])
+        .insert([insertData])
         .select()
         .single();
 
