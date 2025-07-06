@@ -6,6 +6,7 @@ import ErrorBoundary from '@/components/ui/ErrorBoundary';
 import Navigation from '@/components/layout/Navigation';
 import TournamentList from '@/pages/tournament/TournamentList';
 import TournamentDetail from '@/pages/tournament/TournamentDetail';
+import CreateTournament from '@/pages/tournament/CreateTournament';
 import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
 import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage';
@@ -24,6 +25,7 @@ const App: React.FC = () => {
               <Routes>
                 <Route path="/" element={<Navigate to="/tournaments" replace />} />
                 <Route path="/tournaments" element={<TournamentList />} />
+                <Route path="/tournaments/create" element={<CreateTournament />} />
                 <Route path="/tournaments/:id" element={<TournamentDetail />} />
                 <Route path="/auth/login" element={<LoginPage />} />
                 <Route path="/auth/register" element={<RegisterPage />} />

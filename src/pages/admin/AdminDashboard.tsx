@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAdmin, useAdminDashboard, useUserAdmin } from '@/hooks/admin/useAdmin';
 import { useAuth } from '@/contexts/AuthContext';
 import Button from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import ErrorBoundary from '@/components/ui/ErrorBoundary';
 import { 
   Users, 
   Trophy, 
@@ -131,7 +133,9 @@ const AdminDashboard: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900">Tournament Management</h3>
-        <Button size="sm">Create Tournament</Button>
+        <Link to="/tournaments/create">
+          <Button size="sm">Create Tournament</Button>
+        </Link>
       </div>
 
       <div className="card overflow-hidden">
@@ -425,10 +429,54 @@ const AdminDashboard: React.FC = () => {
 
       {/* Tab Content */}
       <div className="min-h-96">
-        {activeTab === 'overview' && renderOverview()}
-        {activeTab === 'tournaments' && renderTournaments()}
-        {activeTab === 'users' && renderUsers()}
-        {activeTab === 'settings' && renderSettings()}
+        {activeTab === 'overview' && (
+          <ErrorBoundary fallback={
+            <div className="text-center py-12">
+              <p className="text-red-600">Failed to load overview data</p>
+              <Button onClick={() => window.location.reload()} variant="outline" className="mt-4">
+                Refresh Dashboard
+              </Button>
+            </div>
+          }>
+            {renderOverview()}
+          </ErrorBoundary>
+        )}
+        {activeTab === 'tournaments' && (
+          <ErrorBoundary fallback={
+            <div className="text-center py-12">
+              <p className="text-red-600">Failed to load tournament data</p>
+              <Button onClick={() => window.location.reload()} variant="outline" className="mt-4">
+                Refresh Dashboard
+              </Button>
+            </div>
+          }>
+            {renderTournaments()}
+          </ErrorBoundary>
+        )}
+        {activeTab === 'users' && (
+          <ErrorBoundary fallback={
+            <div className="text-center py-12">
+              <p className="text-red-600">Failed to load user data</p>
+              <Button onClick={() => window.location.reload()} variant="outline" className="mt-4">
+                Refresh Dashboard
+              </Button>
+            </div>
+          }>
+            {renderUsers()}
+          </ErrorBoundary>
+        )}
+        {activeTab === 'settings' && (
+          <ErrorBoundary fallback={
+            <div className="text-center py-12">
+              <p className="text-red-600">Failed to load settings</p>
+              <Button onClick={() => window.location.reload()} variant="outline" className="mt-4">
+                Refresh Dashboard
+              </Button>
+            </div>
+          }>
+            {renderSettings()}
+          </ErrorBoundary>
+        )}
       </div>
     </div>
   );
