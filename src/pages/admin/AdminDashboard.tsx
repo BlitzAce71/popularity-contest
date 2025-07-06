@@ -256,13 +256,11 @@ const AdminDashboard: React.FC = () => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10">
-                        {userData.avatar_url ? (
-                          <img className="h-10 w-10 rounded-full" src={userData.avatar_url} alt="" />
-                        ) : (
-                          <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                            <Users className="w-5 h-5 text-gray-500" />
-                          </div>
-                        )}
+                        <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center">
+                          <span className="text-primary-600 font-medium text-sm">
+                            {userData.username.substring(0, 2).toUpperCase()}
+                          </span>
+                        </div>
                       </div>
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-900">{userData.username}</div>

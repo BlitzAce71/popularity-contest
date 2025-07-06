@@ -128,7 +128,7 @@ const ConnectionTest: React.FC = () => {
       if (error) {
         updateTest('Storage Buckets', 'error', 'Failed to list buckets', error.message);
       } else {
-        const requiredBuckets = ['tournament-images', 'contestant-images', 'user-avatars'];
+        const requiredBuckets = ['tournament-images', 'contestant-images'];
         const existingBuckets = buckets?.map(b => b.name) || [];
         const missingBuckets = requiredBuckets.filter(b => !existingBuckets.includes(b));
         

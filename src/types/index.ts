@@ -4,7 +4,6 @@ export interface User {
   username: string;
   first_name: string;
   last_name: string;
-  avatar_url?: string;
   is_admin: boolean;
   created_at: string;
   updated_at: string;
@@ -166,7 +165,6 @@ export interface UpdateProfileData {
   username?: string;
   first_name?: string;
   last_name?: string;
-  avatar_url?: string;
 }
 
 export interface ApiResponse<T> {

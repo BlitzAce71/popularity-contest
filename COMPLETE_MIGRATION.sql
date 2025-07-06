@@ -18,7 +18,6 @@ CREATE TABLE IF NOT EXISTS public.users (
     username TEXT NOT NULL UNIQUE,
     first_name TEXT,
     last_name TEXT,
-    avatar_url TEXT,
     is_admin BOOLEAN DEFAULT FALSE,
     is_moderator BOOLEAN DEFAULT FALSE,
     last_seen TIMESTAMP WITH TIME ZONE,
@@ -30,14 +29,13 @@ CREATE TABLE IF NOT EXISTS public.users (
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-    INSERT INTO public.users (id, email, username, first_name, last_name, avatar_url)
+    INSERT INTO public.users (id, email, username, first_name, last_name)
     VALUES (
         NEW.id,
         NEW.email,
         COALESCE(NEW.raw_user_meta_data->>'username', split_part(NEW.email, '@', 1)),
         COALESCE(NEW.raw_user_meta_data->>'firstName', ''),
-        COALESCE(NEW.raw_user_meta_data->>'lastName', ''),
-        COALESCE(NEW.raw_user_meta_data->>'avatar_url', NULL)
+        COALESCE(NEW.raw_user_meta_data->>'lastName', '')
     );
     RETURN NEW;
 END;
@@ -535,8 +533,7 @@ CREATE POLICY "Admins can manage all results" ON public.results
 INSERT INTO storage.buckets (id, name, public) 
 VALUES 
     ('tournament-images', 'tournament-images', true),
-    ('contestant-images', 'contestant-images', true),
-    ('user-avatars', 'user-avatars', false)
+    ('contestant-images', 'contestant-images', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- Storage policies for tournament images (public read)
@@ -583,30 +580,6 @@ CREATE POLICY "Users can delete contestant images they uploaded" ON storage.obje
         AND auth.uid()::text = (storage.foldername(name))[1]
     );
 
--- Storage policies for user avatars (private)
-CREATE POLICY "Users can view their own avatars" ON storage.objects
-    FOR SELECT USING (
-        bucket_id = 'user-avatars' 
-        AND auth.uid()::text = (storage.foldername(name))[1]
-    );
-
-CREATE POLICY "Users can upload their own avatars" ON storage.objects
-    FOR INSERT WITH CHECK (
-        bucket_id = 'user-avatars' 
-        AND auth.uid()::text = (storage.foldername(name))[1]
-    );
-
-CREATE POLICY "Users can update their own avatars" ON storage.objects
-    FOR UPDATE USING (
-        bucket_id = 'user-avatars' 
-        AND auth.uid()::text = (storage.foldername(name))[1]
-    );
-
-CREATE POLICY "Users can delete their own avatars" ON storage.objects
-    FOR DELETE USING (
-        bucket_id = 'user-avatars' 
-        AND auth.uid()::text = (storage.foldername(name))[1]
-    );
 
 -- =============================================================================
 -- STEP 9: CREATE BRACKET FUNCTIONS

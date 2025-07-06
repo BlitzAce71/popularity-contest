@@ -95,7 +95,6 @@ export class AuthService {
             username: authUser.user_metadata?.username || authUser.email?.split('@')[0] || 'user',
             first_name: authUser.user_metadata?.first_name || '',
             last_name: authUser.user_metadata?.last_name || '',
-            avatar_url: authUser.user_metadata?.avatar_url,
             is_admin: false,
           },
         ])
@@ -111,34 +110,15 @@ export class AuthService {
   }
 
   // Update user profile
-  static async updateProfile(
-    updates: UpdateProfileData,
-    newAvatarFile?: File
-  ): Promise<User> {
+  static async updateProfile(updates: UpdateProfileData): Promise<User> {
     try {
       const { data: authUser } = await supabase.auth.getUser();
       if (!authUser.user) throw new Error('User not authenticated');
 
-      const currentUser = await this.getCurrentUser();
-      if (!currentUser) throw new Error('User profile not found');
-
-      let avatarUrl = currentUser.avatarUrl;
-
-      // Handle avatar update
-      if (newAvatarFile) {
-        // Delete old avatar
-        if (currentUser.avatarUrl) {
-          await this.deleteUserAvatar(currentUser.avatarUrl);
-        }
-        // Upload new avatar
-        avatarUrl = await this.uploadUserAvatar(authUser.user.id, newAvatarFile);
-      }
-
       const updateData: Record<string, any> = {};
       if (updates.username) updateData.username = updates.username;
-      if (updates.firstName !== undefined) updateData.first_name = updates.firstName;
-      if (updates.lastName !== undefined) updateData.last_name = updates.lastName;
-      if (avatarUrl !== currentUser.avatarUrl) updateData.avatar_url = avatarUrl;
+      if (updates.first_name !== undefined) updateData.first_name = updates.first_name;
+      if (updates.last_name !== undefined) updateData.last_name = updates.last_name;
 
       const { data, error } = await supabase
         .from('users')
@@ -239,61 +219,12 @@ export class AuthService {
     }
   }
 
-  // Upload user avatar
-  static async uploadUserAvatar(userId: string, file: File): Promise<string> {
-    try {
-      // Validate file type
-      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-      if (!validTypes.includes(file.type)) {
-        throw new Error('Invalid file type. Please upload a JPEG, PNG, or WebP image.');
-      }
-
-      // Validate file size (2MB limit)
-      const maxSize = 2 * 1024 * 1024; // 2MB
-      if (file.size > maxSize) {
-        throw new Error('File size too large. Please upload an image smaller than 2MB.');
-      }
-
-      // Generate unique filename
-      const fileExtension = file.name.split('.').pop() || 'jpg';
-      const timestamp = Date.now();
-      const fileName = `${userId}/avatar_${timestamp}.${fileExtension}`;
-
-      // Upload to Supabase Storage
-      await uploadFile('user-avatars', fileName, file, { upsert: true });
-
-      return fileName;
-    } catch (error) {
-      console.error('Error uploading user avatar:', error);
-      throw new Error(error instanceof Error ? error.message : 'Failed to upload avatar');
-    }
-  }
-
-  // Delete user avatar
-  static async deleteUserAvatar(avatarPath: string): Promise<void> {
-    try {
-      await deleteFile('user-avatars', avatarPath);
-    } catch (error) {
-      console.error('Error deleting user avatar:', error);
-      // Don't throw error for avatar deletion failures
-    }
-  }
-
-  // Get user avatar URL
-  static getUserAvatarUrl(avatarPath: string): string {
-    return getFileUrl('user-avatars', avatarPath);
-  }
 
   // Delete user account
   static async deleteAccount(): Promise<void> {
     try {
       const currentUser = await this.getCurrentUser();
       if (!currentUser) throw new Error('User not found');
-
-      // Delete user avatar if exists
-      if (currentUser.avatarUrl) {
-        await this.deleteUserAvatar(currentUser.avatarUrl);
-      }
 
       // Delete user profile
       const { error: profileError } = await supabase
