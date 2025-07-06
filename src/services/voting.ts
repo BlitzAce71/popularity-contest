@@ -257,7 +257,7 @@ export class VotingService {
 
       // Get vote results
       const { data: results, error: resultsError } = await supabase
-        .from('vote_results')
+        .from('results')
         .select('*')
         .eq('matchup_id', matchupId)
         .single();
@@ -300,7 +300,7 @@ export class VotingService {
   }>> {
     try {
       const { data, error } = await supabase
-        .from('vote_results')
+        .from('results')
         .select(`
           matchup_id,
           contestant1_votes,
@@ -341,7 +341,7 @@ export class VotingService {
         {
           event: '*',
           schema: 'public',
-          table: 'vote_results',
+          table: 'results',
         },
         (payload) => {
           // Filter for this tournament's matchups

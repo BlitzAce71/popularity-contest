@@ -123,18 +123,17 @@ BEGIN
                         (SELECT json_agg(
                             json_build_object(
                                 'id', m.id,
-                                'position', m.position,
                                 'status', m.status,
                                 'contestant1_id', m.contestant1_id,
                                 'contestant2_id', m.contestant2_id,
                                 'winner_id', m.winner_id,
                                 'vote_counts', json_build_object(
-                                    'contestant1_votes', m.contestant1_votes,
-                                    'contestant2_votes', m.contestant2_votes,
-                                    'total_votes', m.total_votes
+                                    'contestant1_votes', COALESCE(m.contestant1_votes, 0),
+                                    'contestant2_votes', COALESCE(m.contestant2_votes, 0),
+                                    'total_votes', COALESCE(m.total_votes, 0)
                                 )
                             )
-                        ) FROM public.matchups m WHERE m.round_id = r.id ORDER BY m.position),
+                        ) FROM public.matchups m WHERE m.round_id = r.id ORDER BY m.id),
                         '[]'::json
                     )
                 )

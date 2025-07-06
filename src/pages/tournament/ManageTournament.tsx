@@ -618,6 +618,7 @@ const AddContestantForm: React.FC<{
 
 // Tournament Settings Component
 const TournamentSettings: React.FC<{ tournament: any; onRefresh: () => void }> = ({ tournament, onRefresh }) => {
+  const navigate = useNavigate();
   const [quadrantNames, setQuadrantNames] = useState<[string, string, string, string]>(
     tournament.quadrant_names || ['Region A', 'Region B', 'Region C', 'Region D']
   );
@@ -636,6 +637,35 @@ const TournamentSettings: React.FC<{ tournament: any; onRefresh: () => void }> =
       onRefresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update quadrant names');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteTournament = async () => {
+    const confirmMessage = `Are you sure you want to delete "${tournament.name}"?\n\nThis action cannot be undone. All contestants, matches, and votes will be permanently removed.`;
+    
+    if (!window.confirm(confirmMessage)) return;
+    
+    const finalConfirm = window.confirm('This is your final warning. Type "DELETE" in the next prompt to confirm.');
+    if (!finalConfirm) return;
+    
+    const userInput = window.prompt('Type "DELETE" (in capital letters) to confirm deletion:');
+    if (userInput !== 'DELETE') {
+      alert('Deletion cancelled - you must type "DELETE" exactly.');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      setError(null);
+      
+      await TournamentService.deleteTournament(tournament.id);
+      
+      // Navigate to tournaments list after successful deletion
+      navigate('/tournaments');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete tournament');
     } finally {
       setLoading(false);
     }
@@ -729,8 +759,21 @@ const TournamentSettings: React.FC<{ tournament: any; onRefresh: () => void }> =
       </div>
 
       <div className="card p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Other Settings</h3>
-        <p className="text-gray-600">Additional tournament settings will be added here.</p>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Danger Zone</h3>
+        <div className="border border-red-200 rounded-lg p-4 bg-red-50">
+          <h4 className="text-sm font-medium text-red-800 mb-2">Delete Tournament</h4>
+          <p className="text-sm text-red-600 mb-4">
+            Once you delete a tournament, there is no going back. This action cannot be undone.
+            All contestants, matches, and votes will be permanently removed.
+          </p>
+          <Button
+            onClick={() => handleDeleteTournament()}
+            variant="outline"
+            className="border-red-300 text-red-700 hover:bg-red-100"
+          >
+            Delete Tournament
+          </Button>
+        </div>
       </div>
     </div>
   );
