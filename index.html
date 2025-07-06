@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- Primary Meta Tags -->
+    <title>Popularity Contest - Create & Participate in Bracket-Style Voting</title>
+    <meta name="title" content="Popularity Contest - Create & Participate in Bracket-Style Voting" />
+    <meta name="description" content="Create and participate in bracket-style popularity contests. Vote for your favorites in tournaments featuring single elimination, double elimination, and round-robin formats." />
+    <meta name="keywords" content="popularity contest, bracket tournament, voting, competition, elimination bracket, tournament maker" />
+    <meta name="author" content="Popularity Contest" />
+    
+    <!-- Favicon and App Icons -->
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/vite.svg" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#3B82F6" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="%VITE_APP_URL%" />
+    <meta property="og:title" content="Popularity Contest - Create & Participate in Bracket-Style Voting" />
+    <meta property="og:description" content="Create and participate in bracket-style popularity contests. Vote for your favorites in tournaments featuring single elimination, double elimination, and round-robin formats." />
+    <meta property="og:image" content="%VITE_OG_IMAGE_URL%" />
+    <meta property="og:site_name" content="Popularity Contest" />
+    <meta property="og:locale" content="en_US" />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="%VITE_APP_URL%" />
+    <meta property="twitter:title" content="Popularity Contest - Create & Participate in Bracket-Style Voting" />
+    <meta property="twitter:description" content="Create and participate in bracket-style popularity contests. Vote for your favorites in tournaments featuring single elimination, double elimination, and round-robin formats." />
+    <meta property="twitter:image" content="%VITE_OG_IMAGE_URL%" />
+    <meta property="twitter:site" content="@%VITE_TWITTER_HANDLE%" />
+    <meta property="twitter:creator" content="@%VITE_TWITTER_HANDLE%" />
+    
+    <!-- Additional SEO Meta Tags -->
+    <meta name="robots" content="index, follow" />
+    <meta name="googlebot" content="index, follow" />
+    <meta name="language" content="English" />
+    <meta name="revisit-after" content="7 days" />
+    <link rel="canonical" href="%VITE_APP_URL%" />
+    
+    <!-- Performance and Security -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="referrer" content="origin-when-cross-origin" />
+    
+    <!-- Preconnect to external domains for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
+    <!-- DNS Prefetch for Supabase -->
+    <link rel="dns-prefetch" href="//supabase.co" />
+    
+    <!-- App-specific Meta Tags -->
+    <meta name="application-name" content="Popularity Contest" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Popularity Contest" />
+    
+    <!-- Google Analytics (if enabled) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=%VITE_GA_TRACKING_ID%"></script>
+    <script>
+      if (window.location.hostname !== 'localhost' && '%VITE_GA_TRACKING_ID%' && '%VITE_GA_TRACKING_ID%' !== 'your_google_analytics_id') {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '%VITE_GA_TRACKING_ID%', {
+          send_page_view: false // We'll handle page views in React
+        });
+      }
+    </script>
+  </head>
+  <body>
+    <noscript>
+      <div style="padding: 2rem; text-align: center; background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; margin: 1rem;">
+        <h2>JavaScript Required</h2>
+        <p>This application requires JavaScript to function properly. Please enable JavaScript in your browser settings and reload the page.</p>
+      </div>
+    </noscript>
+    <div id="root">
+      <!-- Loading placeholder -->
+      <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #f9fafb;">
+        <div style="text-align: center;">
+          <div style="width: 40px; height: 40px; border: 4px solid #e5e7eb; border-top: 4px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
+          <p style="color: #6b7280; font-family: system-ui, -apple-system, sans-serif;">Loading Popularity Contest...</p>
+        </div>
+      </div>
+      <style>
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      </style>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

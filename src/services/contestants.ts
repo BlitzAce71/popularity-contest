@@ -1,0 +1,382 @@
+import { supabase, uploadFile, deleteFile, getFileUrl } from '@/lib/supabase';
+import { Contestant, CreateContestantData } from '@/types';
+
+export class ContestantService {
+  // Get contestants for a tournament
+  static async getContestants(tournamentId: string): Promise<Contestant[]> {
+    try {
+      const { data, error } = await supabase
+        .from('contestants')
+        .select('*')
+        .eq('tournament_id', tournamentId)
+        .eq('is_active', true)
+        .order('position');
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching contestants:', error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to fetch contestants');
+    }
+  }
+
+  // Get single contestant
+  static async getContestant(id: string): Promise<Contestant> {
+    try {
+      const { data, error } = await supabase
+        .from('contestants')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      if (!data) throw new Error('Contestant not found');
+
+      return data;
+    } catch (error) {
+      console.error('Error fetching contestant:', error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to fetch contestant');
+    }
+  }
+
+  // Create new contestant
+  static async createContestant(
+    tournamentId: string,
+    contestantData: CreateContestantData,
+    imageFile?: File
+  ): Promise<Contestant> {
+    try {
+      let imageUrl: string | undefined;
+
+      // Upload image if provided
+      if (imageFile) {
+        imageUrl = await this.uploadContestantImage(tournamentId, imageFile);
+      }
+
+      // Get next position
+      const { data: existingContestants } = await supabase
+        .from('contestants')
+        .select('position')
+        .eq('tournament_id', tournamentId)
+        .order('position', { ascending: false })
+        .limit(1);
+
+      const nextPosition = existingContestants?.[0]?.position ? existingContestants[0].position + 1 : 1;
+
+      const { data, error } = await supabase
+        .from('contestants')
+        .insert([
+          {
+            tournament_id: tournamentId,
+            name: contestantData.name,
+            description: contestantData.description,
+            image_url: imageUrl,
+            position: nextPosition,
+          },
+        ])
+        .select()
+        .single();
+
+      if (error) {
+        // Clean up uploaded image if contestant creation failed
+        if (imageUrl) {
+          await this.deleteContestantImage(imageUrl);
+        }
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error creating contestant:', error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to create contestant');
+    }
+  }
+
+  // Update contestant
+  static async updateContestant(
+    id: string,
+    updates: Partial<CreateContestantData>,
+    newImageFile?: File
+  ): Promise<Contestant> {
+    try {
+      // Get current contestant data
+      const currentContestant = await this.getContestant(id);
+      let imageUrl = currentContestant.image_url;
+
+      // Handle image update
+      if (newImageFile) {
+        // Delete old image
+        if (currentContestant.image_url) {
+          await this.deleteContestantImage(currentContestant.image_url);
+        }
+        // Upload new image
+        imageUrl = await this.uploadContestantImage(currentContestant.tournament_id, newImageFile);
+      }
+
+      const updateData: Record<string, any> = {};
+      if (updates.name) updateData.name = updates.name;
+      if (updates.description !== undefined) updateData.description = updates.description;
+      if (imageUrl !== currentContestant.image_url) updateData.image_url = imageUrl;
+
+      const { data, error } = await supabase
+        .from('contestants')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error updating contestant:', error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to update contestant');
+    }
+  }
+
+  // Delete contestant
+  static async deleteContestant(id: string): Promise<void> {
+    try {
+      // Get contestant data to clean up image
+      const contestant = await this.getContestant(id);
+
+      // Delete contestant
+      const { error } = await supabase.from('contestants').delete().eq('id', id);
+
+      if (error) throw error;
+
+      // Clean up image
+      if (contestant.image_url) {
+        await this.deleteContestantImage(contestant.image_url);
+      }
+    } catch (error) {
+      console.error('Error deleting contestant:', error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to delete contestant');
+    }
+  }
+
+  // Bulk create contestants
+  static async createMultipleContestants(
+    tournamentId: string,
+    contestants: CreateContestantData[]
+  ): Promise<Contestant[]> {
+    try {
+      // Get starting position
+      const { data: existingContestants } = await supabase
+        .from('contestants')
+        .select('position')
+        .eq('tournament_id', tournamentId)
+        .order('position', { ascending: false })
+        .limit(1);
+
+      let nextPosition = existingContestants?.[0]?.position ? existingContestants[0].position + 1 : 1;
+
+      const contestantData = contestants.map((contestant) => ({
+        tournament_id: tournamentId,
+        name: contestant.name,
+        description: contestant.description,
+        position: nextPosition++,
+      }));
+
+      const { data, error } = await supabase
+        .from('contestants')
+        .insert(contestantData)
+        .select();
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error creating multiple contestants:', error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to create contestants');
+    }
+  }
+
+  // Update contestant positions (for reordering)
+  static async updateContestantPositions(
+    tournamentId: string,
+    positionUpdates: { id: string; position: number }[]
+  ): Promise<void> {
+    try {
+      const updatePromises = positionUpdates.map(({ id, position }) =>
+        supabase.from('contestants').update({ position }).eq('id', id)
+      );
+
+      const results = await Promise.all(updatePromises);
+
+      for (const result of results) {
+        if (result.error) throw result.error;
+      }
+    } catch (error) {
+      console.error('Error updating contestant positions:', error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to update positions');
+    }
+  }
+
+  // Upload contestant image
+  static async uploadContestantImage(tournamentId: string, file: File): Promise<string> {
+    try {
+      // Validate file type
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+      if (!validTypes.includes(file.type)) {
+        throw new Error('Invalid file type. Please upload a JPEG, PNG, WebP, or GIF image.');
+      }
+
+      // Validate file size (5MB limit)
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+        throw new Error('File size too large. Please upload an image smaller than 5MB.');
+      }
+
+      // Generate unique filename
+      const fileExtension = file.name.split('.').pop() || 'jpg';
+      const timestamp = Date.now();
+      const random = Math.random().toString(36).substring(2);
+      const fileName = `${tournamentId}/${timestamp}_${random}.${fileExtension}`;
+
+      // Upload to Supabase Storage
+      const uploadData = await uploadFile('contestant-images', fileName, file, { upsert: false });
+
+      return fileName;
+    } catch (error) {
+      console.error('Error uploading contestant image:', error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to upload image');
+    }
+  }
+
+  // Delete contestant image
+  static async deleteContestantImage(imagePath: string): Promise<void> {
+    try {
+      await deleteFile('contestant-images', imagePath);
+    } catch (error) {
+      console.error('Error deleting contestant image:', error);
+      // Don't throw error for image deletion failures
+    }
+  }
+
+  // Get contestant image URL
+  static getContestantImageUrl(imagePath: string): string {
+    return getFileUrl('contestant-images', imagePath);
+  }
+
+  // Get contestant statistics
+  static async getContestantStats(id: string): Promise<any> {
+    try {
+      const { data, error } = await supabase
+        .from('contestants')
+        .select(`
+          *,
+          matchups_as_contestant1:matchups!contestant1_id(id, status, winner_id),
+          matchups_as_contestant2:matchups!contestant2_id(id, status, winner_id)
+        `)
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+
+      // Calculate additional stats
+      const allMatchups = [
+        ...(data.matchups_as_contestant1 || []),
+        ...(data.matchups_as_contestant2 || []),
+      ];
+
+      const completedMatchups = allMatchups.filter((m) => m.status === 'completed');
+      const wins = completedMatchups.filter((m) => m.winner_id === id).length;
+      const losses = completedMatchups.filter((m) => m.winner_id && m.winner_id !== id).length;
+
+      return {
+        ...data,
+        total_matchups: allMatchups.length,
+        completed_matchups: completedMatchups.length,
+        wins,
+        losses,
+        win_rate: completedMatchups.length > 0 ? (wins / completedMatchups.length) * 100 : 0,
+      };
+    } catch (error) {
+      console.error('Error fetching contestant stats:', error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to fetch contestant stats');
+    }
+  }
+
+  // Seed contestants (set tournament seeding)
+  static async seedContestants(
+    tournamentId: string,
+    seedings: { id: string; seed: number }[]
+  ): Promise<void> {
+    try {
+      const updatePromises = seedings.map(({ id, seed }) =>
+        supabase.from('contestants').update({ seed }).eq('id', id)
+      );
+
+      const results = await Promise.all(updatePromises);
+
+      for (const result of results) {
+        if (result.error) throw result.error;
+      }
+    } catch (error) {
+      console.error('Error seeding contestants:', error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to seed contestants');
+    }
+  }
+
+  // Auto-generate seeding based on some criteria (e.g., random, alphabetical)
+  static async autoSeedContestants(
+    tournamentId: string,
+    method: 'random' | 'alphabetical' | 'reverse-alphabetical' = 'random'
+  ): Promise<void> {
+    try {
+      const contestants = await this.getContestants(tournamentId);
+
+      let sortedContestants: Contestant[];
+      switch (method) {
+        case 'alphabetical':
+          sortedContestants = [...contestants].sort((a, b) => a.name.localeCompare(b.name));
+          break;
+        case 'reverse-alphabetical':
+          sortedContestants = [...contestants].sort((a, b) => b.name.localeCompare(a.name));
+          break;
+        case 'random':
+        default:
+          sortedContestants = [...contestants].sort(() => Math.random() - 0.5);
+          break;
+      }
+
+      const seedings = sortedContestants.map((contestant, index) => ({
+        id: contestant.id,
+        seed: index + 1,
+      }));
+
+      await this.seedContestants(tournamentId, seedings);
+    } catch (error) {
+      console.error('Error auto-seeding contestants:', error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to auto-seed contestants');
+    }
+  }
+
+  // Check if user can manage contestants for this tournament
+  static async canManageContestants(tournamentId: string): Promise<boolean> {
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) return false;
+
+      // Check if user is admin
+      const { data: userProfile } = await supabase
+        .from('users')
+        .select('is_admin')
+        .eq('id', user.user.id)
+        .single();
+
+      if (userProfile?.is_admin) return true;
+
+      // Check if user created the tournament
+      const { data: tournament } = await supabase
+        .from('tournaments')
+        .select('created_by')
+        .eq('id', tournamentId)
+        .single();
+
+      return tournament?.created_by === user.user.id;
+    } catch (error) {
+      console.error('Error checking contestant permissions:', error);
+      return false;
+    }
+  }
+}

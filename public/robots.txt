@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: %VITE_APP_URL%/sitemap.xml
+
+# Disallow admin pages for non-authenticated users
+Disallow: /admin
+
+# Allow all other pages
+Allow: /tournaments
+Allow: /auth
+
+# Crawl-delay (optional, in seconds)
+Crawl-delay: 1
+EOF < /dev/null
