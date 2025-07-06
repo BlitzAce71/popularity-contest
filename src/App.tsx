@@ -10,6 +10,7 @@ import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
 import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage';
 import AdminDashboard from '@/pages/admin/AdminDashboard';
+import ConnectionTest from '@/components/debug/ConnectionTest';
 
 const App: React.FC = () => {
   return (
@@ -28,6 +29,7 @@ const App: React.FC = () => {
                 <Route path="/auth/register" element={<RegisterPage />} />
                 <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
                 <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/debug" element={<ConnectionTest />} />
                 <Route 
                   path="*" 
                   element={
