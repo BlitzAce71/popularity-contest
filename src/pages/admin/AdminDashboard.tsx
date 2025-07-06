@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAdmin } from '@/hooks/admin/useAdmin';
+import { useAdmin, useAdminDashboard, useUserAdmin } from '@/hooks/admin/useAdmin';
 import { useAuth } from '@/contexts/AuthContext';
 import Button from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
@@ -18,19 +18,12 @@ import {
 
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
-  const {
-    stats,
-    tournaments,
-    users,
-    loading,
-    error,
-    toggleTournamentStatus,
-    deleteUser,
-    makeModerator
-  } = useAdmin();
+  const { isAdmin } = useAdmin();
+  const { dashboardData, loading: dashboardLoading, error: dashboardError, refresh: refreshDashboard } = useAdminDashboard();
+  const { users, loading: usersLoading, error: usersError, deleteUser, updateUserAdminStatus, refresh: refreshUsers } = useUserAdmin();
   const [activeTab, setActiveTab] = useState<'overview' | 'tournaments' | 'users' | 'settings'>('overview');
 
-  if (!user?.isAdmin) {
+  if (!user?.is_admin) {
     return (
       <div className="text-center py-12">
         <Shield className="w-16 h-16 text-red-500 mx-auto mb-4" />
@@ -40,7 +33,7 @@ const AdminDashboard: React.FC = () => {
     );
   }
 
-  if (loading && !stats) {
+  if (dashboardLoading && !dashboardData) {
     return (
       <div className="flex items-center justify-center min-h-96">
         <LoadingSpinner size="lg" />
@@ -48,14 +41,14 @@ const AdminDashboard: React.FC = () => {
     );
   }
 
-  if (error) {
+  if (dashboardError) {
     return (
       <div className="text-center py-12">
         <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Error Loading Dashboard</h2>
-        <p className="text-gray-600 mb-4">{error}</p>
-        <Button onClick={() => window.location.reload()}>
-          Reload Dashboard
+        <p className="text-gray-600 mb-4">{dashboardError}</p>
+        <Button onClick={() => refreshDashboard()}>
+          Try Again
         </Button>
       </div>
     );
@@ -72,7 +65,7 @@ const AdminDashboard: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Users</p>
-              <p className="text-2xl font-semibold text-gray-900">{stats?.totalUsers || 0}</p>
+              <p className="text-2xl font-semibold text-gray-900">{dashboardData?.totalUsers || 0}</p>
             </div>
           </div>
         </div>
@@ -84,7 +77,7 @@ const AdminDashboard: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Tournaments</p>
-              <p className="text-2xl font-semibold text-gray-900">{stats?.totalTournaments || 0}</p>
+              <p className="text-2xl font-semibold text-gray-900">{dashboardData?.totalTournaments || 0}</p>
             </div>
           </div>
         </div>
@@ -96,7 +89,7 @@ const AdminDashboard: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Active Tournaments</p>
-              <p className="text-2xl font-semibold text-gray-900">{stats?.activeTournaments || 0}</p>
+              <p className="text-2xl font-semibold text-gray-900">{dashboardData?.activeTournaments || 0}</p>
             </div>
           </div>
         </div>
@@ -108,7 +101,7 @@ const AdminDashboard: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Votes</p>
-              <p className="text-2xl font-semibold text-gray-900">{stats?.totalVotes || 0}</p>
+              <p className="text-2xl font-semibold text-gray-900">{dashboardData?.totalVotes || 0}</p>
             </div>
           </div>
         </div>
@@ -118,7 +111,7 @@ const AdminDashboard: React.FC = () => {
       <div className="card p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
         <div className="space-y-3">
-          {stats?.recentActivity?.map((activity, index) => (
+          {dashboardData?.recentActivity?.map((activity, index) => (
             <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
               <Activity className="w-5 h-5 text-gray-400" />
               <div>
@@ -164,7 +157,7 @@ const AdminDashboard: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {tournaments?.map((tournament) => (
+              {dashboardData?.tournaments?.map((tournament) => (
                 <tr key={tournament.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
@@ -194,7 +187,10 @@ const AdminDashboard: React.FC = () => {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => toggleTournamentStatus(tournament.id, tournament.status)}
+                        onClick={() => {
+                          // TODO: Implement tournament status toggle
+                          console.log('Toggle tournament status:', tournament.id);
+                        }}
                       >
                         {tournament.status === 'active' ? 'Pause' : 'Activate'}
                       </Button>
@@ -300,7 +296,7 @@ const AdminDashboard: React.FC = () => {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => makeModerator(userData.id)}
+                          onClick={() => updateUserAdminStatus(userData.id, true)}
                         >
                           Make Moderator
                         </Button>
