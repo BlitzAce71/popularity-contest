@@ -31,6 +31,8 @@ const ManageTournament: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'contestants' | 'settings' | 'bracket'>('contestants');
   const [showAddContestant, setShowAddContestant] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [editingContestant, setEditingContestant] = useState<string | null>(null);
+  const [editSeed, setEditSeed] = useState<number>(1);
 
   const { tournament, loading: tournamentLoading, error: tournamentError, refresh } = useTournament(id);
 
@@ -298,6 +300,37 @@ const ContestantManagement: React.FC<{
     }
   };
 
+  const handleUpdateSeed = async (contestantId: string, newSeed: number) => {
+    try {
+      setLoading(true);
+      await ContestantService.updateContestantSeeds(tournament.id, [{ id: contestantId, seed: newSeed }]);
+      await fetchContestants();
+      onRefresh();
+      setEditingContestant(null);
+    } catch (error) {
+      console.error('Error updating contestant seed:', error);
+      setError(error instanceof Error ? error.message : 'Failed to update seed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAutoSeed = async (method: 'random' | 'alphabetical' | 'reverse-alphabetical') => {
+    if (!window.confirm('This will reassign all contestant seeds. Continue?')) return;
+    
+    try {
+      setLoading(true);
+      await ContestantService.autoSeedContestants(tournament.id, method);
+      await fetchContestants();
+      onRefresh();
+    } catch (error) {
+      console.error('Error auto-seeding contestants:', error);
+      setError(error instanceof Error ? error.message : 'Failed to auto-seed contestants');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loading && contestants.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-96">
@@ -325,6 +358,17 @@ const ContestantManagement: React.FC<{
             <Plus className="w-4 h-4" />
             Add Contestant
           </Button>
+          {contestants.length > 1 && (
+            <Button
+              onClick={() => handleAutoSeed('random')}
+              variant="outline"
+              className="flex items-center gap-2"
+              disabled={loading}
+            >
+              <GripVertical className="w-4 h-4" />
+              Auto-Seed
+            </Button>
+          )}
         </div>
       </div>
 
@@ -380,11 +424,43 @@ const ContestantManagement: React.FC<{
                   </div>
                   <div>
                     <h3 className="font-medium text-gray-900">{contestant.name}</h3>
-                    <p className="text-sm text-gray-500">Seed #{contestant.seed || index + 1}</p>
+                    {editingContestant === contestant.id ? (
+                      <div className="flex items-center gap-2 mt-1">
+                        <input
+                          type="number"
+                          value={editSeed}
+                          onChange={(e) => setEditSeed(parseInt(e.target.value) || 1)}
+                          className="w-16 px-2 py-1 text-xs border rounded"
+                          min="1"
+                          max="999"
+                        />
+                        <button
+                          onClick={() => handleUpdateSeed(contestant.id, editSeed)}
+                          className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={() => setEditingContestant(null)}
+                          className="text-xs bg-gray-500 text-white px-2 py-1 rounded hover:bg-gray-600"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500">Seed #{contestant.seed || index + 1}</p>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
-                  <button className="p-1 text-gray-400 hover:text-gray-600">
+                  <button 
+                    onClick={() => {
+                      setEditingContestant(contestant.id);
+                      setEditSeed(contestant.seed || 1);
+                    }}
+                    className="p-1 text-gray-400 hover:text-gray-600"
+                    title="Edit seed position"
+                  >
                     <Edit className="w-4 h-4" />
                   </button>
                   <button 

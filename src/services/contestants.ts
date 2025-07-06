@@ -13,7 +13,14 @@ export class ContestantService {
         .order('seed');
 
       if (error) throw error;
-      return data || [];
+      
+      // Convert image paths to full URLs
+      const contestants = (data || []).map(contestant => ({
+        ...contestant,
+        image_url: contestant.image_url ? this.getContestantImageUrl(contestant.image_url) : contestant.image_url
+      }));
+      
+      return contestants;
     } catch (error) {
       console.error('Error fetching contestants:', error);
       throw new Error(error instanceof Error ? error.message : 'Failed to fetch contestants');
@@ -32,7 +39,13 @@ export class ContestantService {
       if (error) throw error;
       if (!data) throw new Error('Contestant not found');
 
-      return data;
+      // Convert image path to full URL
+      const contestant = {
+        ...data,
+        image_url: data.image_url ? this.getContestantImageUrl(data.image_url) : data.image_url
+      };
+
+      return contestant;
     } catch (error) {
       console.error('Error fetching contestant:', error);
       throw new Error(error instanceof Error ? error.message : 'Failed to fetch contestant');
@@ -85,7 +98,13 @@ export class ContestantService {
         throw error;
       }
 
-      return data;
+      // Convert image path to full URL before returning
+      const contestant = {
+        ...data,
+        image_url: data.image_url ? this.getContestantImageUrl(data.image_url) : data.image_url
+      };
+
+      return contestant;
     } catch (error) {
       console.error('Error creating contestant:', error);
       throw new Error(error instanceof Error ? error.message : 'Failed to create contestant');
@@ -126,7 +145,14 @@ export class ContestantService {
         .single();
 
       if (error) throw error;
-      return data;
+      
+      // Convert image path to full URL before returning
+      const contestant = {
+        ...data,
+        image_url: data.image_url ? this.getContestantImageUrl(data.image_url) : data.image_url
+      };
+      
+      return contestant;
     } catch (error) {
       console.error('Error updating contestant:', error);
       throw new Error(error instanceof Error ? error.message : 'Failed to update contestant');
@@ -235,6 +261,7 @@ export class ContestantService {
       // Upload to Supabase Storage
       await uploadFile('contestant-images', fileName, file, { upsert: false });
 
+      // Return the file path (not the full URL - that's handled in getContestantImageUrl)
       return fileName;
     } catch (error) {
       console.error('Error uploading contestant image:', error);
