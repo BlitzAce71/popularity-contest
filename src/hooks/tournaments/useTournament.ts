@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { TournamentService } from '@/services/tournaments';
 import { ContestantService } from '@/services/contestants';
 import { Tournament, TournamentStats, Contestant, BracketData, VoteCounts, VotingStatus } from '@/types';
@@ -8,7 +8,7 @@ export const useTournament = (tournamentId: string | undefined) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchTournament = async () => {
+  const fetchTournament = useCallback(async () => {
     if (!tournamentId) {
       setTournament(null);
       setLoading(false);
@@ -27,11 +27,11 @@ export const useTournament = (tournamentId: string | undefined) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [tournamentId]);
 
   useEffect(() => {
     fetchTournament();
-  }, [tournamentId]);
+  }, [fetchTournament]);
 
   // Subscribe to real-time updates
   useEffect(() => {
@@ -42,7 +42,7 @@ export const useTournament = (tournamentId: string | undefined) => {
     });
 
     return unsubscribe;
-  }, [tournamentId]);
+  }, [tournamentId, fetchTournament]);
 
   const refresh = () => {
     fetchTournament();

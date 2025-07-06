@@ -75,7 +75,13 @@ const CreateTournament: React.FC = () => {
       console.log('📝 Cleaned tournament data:', tournamentData);
       console.log('🚀 Calling TournamentService.createTournament...');
 
-      const newTournament = await TournamentService.createTournament(tournamentData);
+      // Add client-side timeout protection
+      const createPromise = TournamentService.createTournament(tournamentData);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Tournament creation timed out. Please try again.')), 45000)
+      );
+
+      const newTournament = await Promise.race([createPromise, timeoutPromise]);
       
       console.log('✅ Tournament created successfully:', newTournament);
       console.log('🧭 Navigating to:', `/tournaments/${newTournament.id}`);

@@ -170,7 +170,7 @@ export const useAuth = () => {
     clearError,
     refresh,
     isAuthenticated: !!user,
-    isAdmin: user?.isAdmin || false,
+    isAdmin: user?.is_admin || false,
   };
 };
 
