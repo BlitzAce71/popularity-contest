@@ -333,10 +333,42 @@ BEGIN
 END $$;
 
 -- =============================================================================
--- FIX 8: Add unique constraint for (tournament_id, quadrant, seed)
+-- FIX 8: Update unique constraints for proper per-quadrant seeding
 -- =============================================================================
 
--- Add unique constraint to prevent duplicate seeds within the same quadrant
+-- First, drop old global unique constraint if it exists
+DO $$ 
+BEGIN
+    IF EXISTS (
+        SELECT 1 
+        FROM pg_constraint 
+        WHERE conname = 'unique_tournament_seed'
+    ) THEN
+        ALTER TABLE public.contestants DROP CONSTRAINT unique_tournament_seed;
+        RAISE NOTICE 'Dropped old global unique_tournament_seed constraint';
+    END IF;
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE NOTICE 'Old constraint not found or already removed';
+END $$;
+
+-- Also drop any other old seed constraints
+DO $$ 
+BEGIN
+    IF EXISTS (
+        SELECT 1 
+        FROM pg_constraint 
+        WHERE conname = 'contestants_tournament_id_seed_key'
+    ) THEN
+        ALTER TABLE public.contestants DROP CONSTRAINT contestants_tournament_id_seed_key;
+        RAISE NOTICE 'Dropped old contestants_tournament_id_seed_key constraint';
+    END IF;
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE NOTICE 'Old seed key constraint not found';
+END $$;
+
+-- Add new unique constraint for per-quadrant seeding
 DO $$ 
 BEGIN
     IF NOT EXISTS (
@@ -344,17 +376,27 @@ BEGIN
         FROM pg_constraint 
         WHERE conname = 'contestants_tournament_quadrant_seed_unique'
     ) THEN
-        ALTER TABLE public.contestants 
-        ADD CONSTRAINT contestants_tournament_quadrant_seed_unique 
-        UNIQUE (tournament_id, quadrant, seed);
-        
-        RAISE NOTICE 'Added unique constraint for tournament_id, quadrant, seed';
+        -- Only add if quadrant column exists
+        IF EXISTS (
+            SELECT 1 
+            FROM information_schema.columns 
+            WHERE table_name = 'contestants' 
+            AND column_name = 'quadrant'
+        ) THEN
+            ALTER TABLE public.contestants 
+            ADD CONSTRAINT contestants_tournament_quadrant_seed_unique 
+            UNIQUE (tournament_id, quadrant, seed);
+            
+            RAISE NOTICE 'Added unique constraint for tournament_id, quadrant, seed';
+        ELSE
+            RAISE NOTICE 'Skipping constraint - quadrant column does not exist yet';
+        END IF;
     ELSE
-        RAISE NOTICE 'Unique constraint already exists';
+        RAISE NOTICE 'Per-quadrant unique constraint already exists';
     END IF;
 EXCEPTION
     WHEN OTHERS THEN
-        RAISE NOTICE 'Note: Unique constraint may conflict with existing data. Clean up duplicates first if needed.';
+        RAISE NOTICE 'Note: Unique constraint failed. Error: %', SQLERRM;
 END $$;
 
 -- =============================================================================

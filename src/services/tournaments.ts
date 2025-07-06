@@ -165,6 +165,11 @@ export class TournamentService {
       }
       if (updates.bracket_type) updateData.bracket_type = updates.bracket_type;
       if (updates.is_public !== undefined) updateData.is_public = updates.is_public;
+      
+      // Add quadrant_names if provided (gracefully handle if column doesn't exist yet)
+      if (updates.quadrant_names) {
+        updateData.quadrant_names = updates.quadrant_names;
+      }
 
       const { data, error } = await supabase
         .from('tournaments')
@@ -173,7 +178,27 @@ export class TournamentService {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        // Handle column doesn't exist error gracefully
+        if (error.code === 'PGRST116' || error.message?.includes('column')) {
+          console.warn('Database schema not updated yet, some fields may not be saved:', error.message);
+          
+          // Try update without the problematic fields
+          const basicUpdateData = { ...updateData };
+          delete basicUpdateData.quadrant_names; // Remove field that doesn't exist yet
+          
+          const { data: retryData, error: retryError } = await supabase
+            .from('tournaments')
+            .update(basicUpdateData)
+            .eq('id', id)
+            .select()
+            .single();
+            
+          if (retryError) throw retryError;
+          return retryData;
+        }
+        throw error;
+      }
       return data;
     } catch (error) {
       console.error('Error updating tournament:', error);

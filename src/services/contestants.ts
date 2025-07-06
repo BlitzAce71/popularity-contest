@@ -119,6 +119,35 @@ export class ContestantService {
         .single();
 
       if (error) {
+        // Handle column doesn't exist error gracefully
+        if (error.code === '42703' || error.message?.includes('column') || error.message?.includes('quadrant')) {
+          console.warn('Quadrant column not ready yet, creating without quadrant:', error.message);
+          
+          // Try insert without quadrant field
+          const basicInsertData = { ...insertData };
+          delete basicInsertData.quadrant;
+          
+          const { data: retryData, error: retryError } = await supabase
+            .from('contestants')
+            .insert([basicInsertData])
+            .select()
+            .single();
+            
+          if (retryError) {
+            if (imageUrl) await this.deleteContestantImage(imageUrl);
+            throw retryError;
+          }
+          
+          // Convert image path to full URL before returning
+          const contestant = {
+            ...retryData,
+            image_url: retryData.image_url ? this.getContestantImageUrl(retryData.image_url) : retryData.image_url,
+            quadrant: finalQuadrant // Add quadrant info for UI even if not in DB yet
+          };
+          
+          return contestant;
+        }
+        
         // Clean up uploaded image if contestant creation failed
         if (imageUrl) {
           await this.deleteContestantImage(imageUrl);
