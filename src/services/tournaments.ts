@@ -12,7 +12,7 @@ export class TournamentService {
     try {
       let query = supabase
         .from('tournaments')
-        .select('*, users!created_by(username, avatar_url)', { count: 'exact' });
+        .select('*, users!created_by(username)', { count: 'exact' });
 
       // Apply filters
       if (filters?.status) {
@@ -67,7 +67,7 @@ export class TournamentService {
         .from('tournaments')
         .select(`
           *,
-          users!created_by(username, avatar_url),
+          users!created_by(username),
           contestants(*),
           rounds(
             *,

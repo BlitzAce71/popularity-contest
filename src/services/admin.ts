@@ -52,7 +52,7 @@ export class AdminService {
       const recentActivity: ActivityLog[] = [
         {
           id: '1',
-          userId: 'system',
+          user_id: 'system',
           action: 'tournament_created',
           details: 'New tournament created',
           timestamp: new Date().toISOString(),
@@ -60,11 +60,11 @@ export class AdminService {
       ];
 
       return {
-        totalTournaments,
-        activeTournaments,
-        totalUsers: totalUsers || 0,
-        totalVotes: totalVotes || 0,
-        recentActivity,
+        total_tournaments: totalTournaments,
+        active_tournaments: activeTournaments,
+        total_users: totalUsers || 0,
+        total_votes: totalVotes || 0,
+        recent_activity: recentActivity,
       };
     } catch (error) {
       console.error('Error fetching dashboard data:', error);

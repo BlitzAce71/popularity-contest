@@ -222,7 +222,7 @@ export const useUserAdmin = (page: number = 1, pageSize: number = 20, search?: s
       
       // Update local state
       setUsers(prev => prev.map(user => 
-        user.id === userId ? { ...user, isAdmin } : user
+        user.id === userId ? { ...user, is_admin: isAdmin } : user
       ));
       
       return true;

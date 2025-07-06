@@ -65,7 +65,7 @@ const AdminDashboard: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Users</p>
-              <p className="text-2xl font-semibold text-gray-900">{dashboardData?.totalUsers || 0}</p>
+              <p className="text-2xl font-semibold text-gray-900">{dashboardData?.total_users || 0}</p>
             </div>
           </div>
         </div>
@@ -77,7 +77,7 @@ const AdminDashboard: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Tournaments</p>
-              <p className="text-2xl font-semibold text-gray-900">{dashboardData?.totalTournaments || 0}</p>
+              <p className="text-2xl font-semibold text-gray-900">{dashboardData?.total_tournaments || 0}</p>
             </div>
           </div>
         </div>
@@ -89,7 +89,7 @@ const AdminDashboard: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Active Tournaments</p>
-              <p className="text-2xl font-semibold text-gray-900">{dashboardData?.activeTournaments || 0}</p>
+              <p className="text-2xl font-semibold text-gray-900">{dashboardData?.active_tournaments || 0}</p>
             </div>
           </div>
         </div>
@@ -101,7 +101,7 @@ const AdminDashboard: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Votes</p>
-              <p className="text-2xl font-semibold text-gray-900">{dashboardData?.totalVotes || 0}</p>
+              <p className="text-2xl font-semibold text-gray-900">{dashboardData?.total_votes || 0}</p>
             </div>
           </div>
         </div>
@@ -111,7 +111,7 @@ const AdminDashboard: React.FC = () => {
       <div className="card p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
         <div className="space-y-3">
-          {dashboardData?.recentActivity?.map((activity, index) => (
+          {dashboardData?.recent_activity?.map((activity, index) => (
             <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
               <Activity className="w-5 h-5 text-gray-400" />
               <div>
