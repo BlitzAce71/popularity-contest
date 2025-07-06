@@ -15,8 +15,8 @@ export interface Tournament {
   description: string;
   image_url?: string;
   status: 'draft' | 'registration' | 'active' | 'completed' | 'cancelled';
-  tournament_start_date: string;
-  tournament_end_date?: string;
+  start_date: string;
+  end_date?: string;
   max_contestants: number;
   current_contestants: number;
   bracket_type: 'single-elimination' | 'double-elimination' | 'round-robin';
@@ -133,8 +133,8 @@ export interface CreateTournamentData {
   name: string;
   description: string;
   image_url?: string;
-  tournament_start_date: string;
-  tournament_end_date?: string;
+  start_date: string;
+  end_date?: string;
   max_contestants: number;
   bracket_type: 'single-elimination' | 'double-elimination' | 'round-robin';
   is_public: boolean;
@@ -190,7 +190,7 @@ export interface FilterOptions {
 }
 
 export interface SortOptions {
-  field: 'name' | 'created_at' | 'tournament_start_date' | 'current_contestants';
+  field: 'name' | 'created_at' | 'start_date' | 'current_contestants';
   direction: 'asc' | 'desc';
 }
 

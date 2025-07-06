@@ -95,31 +95,54 @@ export class TournamentService {
   // Create new tournament
   static async createTournament(tournamentData: CreateTournamentData): Promise<Tournament> {
     try {
+      console.log('🏪 TournamentService.createTournament called with:', tournamentData);
+      
+      console.log('🔐 Getting authenticated user...');
       const { data: user } = await supabase.auth.getUser();
-      if (!user.user) throw new Error('User not authenticated');
+      if (!user.user) {
+        console.log('❌ No authenticated user found');
+        throw new Error('User not authenticated');
+      }
+      console.log('✅ User authenticated:', user.user.id);
 
-      const { data, error } = await supabase
+      const insertData = {
+        name: tournamentData.name,
+        description: tournamentData.description,
+        image_url: tournamentData.image_url,
+        start_date: tournamentData.start_date,
+        end_date: tournamentData.end_date,
+        max_contestants: tournamentData.max_contestants,
+        bracket_type: tournamentData.bracket_type,
+        is_public: tournamentData.is_public,
+        created_by: user.user.id,
+      };
+      
+      console.log('📤 Inserting tournament data:', insertData);
+
+      // Add timeout to prevent infinite hanging
+      const insertPromise = supabase
         .from('tournaments')
-        .insert([
-          {
-            name: tournamentData.name,
-            description: tournamentData.description,
-            image_url: tournamentData.image_url,
-            start_date: tournamentData.tournament_start_date,
-            end_date: tournamentData.tournament_end_date,
-            max_contestants: tournamentData.max_contestants,
-            bracket_type: tournamentData.bracket_type,
-            is_public: tournamentData.is_public,
-            created_by: user.user.id,
-          },
-        ])
+        .insert([insertData])
         .select()
         .single();
+        
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Tournament creation timed out after 30 seconds')), 30000)
+      );
 
-      if (error) throw error;
+      const { data, error } = await Promise.race([insertPromise, timeoutPromise]) as any;
+
+      console.log('📥 Database response - data:', data, 'error:', error);
+
+      if (error) {
+        console.log('💥 Database error:', error);
+        throw error;
+      }
+      
+      console.log('🎉 Tournament created successfully, returning:', data);
       return data;
     } catch (error) {
-      console.error('Error creating tournament:', error);
+      console.error('💥 TournamentService.createTournament error:', error);
       throw new Error(error instanceof Error ? error.message : 'Failed to create tournament');
     }
   }
@@ -135,8 +158,8 @@ export class TournamentService {
       if (updates.name) updateData.name = updates.name;
       if (updates.description !== undefined) updateData.description = updates.description;
       if (updates.image_url !== undefined) updateData.image_url = updates.image_url;
-      if (updates.tournament_start_date) updateData.start_date = updates.tournament_start_date;
-      if (updates.tournament_end_date !== undefined) updateData.end_date = updates.tournament_end_date;
+      if (updates.start_date) updateData.start_date = updates.start_date;
+      if (updates.end_date !== undefined) updateData.end_date = updates.end_date;
       if (updates.max_contestants) {
         updateData.max_contestants = updates.max_contestants;
       }

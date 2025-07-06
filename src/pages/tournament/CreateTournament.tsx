@@ -22,8 +22,8 @@ const createTournamentSchema = z.object({
   name: z.string().min(1, 'Tournament name is required').max(100, 'Name too long'),
   description: z.string().min(1, 'Description is required').max(500, 'Description too long'),
   image_url: z.string().url('Invalid URL').optional().or(z.literal('')),
-  tournament_start_date: z.string().min(1, 'Start date is required'),
-  tournament_end_date: z.string().optional().or(z.literal('')),
+  start_date: z.string().min(1, 'Start date is required'),
+  end_date: z.string().optional().or(z.literal('')),
   max_contestants: z.number().min(4, 'Minimum 4 contestants').max(128, 'Maximum 128 contestants'),
   bracket_type: z.enum(['single-elimination', 'double-elimination', 'round-robin']),
   is_public: z.boolean(),
@@ -48,35 +48,49 @@ const CreateTournament: React.FC = () => {
       max_contestants: 16,
       bracket_type: 'single-elimination',
       is_public: true,
-      tournament_start_date: new Date().toISOString().split('T')[0],
+      start_date: new Date().toISOString().split('T')[0],
     },
   });
 
   const onSubmit = async (data: CreateTournamentFormData) => {
+    console.log('🔥 Tournament creation started:', data);
+    
     if (!isAuthenticated || !user) {
+      console.log('❌ User not authenticated');
       setError('root', { message: 'You must be logged in to create a tournament' });
       return;
     }
 
     try {
       setLoading(true);
+      console.log('🔄 Setting loading to true');
       
       // Clean up data before submission
       const tournamentData = {
         ...data,
         image_url: data.image_url || undefined,
-        tournament_end_date: data.tournament_end_date || undefined,
+        end_date: data.end_date || undefined,
       };
+      
+      console.log('📝 Cleaned tournament data:', tournamentData);
+      console.log('🚀 Calling TournamentService.createTournament...');
 
       const newTournament = await TournamentService.createTournament(tournamentData);
       
+      console.log('✅ Tournament created successfully:', newTournament);
+      console.log('🧭 Navigating to:', `/tournaments/${newTournament.id}`);
+      
       // Navigate to the newly created tournament
       navigate(`/tournaments/${newTournament.id}`);
+      
+      console.log('🎯 Navigation completed');
     } catch (error) {
+      console.log('💥 Error during tournament creation:', error);
       setError('root', {
         message: error instanceof Error ? error.message : 'Failed to create tournament',
       });
     } finally {
+      console.log('🏁 Setting loading to false');
       setLoading(false);
     }
   };
@@ -178,7 +192,7 @@ const CreateTournament: React.FC = () => {
             {/* Dates */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="tournament_start_date" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="start_date" className="block text-sm font-medium text-gray-700">
                   Start Date *
                 </label>
                 <div className="mt-1 relative">
@@ -186,18 +200,18 @@ const CreateTournament: React.FC = () => {
                     <Calendar className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
-                    {...register('tournament_start_date')}
+                    {...register('start_date')}
                     type="date"
                     className="input-field pl-10"
                   />
                 </div>
-                {errors.tournament_start_date && (
-                  <p className="mt-1 text-sm text-red-600">{errors.tournament_start_date.message}</p>
+                {errors.start_date && (
+                  <p className="mt-1 text-sm text-red-600">{errors.start_date.message}</p>
                 )}
               </div>
 
               <div>
-                <label htmlFor="tournament_end_date" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="end_date" className="block text-sm font-medium text-gray-700">
                   End Date (optional)
                 </label>
                 <div className="mt-1 relative">
@@ -205,13 +219,13 @@ const CreateTournament: React.FC = () => {
                     <Calendar className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
-                    {...register('tournament_end_date')}
+                    {...register('end_date')}
                     type="date"
                     className="input-field pl-10"
                   />
                 </div>
-                {errors.tournament_end_date && (
-                  <p className="mt-1 text-sm text-red-600">{errors.tournament_end_date.message}</p>
+                {errors.end_date && (
+                  <p className="mt-1 text-sm text-red-600">{errors.end_date.message}</p>
                 )}
               </div>
             </div>
