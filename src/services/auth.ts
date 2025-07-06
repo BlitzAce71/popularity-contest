@@ -56,28 +56,60 @@ export class AuthService {
     }
   }
 
-  // Get current user profile
+  // Get current user profile with timeout and error handling
   static async getCurrentUser(): Promise<User | null> {
     try {
-      const { data: authUser } = await supabase.auth.getUser();
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout')), 8000)
+      );
+      
+      const authPromise = supabase.auth.getUser();
+      const { data: authUser } = await Promise.race([authPromise, timeoutPromise]);
+      
       if (!authUser.user) return null;
 
-      const { data, error } = await supabase
+      // Add timeout to database query
+      const dbTimeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Database timeout')), 5000)
+      );
+      
+      const dbPromise = supabase
         .from('users')
         .select('*')
         .eq('id', authUser.user.id)
         .single();
+        
+      const { data, error } = await Promise.race([dbPromise, dbTimeoutPromise]);
 
       if (error) {
         // If user profile doesn't exist, create it
         if (error.code === 'PGRST116') {
           return await this.createUserProfile(authUser.user);
         }
+        
+        // Handle auth errors gracefully
+        if (error.message?.includes('JWT') || error.message?.includes('401')) {
+          console.warn('Authentication expired, returning null');
+          return null;
+        }
+        
         throw error;
       }
 
       return data;
     } catch (error) {
+      // Don't throw for timeout or auth errors - return null instead
+      if (error instanceof Error && (
+        error.message.includes('timeout') || 
+        error.message.includes('JWT') ||
+        error.message.includes('401') ||
+        error.message.includes('fetch')
+      )) {
+        console.warn('Auth request failed, returning null:', error.message);
+        return null;
+      }
+      
       console.error('Error fetching current user:', error);
       throw new Error(error instanceof Error ? error.message : 'Failed to fetch user profile');
     }
@@ -337,13 +369,28 @@ export class AuthService {
     }
   }
 
-  // Subscribe to auth state changes
+  // Subscribe to auth state changes with error handling
   static onAuthStateChange(callback: (event: string, session: import('@supabase/supabase-js').Session | null) => void): () => void {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(callback);
-    
-    return () => {
-      subscription.unsubscribe();
-    };
+    try {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        try {
+          callback(event, session);
+        } catch (error) {
+          console.error('Error in auth state change callback:', error);
+        }
+      });
+      
+      return () => {
+        try {
+          subscription.unsubscribe();
+        } catch (error) {
+          console.error('Error unsubscribing from auth changes:', error);
+        }
+      };
+    } catch (error) {
+      console.error('Error setting up auth state listener:', error);
+      return () => {}; // Return no-op function
+    }
   }
 
   // Refresh session

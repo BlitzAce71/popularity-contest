@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { AuthService } from '@/services/auth';
 import { User, SignUpData, AuthData, UpdateProfileData } from '@/types';
 
@@ -6,42 +6,127 @@ export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const initializeAttempted = useRef(false);
+  const authStateListener = useRef<(() => void) | null>(null);
+  
+  const MAX_RETRIES = 3;
+  const RETRY_DELAY = 1000;
 
-  // Initialize auth state
-  const initializeAuth = async () => {
+  // Initialize auth state with circuit breaker
+  const initializeAuth = useCallback(async () => {
+    if (initializeAttempted.current && retryCount >= MAX_RETRIES) {
+      console.warn('Auth initialization max retries exceeded');
+      setLoading(false);
+      setError('Authentication service temporarily unavailable');
+      return;
+    }
+
     try {
       setLoading(true);
-      const currentUser = await AuthService.getCurrentUser();
+      setError(null);
+      
+      // Add timeout to auth call
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Auth timeout')), 10000)
+      );
+      
+      const authPromise = AuthService.getCurrentUser();
+      const currentUser = await Promise.race([authPromise, timeoutPromise]) as User | null;
+      
       setUser(currentUser);
+      setRetryCount(0); // Reset on success
+      initializeAttempted.current = true;
     } catch (err) {
       console.error('Auth initialization error:', err);
       setUser(null);
+      
+      if (retryCount < MAX_RETRIES) {
+        console.log(`Retrying auth initialization (${retryCount + 1}/${MAX_RETRIES})`);
+        setRetryCount(prev => prev + 1);
+        setTimeout(() => initializeAuth(), RETRY_DELAY * (retryCount + 1));
+        return;
+      } else {
+        setError('Failed to initialize authentication');
+      }
     } finally {
-      setLoading(false);
+      if (retryCount >= MAX_RETRIES || !err) {
+        setLoading(false);
+      }
     }
-  };
+  }, [retryCount]);
 
   useEffect(() => {
-    initializeAuth();
-
-    // Listen for auth state changes
-    const unsubscribe = AuthService.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        try {
-          const currentUser = await AuthService.getCurrentUser();
-          setUser(currentUser);
-        } catch (err) {
-          console.error('Error fetching user after sign in:', err);
-          setUser(null);
-        }
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
+    let mounted = true;
+    
+    const setupAuth = async () => {
+      if (!mounted) return;
+      
+      // Initialize auth only once
+      if (!initializeAttempted.current) {
+        await initializeAuth();
       }
-      setLoading(false);
-    });
 
-    return unsubscribe;
-  }, []);
+      // Listen for auth state changes with error handling
+      if (!authStateListener.current && mounted) {
+        try {
+          authStateListener.current = AuthService.onAuthStateChange(async (event, session) => {
+            if (!mounted) return;
+            
+            try {
+              if (event === 'SIGNED_IN' && session) {
+                const timeoutPromise = new Promise((_, reject) => 
+                  setTimeout(() => reject(new Error('Auth timeout')), 5000)
+                );
+                
+                const authPromise = AuthService.getCurrentUser();
+                const currentUser = await Promise.race([authPromise, timeoutPromise]) as User | null;
+                
+                if (mounted) {
+                  setUser(currentUser);
+                  setError(null);
+                }
+              } else if (event === 'SIGNED_OUT') {
+                if (mounted) {
+                  setUser(null);
+                  setError(null);
+                }
+              }
+            } catch (err) {
+              console.error('Error in auth state change:', err);
+              if (mounted) {
+                setError('Authentication error occurred');
+              }
+            } finally {
+              if (mounted) {
+                setLoading(false);
+              }
+            }
+          });
+        } catch (err) {
+          console.error('Error setting up auth listener:', err);
+          if (mounted) {
+            setError('Failed to setup authentication');
+            setLoading(false);
+          }
+        }
+      }
+    };
+
+    setupAuth();
+
+    return () => {
+      mounted = false;
+      if (authStateListener.current) {
+        try {
+          authStateListener.current();
+          authStateListener.current = null;
+        } catch (err) {
+          console.error('Error cleaning up auth listener:', err);
+        }
+      }
+    };
+  }, [initializeAuth]);
 
   // Sign up
   const signUp = async (userData: SignUpData): Promise<{ success: boolean; needsVerification: boolean }> => {
@@ -125,9 +210,10 @@ export const useAuth = () => {
     }
   };
 
-  // Clear error
+  // Clear error and reset retry count
   const clearError = () => {
     setError(null);
+    setRetryCount(0);
   };
 
   // Reset password

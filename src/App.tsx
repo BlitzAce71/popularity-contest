@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ToastProvider } from '@/contexts/ToastContext';
 import ErrorBoundary from '@/components/ui/ErrorBoundary';
+import AuthErrorBoundary from '@/components/ui/AuthErrorBoundary';
 import ErrorRecovery from '@/components/ui/ErrorRecovery';
 import Navigation from '@/components/layout/Navigation';
 import TournamentList from '@/pages/tournament/TournamentList';
@@ -19,8 +20,9 @@ const App: React.FC = () => {
   return (
     <ErrorBoundary>
       <ToastProvider>
-        <AuthProvider>
-          <Router>
+        <AuthErrorBoundary>
+          <AuthProvider>
+            <Router>
           <div className="min-h-screen bg-gray-50">
             <Navigation />
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -72,9 +74,10 @@ const App: React.FC = () => {
             </main>
           </div>
           </Router>
-        </AuthProvider>
-      </ToastProvider>
-    </ErrorBoundary>
+            </AuthProvider>
+          </AuthErrorBoundary>
+        </ToastProvider>
+      </ErrorBoundary>
   );
 };
 
