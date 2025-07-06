@@ -64,7 +64,7 @@ const TournamentDetail: React.FC = () => {
     );
   }
 
-  const canManage = user?.id === tournament.createdBy || user?.isAdmin;
+  const canManage = user?.id === tournament?.created_by || user?.is_admin;
   const isActive = tournament.status === 'active';
   const isRegistration = tournament.status === 'registration';
 

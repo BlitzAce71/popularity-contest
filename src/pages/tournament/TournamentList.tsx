@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTournaments } from '@/hooks/tournaments/useTournaments';
 import { useAuth } from '@/contexts/AuthContext';
 import Button from '@/components/ui/Button';
@@ -10,6 +10,7 @@ import { Plus, Trophy, Users, Calendar, Filter, Search } from 'lucide-react';
 
 const TournamentList: React.FC = () => {
   const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'registration' | 'completed'>('all');
   
@@ -152,7 +153,7 @@ const TournamentList: React.FC = () => {
             isAuthenticated && !searchTerm && statusFilter === 'all'
               ? {
                   label: 'Create Your First Tournament',
-                  onClick: () => window.location.href = '/tournaments/create'
+                  onClick: () => navigate('/tournaments/create')
                 }
               : undefined
           }
