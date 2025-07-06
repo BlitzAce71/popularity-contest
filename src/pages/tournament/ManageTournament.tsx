@@ -359,6 +359,7 @@ const ContestantManagement: React.FC<{
           onSubmit={handleAddContestant}
           onCancel={() => onToggleAddForm(false)}
           loading={loading}
+          contestants={contestants}
         />
       )}
 
@@ -465,14 +466,31 @@ const AddContestantForm: React.FC<{
   onSubmit: (data: CreateContestantData, imageFile?: File) => void;
   onCancel: () => void;
   loading: boolean;
-}> = ({ onSubmit, onCancel, loading }) => {
+  contestants: any[];
+}> = ({ onSubmit, onCancel, loading, contestants }) => {
+  // Calculate next available seed
+  const getNextSeed = () => {
+    if (contestants.length === 0) return 1;
+    const usedSeeds = new Set(contestants.map(c => c.seed));
+    let nextSeed = 1;
+    while (usedSeeds.has(nextSeed)) {
+      nextSeed++;
+    }
+    return nextSeed;
+  };
+
   const [formData, setFormData] = useState<CreateContestantData>({
     name: '',
     description: '',
-    seed: 1,
+    seed: getNextSeed(),
     quadrant: 1,
   });
   const [imageFile, setImageFile] = useState<File | undefined>();
+
+  // Update seed when contestants change
+  React.useEffect(() => {
+    setFormData(prev => ({ ...prev, seed: getNextSeed() }));
+  }, [contestants.length]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -520,6 +538,12 @@ const AddContestantForm: React.FC<{
               max="999"
               required
             />
+            <p className="text-xs text-gray-500 mt-1">
+              {contestants.some(c => c.seed === formData.seed) 
+                ? '⚠️ This seed is already taken - will auto-assign next available' 
+                : `Next suggested: ${getNextSeed()}`
+              }
+            </p>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Quadrant</label>

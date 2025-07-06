@@ -66,15 +66,34 @@ export class ContestantService {
         imageUrl = await this.uploadContestantImage(tournamentId, imageFile);
       }
 
-      // Get next seed number
-      const { data: existingContestants } = await supabase
+      // Validate and handle seed conflicts
+      let finalSeed = contestantData.seed;
+      
+      // Check if the seed is already taken
+      const { data: existingWithSameSeed } = await supabase
         .from('contestants')
-        .select('seed')
+        .select('id')
         .eq('tournament_id', tournamentId)
-        .order('seed', { ascending: false })
-        .limit(1);
+        .eq('seed', finalSeed)
+        .eq('is_active', true);
 
-      const nextSeed = existingContestants?.[0]?.seed ? existingContestants[0].seed + 1 : 1;
+      if (existingWithSameSeed && existingWithSameSeed.length > 0) {
+        // Find the next available seed
+        const { data: allSeeds } = await supabase
+          .from('contestants')
+          .select('seed')
+          .eq('tournament_id', tournamentId)
+          .eq('is_active', true)
+          .order('seed', { ascending: true });
+
+        const usedSeeds = new Set((allSeeds || []).map(c => c.seed));
+        finalSeed = 1;
+        while (usedSeeds.has(finalSeed)) {
+          finalSeed++;
+        }
+        
+        console.warn(`Seed ${contestantData.seed} was taken, assigned seed ${finalSeed} instead`);
+      }
 
       // Prepare insert data without quadrant for now (until database is updated)
       const insertData = {
@@ -82,7 +101,7 @@ export class ContestantService {
         name: contestantData.name,
         description: contestantData.description,
         image_url: imageUrl,
-        seed: contestantData.seed,
+        seed: finalSeed,
       };
 
       const { data, error } = await supabase
