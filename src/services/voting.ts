@@ -364,6 +364,164 @@ export class VotingService {
     };
   }
 
+  // Submit admin tie-breaking vote
+  static async submitAdminTieBreaker(
+    matchupId: string,
+    selectedContestantId: string,
+    weight: number = 1
+  ): Promise<Vote> {
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error('User not authenticated');
+
+      // Verify user is admin
+      const { data: userData } = await supabase
+        .from('users')
+        .select('is_admin')
+        .eq('id', user.user.id)
+        .single();
+
+      if (!userData?.is_admin) {
+        throw new Error('Unauthorized: Admin access required for tie-breaking votes');
+      }
+
+      // Check if matchup is tied or close
+      const results = await this.getMatchupResults(matchupId);
+      const voteDifference = Math.abs(results.contestant1Votes - results.contestant2Votes);
+      
+      if (voteDifference > 3) {
+        throw new Error('Tie-breaking votes can only be used when the vote difference is 3 or less');
+      }
+
+      // Submit admin vote with special marking
+      const { data, error } = await supabase
+        .from('votes')
+        .upsert([
+          {
+            user_id: user.user.id,
+            matchup_id: matchupId,
+            selected_contestant_id: selectedContestantId,
+            is_admin_vote: true,
+            weight: weight,
+          },
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error submitting admin tie-breaker vote:', error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to submit tie-breaker vote');
+    }
+  }
+
+  // Get tie-breaking opportunities for admins
+  static async getTieBreakingOpportunities(tournamentId: string): Promise<{
+    matchupId: string;
+    contestant1: any;
+    contestant2: any;
+    contestant1Votes: number;
+    contestant2Votes: number;
+    voteDifference: number;
+    hasAdminVote: boolean;
+  }[]> {
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) return [];
+
+      // Verify user is admin
+      const { data: userData } = await supabase
+        .from('users')
+        .select('is_admin')
+        .eq('id', user.user.id)
+        .single();
+
+      if (!userData?.is_admin) return [];
+
+      // Get active matchups with close vote counts
+      const { data: matchups, error } = await supabase
+        .from('matchups')
+        .select(`
+          id,
+          contestant1_id,
+          contestant2_id,
+          status,
+          contestants!matchups_contestant1_id_fkey(id, name, image_url),
+          contestants!matchups_contestant2_id_fkey(id, name, image_url)
+        `)
+        .eq('tournament_id', tournamentId)
+        .eq('status', 'active');
+
+      if (error) throw error;
+
+      const opportunities = [];
+      
+      for (const matchup of matchups || []) {
+        const results = await this.getMatchupResults(matchup.id);
+        const voteDifference = Math.abs(results.contestant1Votes - results.contestant2Votes);
+        
+        // Only show matchups with close votes (difference of 3 or less)
+        if (voteDifference <= 3) {
+          // Check if admin has already voted
+          const { data: adminVote } = await supabase
+            .from('votes')
+            .select('id')
+            .eq('user_id', user.user.id)
+            .eq('matchup_id', matchup.id)
+            .eq('is_admin_vote', true)
+            .maybeSingle();
+
+          opportunities.push({
+            matchupId: matchup.id,
+            contestant1: matchup.contestants[0],
+            contestant2: matchup.contestants[1], 
+            contestant1Votes: results.contestant1Votes,
+            contestant2Votes: results.contestant2Votes,
+            voteDifference,
+            hasAdminVote: !!adminVote,
+          });
+        }
+      }
+
+      return opportunities;
+    } catch (error) {
+      console.error('Error getting tie-breaking opportunities:', error);
+      return [];
+    }
+  }
+
+  // Remove admin tie-breaking vote
+  static async removeAdminTieBreaker(matchupId: string): Promise<void> {
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error('User not authenticated');
+
+      // Verify user is admin
+      const { data: userData } = await supabase
+        .from('users')
+        .select('is_admin')
+        .eq('id', user.user.id)
+        .single();
+
+      if (!userData?.is_admin) {
+        throw new Error('Unauthorized: Admin access required');
+      }
+
+      const { error } = await supabase
+        .from('votes')
+        .delete()
+        .eq('user_id', user.user.id)
+        .eq('matchup_id', matchupId)
+        .eq('is_admin_vote', true);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error removing admin tie-breaker vote:', error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to remove tie-breaker vote');
+    }
+  }
+
   // Batch vote submission (for admin or special cases)
   static async submitBatchVotes(
     votes: { matchupId: string; selectedContestantId: string; weight?: number }[]

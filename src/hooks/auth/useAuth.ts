@@ -13,7 +13,7 @@ export const useAuth = () => {
   const MAX_RETRIES = 3;
   const RETRY_DELAY = 1000;
 
-  // Initialize auth state with circuit breaker
+  // Initialize auth state with circuit breaker and stored session restoration
   const initializeAuth = useCallback(async () => {
     if (initializeAttempted.current && retryCount >= MAX_RETRIES) {
       console.warn('Auth initialization max retries exceeded');
@@ -26,13 +26,28 @@ export const useAuth = () => {
       setLoading(true);
       setError(null);
       
-      // Add timeout to auth call
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Auth timeout')), 10000)
-      );
+      // First, try to restore stored session
+      let currentUser: User | null = null;
       
-      const authPromise = AuthService.getCurrentUser();
-      const currentUser = await Promise.race([authPromise, timeoutPromise]) as User | null;
+      try {
+        const restored = await AuthService.restoreStoredSession();
+        if (restored) {
+          currentUser = restored.user;
+          console.log('Session restored from storage');
+        }
+      } catch (err) {
+        console.log('Failed to restore stored session, falling back to normal auth check');
+      }
+      
+      // If no stored session, try normal auth check
+      if (!currentUser) {
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Auth timeout')), 10000)
+        );
+        
+        const authPromise = AuthService.getCurrentUser();
+        currentUser = await Promise.race([authPromise, timeoutPromise]) as User | null;
+      }
       
       setUser(currentUser);
       setRetryCount(0); // Reset on success

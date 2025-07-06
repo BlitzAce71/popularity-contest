@@ -194,6 +194,31 @@ export class ContestantService {
       if (updates.description !== undefined) updateData.description = updates.description;
       if (imageUrl !== currentContestant.image_url) updateData.image_url = imageUrl;
 
+      // Handle seed and quadrant updates with conflict checking
+      if (updates.seed !== undefined || updates.quadrant !== undefined) {
+        const newSeed = updates.seed !== undefined ? updates.seed : currentContestant.seed;
+        const newQuadrant = updates.quadrant !== undefined ? updates.quadrant : (currentContestant.quadrant || 1);
+
+        // Check for seed conflicts in the target quadrant (excluding current contestant)
+        const { data: existingWithSameSeed } = await supabase
+          .from('contestants')
+          .select('id')
+          .eq('tournament_id', currentContestant.tournament_id)
+          .eq('seed', newSeed)
+          .eq('quadrant', newQuadrant)
+          .eq('is_active', true)
+          .neq('id', id);
+
+        if (existingWithSameSeed && existingWithSameSeed.length > 0) {
+          throw new Error(`Seed ${newSeed} is already taken in this quadrant`);
+        }
+
+        updateData.seed = newSeed;
+        if (updates.quadrant !== undefined) {
+          updateData.quadrant = newQuadrant;
+        }
+      }
+
       const { data, error } = await supabase
         .from('contestants')
         .update(updateData)
@@ -201,7 +226,36 @@ export class ContestantService {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        // Handle quadrant column not existing gracefully
+        if (error.code === '42703' || error.message?.includes('column') || error.message?.includes('quadrant')) {
+          console.warn('Quadrant column not ready yet, updating without quadrant:', error.message);
+          
+          // Try update without quadrant field
+          const basicUpdateData = { ...updateData };
+          delete basicUpdateData.quadrant;
+          
+          const { data: retryData, error: retryError } = await supabase
+            .from('contestants')
+            .update(basicUpdateData)
+            .eq('id', id)
+            .select()
+            .single();
+            
+          if (retryError) throw retryError;
+          
+          // Convert image path to full URL before returning
+          const contestant = {
+            ...retryData,
+            image_url: retryData.image_url ? this.getContestantImageUrl(retryData.image_url) : retryData.image_url,
+            quadrant: updates.quadrant || currentContestant.quadrant || 1 // Preserve quadrant info for UI
+          };
+          
+          return contestant;
+        }
+        
+        throw error;
+      }
       
       // Convert image path to full URL before returning
       const contestant = {

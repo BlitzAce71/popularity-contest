@@ -10,6 +10,7 @@ import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
+  rememberMe: z.boolean().optional(),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -35,6 +36,7 @@ const LoginPage: React.FC = () => {
       const success = await signIn({
         email: data.email,
         password: data.password,
+        rememberMe: data.rememberMe,
       });
       
       if (success) {
@@ -119,6 +121,29 @@ const LoginPage: React.FC = () => {
                 <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
               )}
             </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <input
+                  {...register('rememberMe')}
+                  type="checkbox"
+                  id="rememberMe"
+                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                />
+                <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-700">
+                  Remember me
+                </label>
+              </div>
+
+              <div>
+                <Link
+                  to="/auth/forgot-password"
+                  className="text-sm text-primary-600 hover:text-primary-500"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+            </div>
           </div>
 
           {errors.root && (
@@ -136,15 +161,6 @@ const LoginPage: React.FC = () => {
             >
               Sign in
             </Button>
-          </div>
-
-          <div className="text-center">
-            <Link
-              to="/auth/forgot-password"
-              className="text-sm text-primary-600 hover:text-primary-500"
-            >
-              Forgot your password?
-            </Link>
           </div>
         </form>
       </div>

@@ -27,6 +27,10 @@ const createTournamentSchema = z.object({
   max_contestants: z.number().min(4, 'Minimum 4 contestants').max(128, 'Maximum 128 contestants'),
   bracket_type: z.enum(['single-elimination', 'double-elimination', 'round-robin']),
   is_public: z.boolean(),
+  quadrant_1_name: z.string().min(1, 'Quadrant 1 name is required').max(50, 'Name too long'),
+  quadrant_2_name: z.string().min(1, 'Quadrant 2 name is required').max(50, 'Name too long'),
+  quadrant_3_name: z.string().min(1, 'Quadrant 3 name is required').max(50, 'Name too long'),
+  quadrant_4_name: z.string().min(1, 'Quadrant 4 name is required').max(50, 'Name too long'),
 });
 
 type CreateTournamentFormData = z.infer<typeof createTournamentSchema>;
@@ -49,6 +53,10 @@ const CreateTournament: React.FC = () => {
       bracket_type: 'single-elimination',
       is_public: true,
       start_date: new Date().toISOString().split('T')[0],
+      quadrant_1_name: 'Region A',
+      quadrant_2_name: 'Region B',
+      quadrant_3_name: 'Region C',
+      quadrant_4_name: 'Region D',
     },
   });
 
@@ -70,6 +78,17 @@ const CreateTournament: React.FC = () => {
         ...data,
         image_url: data.image_url || undefined,
         end_date: data.end_date || undefined,
+        quadrant_names: [
+          data.quadrant_1_name,
+          data.quadrant_2_name,
+          data.quadrant_3_name,
+          data.quadrant_4_name,
+        ] as [string, string, string, string],
+        // Remove individual quadrant name fields
+        quadrant_1_name: undefined,
+        quadrant_2_name: undefined,
+        quadrant_3_name: undefined,
+        quadrant_4_name: undefined,
       };
       
       console.log('📝 Cleaned tournament data:', tournamentData);
@@ -276,6 +295,78 @@ const CreateTournament: React.FC = () => {
                 {errors.bracket_type && (
                   <p className="mt-1 text-sm text-red-600">{errors.bracket_type.message}</p>
                 )}
+              </div>
+            </div>
+
+            {/* Quadrant Names */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Bracket Quadrant Names *
+              </label>
+              <p className="text-sm text-gray-600 mb-4">
+                Customize the names of your tournament's four quadrants/regions. These names will be shown 
+                when contestants select their quadrant placement and in the bracket visualization.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="quadrant_1_name" className="block text-sm font-medium text-gray-700">
+                    Quadrant 1 (Top Left) *
+                  </label>
+                  <input
+                    {...register('quadrant_1_name')}
+                    type="text"
+                    className="input-field mt-1"
+                    placeholder="e.g., Region A, North Division"
+                  />
+                  {errors.quadrant_1_name && (
+                    <p className="mt-1 text-sm text-red-600">{errors.quadrant_1_name.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label htmlFor="quadrant_2_name" className="block text-sm font-medium text-gray-700">
+                    Quadrant 2 (Top Right) *
+                  </label>
+                  <input
+                    {...register('quadrant_2_name')}
+                    type="text"
+                    className="input-field mt-1"
+                    placeholder="e.g., Region B, South Division"
+                  />
+                  {errors.quadrant_2_name && (
+                    <p className="mt-1 text-sm text-red-600">{errors.quadrant_2_name.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label htmlFor="quadrant_3_name" className="block text-sm font-medium text-gray-700">
+                    Quadrant 3 (Bottom Left) *
+                  </label>
+                  <input
+                    {...register('quadrant_3_name')}
+                    type="text"
+                    className="input-field mt-1"
+                    placeholder="e.g., Region C, East Division"
+                  />
+                  {errors.quadrant_3_name && (
+                    <p className="mt-1 text-sm text-red-600">{errors.quadrant_3_name.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label htmlFor="quadrant_4_name" className="block text-sm font-medium text-gray-700">
+                    Quadrant 4 (Bottom Right) *
+                  </label>
+                  <input
+                    {...register('quadrant_4_name')}
+                    type="text"
+                    className="input-field mt-1"
+                    placeholder="e.g., Region D, West Division"
+                  />
+                  {errors.quadrant_4_name && (
+                    <p className="mt-1 text-sm text-red-600">{errors.quadrant_4_name.message}</p>
+                  )}
+                </div>
               </div>
             </div>
 

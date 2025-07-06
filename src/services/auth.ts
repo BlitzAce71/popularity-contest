@@ -2,6 +2,144 @@ import { supabase, uploadFile, deleteFile, getFileUrl } from '@/lib/supabase';
 import type { User, SignUpData, AuthData, UpdateProfileData } from '@/types';
 
 export class AuthService {
+  // Local storage keys for persistence
+  private static readonly STORAGE_KEYS = {
+    SESSION: 'popularity_contest_session',
+    USER: 'popularity_contest_user',
+    REMEMBER_ME: 'popularity_contest_remember_me'
+  };
+
+  // Save session to localStorage
+  static saveSessionToStorage(session: any, user: User | null, rememberMe: boolean = false): void {
+    try {
+      if (!rememberMe) {
+        // Use sessionStorage for temporary login
+        sessionStorage.setItem(this.STORAGE_KEYS.SESSION, JSON.stringify(session));
+        sessionStorage.setItem(this.STORAGE_KEYS.USER, JSON.stringify(user));
+        // Clear any persistent storage
+        localStorage.removeItem(this.STORAGE_KEYS.SESSION);
+        localStorage.removeItem(this.STORAGE_KEYS.USER);
+        localStorage.removeItem(this.STORAGE_KEYS.REMEMBER_ME);
+      } else {
+        // Use localStorage for persistent login
+        localStorage.setItem(this.STORAGE_KEYS.SESSION, JSON.stringify(session));
+        localStorage.setItem(this.STORAGE_KEYS.USER, JSON.stringify(user));
+        localStorage.setItem(this.STORAGE_KEYS.REMEMBER_ME, 'true');
+        // Clear session storage
+        sessionStorage.removeItem(this.STORAGE_KEYS.SESSION);
+        sessionStorage.removeItem(this.STORAGE_KEYS.USER);
+      }
+    } catch (error) {
+      console.error('Error saving session to storage:', error);
+    }
+  }
+
+  // Load session from localStorage
+  static loadSessionFromStorage(): { session: any; user: User | null; rememberMe: boolean } | null {
+    try {
+      // Check localStorage first (persistent login)
+      const persistentSession = localStorage.getItem(this.STORAGE_KEYS.SESSION);
+      const persistentUser = localStorage.getItem(this.STORAGE_KEYS.USER);
+      const rememberMe = localStorage.getItem(this.STORAGE_KEYS.REMEMBER_ME) === 'true';
+
+      if (persistentSession && persistentUser) {
+        return {
+          session: JSON.parse(persistentSession),
+          user: JSON.parse(persistentUser),
+          rememberMe: true
+        };
+      }
+
+      // Check sessionStorage (temporary login)
+      const tempSession = sessionStorage.getItem(this.STORAGE_KEYS.SESSION);
+      const tempUser = sessionStorage.getItem(this.STORAGE_KEYS.USER);
+
+      if (tempSession && tempUser) {
+        return {
+          session: JSON.parse(tempSession),
+          user: JSON.parse(tempUser),
+          rememberMe: false
+        };
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error loading session from storage:', error);
+      return null;
+    }
+  }
+
+  // Clear stored session
+  static clearStoredSession(): void {
+    try {
+      localStorage.removeItem(this.STORAGE_KEYS.SESSION);
+      localStorage.removeItem(this.STORAGE_KEYS.USER);
+      localStorage.removeItem(this.STORAGE_KEYS.REMEMBER_ME);
+      sessionStorage.removeItem(this.STORAGE_KEYS.SESSION);
+      sessionStorage.removeItem(this.STORAGE_KEYS.USER);
+    } catch (error) {
+      console.error('Error clearing stored session:', error);
+    }
+  }
+
+  // Check if session is valid (not expired)
+  static isSessionValid(session: any): boolean {
+    if (!session || !session.expires_at) return false;
+    
+    const expiresAt = new Date(session.expires_at * 1000); // Convert to milliseconds
+    const now = new Date();
+    const bufferTime = 5 * 60 * 1000; // 5 minutes buffer
+    
+    return expiresAt.getTime() > now.getTime() + bufferTime;
+  }
+
+  // Restore session from storage
+  static async restoreStoredSession(): Promise<{ user: User | null; rememberMe: boolean } | null> {
+    try {
+      const stored = this.loadSessionFromStorage();
+      if (!stored) return null;
+
+      const { session, user, rememberMe } = stored;
+
+      // Check if session is still valid
+      if (!this.isSessionValid(session)) {
+        console.log('Stored session expired, clearing...');
+        this.clearStoredSession();
+        return null;
+      }
+
+      // Restore session to Supabase
+      const { data, error } = await supabase.auth.setSession({
+        access_token: session.access_token,
+        refresh_token: session.refresh_token
+      });
+
+      if (error) {
+        console.log('Failed to restore session, clearing stored data:', error.message);
+        this.clearStoredSession();
+        return null;
+      }
+
+      // Verify user profile still exists and is valid
+      const currentUser = await this.getCurrentUser();
+      if (!currentUser) {
+        this.clearStoredSession();
+        return null;
+      }
+
+      // Update stored user data if it's different
+      if (JSON.stringify(currentUser) !== JSON.stringify(user)) {
+        this.saveSessionToStorage(data.session, currentUser, rememberMe);
+      }
+
+      return { user: currentUser, rememberMe };
+    } catch (error) {
+      console.error('Error restoring stored session:', error);
+      this.clearStoredSession();
+      return null;
+    }
+  }
+
   // Sign up new user
   static async signUp(userData: SignUpData): Promise<{ user: import('@supabase/supabase-js').User | null; needsVerification: boolean }> {
     try {
@@ -38,6 +176,13 @@ export class AuthService {
       });
 
       if (error) throw error;
+
+      // Get user profile and save session with remember me preference
+      if (data.session && data.user) {
+        const userProfile = await this.getCurrentUser();
+        this.saveSessionToStorage(data.session, userProfile, credentials.rememberMe || false);
+      }
+
       return data;
     } catch (error) {
       console.error('Error during sign in:', error);
@@ -48,6 +193,9 @@ export class AuthService {
   // Sign out user
   static async signOut(): Promise<void> {
     try {
+      // Clear stored session data first
+      this.clearStoredSession();
+      
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
     } catch (error) {

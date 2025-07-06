@@ -8,6 +8,7 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import BracketVisualization from '@/components/brackets/BracketVisualization';
 import TournamentInfo from '@/components/tournaments/TournamentInfo';
 import VotingProgress from '@/components/voting/VotingProgress';
+import TieBreakerPanel from '@/components/admin/TieBreakerPanel';
 import { 
   ArrowLeft, 
   Trophy, 
@@ -21,7 +22,7 @@ import {
 
 const TournamentDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isAdmin } = useAuth();
   const [activeTab, setActiveTab] = useState<'bracket' | 'info' | 'stats'>('bracket');
 
   const { tournament, loading: tournamentLoading, error: tournamentError, refresh } = useTournament(id);
@@ -158,6 +159,14 @@ const TournamentDetail: React.FC = () => {
           tournamentId={id}
           votingStatus={votingStatus}
           className="bg-blue-50 border border-blue-200 rounded-lg"
+        />
+      )}
+
+      {/* Admin Tie-Breaking Panel */}
+      {isAdmin && isActive && id && (
+        <TieBreakerPanel 
+          tournamentId={id}
+          className="border-2 border-red-300"
         />
       )}
 

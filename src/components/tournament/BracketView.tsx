@@ -67,13 +67,19 @@ const BracketView: React.FC<BracketViewProps> = ({ contestants, tournament }) =>
                 position={isLeft ? 'left' : 'right'} 
               />
               
-              {/* Connection line to next round (simplified) */}
+              {/* Connection line to next round (improved positioning) */}
               {index % 2 === 0 && index + 1 < contestants.length && (
-                <div className={`absolute ${isTop ? 'top-full' : 'bottom-full'} ${
-                  isLeft ? 'left-full' : 'right-full'
-                } w-8 h-8 border-2 border-gray-300 ${
-                  isTop ? 'border-t-0 border-l-0' : 'border-b-0 border-l-0'
-                } ${isLeft ? '' : 'transform scale-x-[-1]'}`} />
+                <div className="absolute top-1/2 transform -translate-y-1/2" style={{
+                  [isLeft ? 'right' : 'left']: '-16px',
+                  width: '16px',
+                  height: '2px'
+                }}>
+                  <div className="w-full h-0.5 bg-gray-300"></div>
+                  <div className={`absolute ${isLeft ? 'right' : 'left'}-0 top-0 w-0.5 bg-gray-300`} style={{
+                    height: '48px',
+                    [isTop ? 'top' : 'bottom']: '0'
+                  }}></div>
+                </div>
               )}
             </div>
           ))}
@@ -100,49 +106,61 @@ const BracketView: React.FC<BracketViewProps> = ({ contestants, tournament }) =>
         </p>
       </div>
       
-      <div className="grid grid-cols-2 grid-rows-2 min-h-96">
-        {/* Quadrant 1 - Top Left */}
-        <QuadrantBracket
-          quadrant={1}
-          contestants={quadrants[1]}
-          title={tournament.quadrant_names?.[0] || "Quadrant 1"}
-          position="top-left"
-        />
+      {/* Bracket container with relative positioning for absolute children */}
+      <div className="relative min-h-96">
+        <div className="grid grid-cols-2 grid-rows-2 h-full">
+          {/* Quadrant 1 - Top Left */}
+          <QuadrantBracket
+            quadrant={1}
+            contestants={quadrants[1]}
+            title={tournament.quadrant_names?.[0] || "Quadrant 1"}
+            position="top-left"
+          />
+          
+          {/* Quadrant 2 - Top Right */}
+          <QuadrantBracket
+            quadrant={2}
+            contestants={quadrants[2]}
+            title={tournament.quadrant_names?.[1] || "Quadrant 2"}
+            position="top-right"
+          />
+          
+          {/* Quadrant 3 - Bottom Left */}
+          <QuadrantBracket
+            quadrant={3}
+            contestants={quadrants[3]}
+            title={tournament.quadrant_names?.[2] || "Quadrant 3"}
+            position="bottom-left"
+          />
+          
+          {/* Quadrant 4 - Bottom Right */}
+          <QuadrantBracket
+            quadrant={4}
+            contestants={quadrants[4]}
+            title={tournament.quadrant_names?.[3] || "Quadrant 4"}
+            position="bottom-right"
+          />
+        </div>
         
-        {/* Quadrant 2 - Top Right */}
-        <QuadrantBracket
-          quadrant={2}
-          contestants={quadrants[2]}
-          title={tournament.quadrant_names?.[1] || "Quadrant 2"}
-          position="top-right"
-        />
-        
-        {/* Quadrant 3 - Bottom Left */}
-        <QuadrantBracket
-          quadrant={3}
-          contestants={quadrants[3]}
-          title={tournament.quadrant_names?.[2] || "Quadrant 3"}
-          position="bottom-left"
-        />
-        
-        {/* Quadrant 4 - Bottom Right */}
-        <QuadrantBracket
-          quadrant={4}
-          contestants={quadrants[4]}
-          title={tournament.quadrant_names?.[3] || "Quadrant 4"}
-          position="bottom-right"
-        />
-      </div>
-      
-      {/* Center Championship Area */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="w-full h-full flex items-center justify-center">
-          <div className="bg-yellow-100 border-2 border-yellow-300 rounded-lg p-4 pointer-events-auto">
+        {/* Center Championship Area - Fixed positioning */}
+        <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+          <div className="bg-yellow-100 border-2 border-yellow-300 rounded-lg p-4 shadow-lg pointer-events-auto z-10">
             <div className="text-center">
               <div className="text-lg font-bold text-yellow-800">Championship</div>
               <div className="text-sm text-yellow-600">Final match here</div>
             </div>
           </div>
+        </div>
+
+        {/* Central bracket connection lines */}
+        <div className="absolute inset-0 pointer-events-none">
+          {/* Horizontal lines connecting quadrants to center */}
+          <div className="absolute top-1/2 left-1/4 w-1/4 h-0.5 bg-gray-300 transform -translate-y-0.5"></div>
+          <div className="absolute top-1/2 right-1/4 w-1/4 h-0.5 bg-gray-300 transform -translate-y-0.5"></div>
+          
+          {/* Vertical lines connecting quadrants to center */}
+          <div className="absolute left-1/2 top-1/4 w-0.5 h-1/4 bg-gray-300 transform -translate-x-0.5"></div>
+          <div className="absolute left-1/2 bottom-1/4 w-0.5 h-1/4 bg-gray-300 transform -translate-x-0.5"></div>
         </div>
       </div>
     </div>

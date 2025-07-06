@@ -250,8 +250,7 @@ const ContestantManagement: React.FC<{
   const [contestants, setContestants] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [editingContestant, setEditingContestant] = useState<string | null>(null);
-  const [editSeed, setEditSeed] = useState<number>(1);
+  const [editingContestant, setEditingContestant] = useState<any | null>(null);
 
   const fetchContestants = async () => {
     try {
@@ -301,16 +300,18 @@ const ContestantManagement: React.FC<{
     }
   };
 
-  const handleUpdateSeed = async (contestantId: string, newSeed: number) => {
+  const handleUpdateContestant = async (contestantData: CreateContestantData, imageFile?: File) => {
+    if (!editingContestant) return;
+    
     try {
       setLoading(true);
-      await ContestantService.updateContestantSeeds(tournament.id, [{ id: contestantId, seed: newSeed }]);
+      await ContestantService.updateContestant(editingContestant.id, contestantData, imageFile);
       await fetchContestants();
       onRefresh();
       setEditingContestant(null);
     } catch (error) {
-      console.error('Error updating contestant seed:', error);
-      setError(error instanceof Error ? error.message : 'Failed to update seed');
+      console.error('Error updating contestant:', error);
+      setError(error instanceof Error ? error.message : 'Failed to update contestant');
     } finally {
       setLoading(false);
     }
@@ -401,45 +402,17 @@ const ContestantManagement: React.FC<{
                   </div>
                   <div>
                     <h3 className="font-medium text-gray-900">{contestant.name}</h3>
-                    {editingContestant === contestant.id ? (
-                      <div className="flex items-center gap-2 mt-1">
-                        <input
-                          type="number"
-                          value={editSeed}
-                          onChange={(e) => setEditSeed(parseInt(e.target.value) || 1)}
-                          className="w-16 px-2 py-1 text-xs border rounded"
-                          min="1"
-                          max="999"
-                        />
-                        <button
-                          onClick={() => handleUpdateSeed(contestant.id, editSeed)}
-                          className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
-                        >
-                          Save
-                        </button>
-                        <button
-                          onClick={() => setEditingContestant(null)}
-                          className="text-xs bg-gray-500 text-white px-2 py-1 rounded hover:bg-gray-600"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="text-sm text-gray-500">
-                        <p>Seed #{contestant.seed || index + 1}</p>
-                        <p>{tournament.quadrant_names?.[contestant.quadrant - 1] || `Quadrant ${contestant.quadrant || 1}`}</p>
-                      </div>
-                    )}
+                    <div className="text-sm text-gray-500">
+                      <p>Seed #{contestant.seed || index + 1}</p>
+                      <p>{tournament.quadrant_names?.[contestant.quadrant - 1] || `Quadrant ${contestant.quadrant || 1}`}</p>
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
                   <button 
-                    onClick={() => {
-                      setEditingContestant(contestant.id);
-                      setEditSeed(contestant.seed || 1);
-                    }}
+                    onClick={() => setEditingContestant(contestant)}
                     className="p-1 text-gray-400 hover:text-gray-600"
-                    title="Edit seed position"
+                    title="Edit contestant"
                   >
                     <Edit className="w-4 h-4" />
                   </button>
@@ -458,6 +431,18 @@ const ContestantManagement: React.FC<{
           ))}
         </div>
       )}
+
+      {/* Edit Contestant Modal */}
+      {editingContestant && (
+        <EditContestantModal
+          contestant={editingContestant}
+          tournament={tournament}
+          contestants={contestants}
+          onSubmit={handleUpdateContestant}
+          onCancel={() => setEditingContestant(null)}
+          loading={loading}
+        />
+      )}
     </div>
   );
 };
@@ -470,16 +455,18 @@ const AddContestantForm: React.FC<{
   contestants: any[];
   tournament: any;
 }> = ({ onSubmit, onCancel, loading, contestants, tournament }) => {
-  // Calculate next available seed for selected quadrant
+  // Calculate next available seed for selected quadrant (capped at max seeds per quadrant)
   const getNextSeedForQuadrant = (quadrant: number) => {
+    const maxSeedsPerQuadrant = Math.ceil(tournament.max_contestants / 4); // 1/4 of total participants
     const quadrantContestants = contestants.filter(c => c.quadrant === quadrant);
     if (quadrantContestants.length === 0) return 1;
     const usedSeeds = new Set(quadrantContestants.map(c => c.seed));
     let nextSeed = 1;
-    while (usedSeeds.has(nextSeed)) {
+    while (usedSeeds.has(nextSeed) && nextSeed <= maxSeedsPerQuadrant) {
       nextSeed++;
     }
-    return nextSeed;
+    // If we've exceeded the max seeds per quadrant, return the max + 1 (will show warning)
+    return nextSeed <= maxSeedsPerQuadrant ? nextSeed : maxSeedsPerQuadrant + 1;
   };
 
   const [formData, setFormData] = useState<CreateContestantData>({
@@ -545,10 +532,22 @@ const AddContestantForm: React.FC<{
               required
             />
             <p className="text-xs text-gray-500 mt-1">
-              {contestants.some(c => c.seed === formData.seed && c.quadrant === formData.quadrant) 
-                ? '⚠️ This seed is already taken in this quadrant - will auto-assign next available' 
-                : `Next suggested for this quadrant: ${getNextSeedForQuadrant(formData.quadrant || 1)}`
-              }
+              {(() => {
+                const maxSeedsPerQuadrant = Math.ceil(tournament.max_contestants / 4);
+                const nextSeed = getNextSeedForQuadrant(formData.quadrant || 1);
+                const seedTaken = contestants.some(c => c.seed === formData.seed && c.quadrant === formData.quadrant);
+                const seedTooHigh = formData.seed > maxSeedsPerQuadrant;
+                
+                if (seedTaken) {
+                  return '⚠️ This seed is already taken in this quadrant - will auto-assign next available';
+                } else if (seedTooHigh) {
+                  return `⚠️ Max seed for this quadrant is ${maxSeedsPerQuadrant} (${tournament.max_contestants} participants ÷ 4 quadrants)`;
+                } else if (nextSeed > maxSeedsPerQuadrant) {
+                  return `⚠️ This quadrant is full (max ${maxSeedsPerQuadrant} seeds)`;
+                } else {
+                  return `Next suggested: ${nextSeed} (max ${maxSeedsPerQuadrant} per quadrant)`;
+                }
+              })()}
             </p>
           </div>
           <div>
@@ -832,6 +831,195 @@ const BracketManagement: React.FC<{ tournament: any; onRefresh: () => void }> = 
       </div>
       
       <BracketView contestants={contestants} tournament={tournament} />
+    </div>
+  );
+};
+
+// Edit Contestant Modal Component
+const EditContestantModal: React.FC<{
+  contestant: any;
+  tournament: any;
+  contestants: any[];
+  onSubmit: (data: CreateContestantData, imageFile?: File) => void;
+  onCancel: () => void;
+  loading: boolean;
+}> = ({ contestant, tournament, contestants, onSubmit, onCancel, loading }) => {
+  // Calculate next available seed for selected quadrant (excluding current contestant, capped at max seeds per quadrant)
+  const getNextSeedForQuadrant = (quadrant: number) => {
+    const maxSeedsPerQuadrant = Math.ceil(tournament.max_contestants / 4); // 1/4 of total participants
+    const quadrantContestants = contestants.filter(c => c.quadrant === quadrant && c.id !== contestant.id);
+    if (quadrantContestants.length === 0) return 1;
+    const usedSeeds = new Set(quadrantContestants.map(c => c.seed));
+    let nextSeed = 1;
+    while (usedSeeds.has(nextSeed) && nextSeed <= maxSeedsPerQuadrant) {
+      nextSeed++;
+    }
+    // If we've exceeded the max seeds per quadrant, return the max + 1 (will show warning)
+    return nextSeed <= maxSeedsPerQuadrant ? nextSeed : maxSeedsPerQuadrant + 1;
+  };
+
+  const [formData, setFormData] = useState<CreateContestantData>({
+    name: contestant.name || '',
+    description: contestant.description || '',
+    seed: contestant.seed || 1,
+    quadrant: contestant.quadrant || 1,
+  });
+  const [imageFile, setImageFile] = useState<File | undefined>();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (formData.name.trim()) {
+      onSubmit(formData, imageFile);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium text-gray-900">Edit Contestant</h3>
+            <button
+              onClick={onCancel}
+              className="text-gray-400 hover:text-gray-600"
+              disabled={loading}
+            >
+              <Plus className="w-5 h-5 rotate-45" />
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Name *</label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="input-field mt-1"
+                placeholder="Enter contestant name"
+                required
+                disabled={loading}
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Description</label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                className="input-field mt-1"
+                rows={3}
+                placeholder="Optional description..."
+                disabled={loading}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Seed *</label>
+                <input
+                  type="number"
+                  value={formData.seed}
+                  onChange={(e) => setFormData({ ...formData, seed: parseInt(e.target.value) || 1 })}
+                  className="input-field mt-1"
+                  min="1"
+                  max="999"
+                  required
+                  disabled={loading}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  {(() => {
+                    const maxSeedsPerQuadrant = Math.ceil(tournament.max_contestants / 4);
+                    const nextSeed = getNextSeedForQuadrant(formData.quadrant || 1);
+                    const seedTaken = contestants.some(c => c.seed === formData.seed && c.quadrant === formData.quadrant && c.id !== contestant.id);
+                    const seedTooHigh = formData.seed > maxSeedsPerQuadrant;
+                    
+                    if (seedTaken) {
+                      return `⚠️ Seed ${formData.seed} is already taken in this quadrant`;
+                    } else if (seedTooHigh) {
+                      return `⚠️ Max seed for this quadrant is ${maxSeedsPerQuadrant} (${tournament.max_contestants} participants ÷ 4 quadrants)`;
+                    } else if (nextSeed > maxSeedsPerQuadrant) {
+                      return `⚠️ This quadrant is full (max ${maxSeedsPerQuadrant} seeds)`;
+                    } else {
+                      return `Next available: ${nextSeed} (max ${maxSeedsPerQuadrant} per quadrant)`;
+                    }
+                  })()}
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Quadrant</label>
+                <select
+                  value={formData.quadrant || 1}
+                  onChange={(e) => {
+                    const newQuadrant = parseInt(e.target.value) as 1 | 2 | 3 | 4;
+                    setFormData({ 
+                      ...formData, 
+                      quadrant: newQuadrant,
+                      seed: getNextSeedForQuadrant(newQuadrant)
+                    });
+                  }}
+                  className="input-field mt-1"
+                  disabled={loading}
+                >
+                  {(tournament.quadrant_names || ['Region A', 'Region B', 'Region C', 'Region D']).map((name, index) => (
+                    <option key={index + 1} value={index + 1}>
+                      {name} (Quadrant {index + 1})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Update Image</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setImageFile(e.target.files?.[0])}
+                className="input-field mt-1"
+                disabled={loading}
+              />
+              {contestant.image_url && (
+                <div className="mt-2">
+                  <p className="text-xs text-gray-500 mb-1">Current image:</p>
+                  <img
+                    src={contestant.image_url}
+                    alt={contestant.name}
+                    className="w-16 h-16 rounded-lg object-cover"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onCancel}
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={loading || !formData.name.trim()}
+              >
+                {loading ? (
+                  <>
+                    <LoadingSpinner size="sm" className="mr-2" />
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <Edit className="w-4 h-4 mr-2" />
+                    Update Contestant
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   );
 };

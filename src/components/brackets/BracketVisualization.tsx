@@ -186,11 +186,22 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
 
                       {/* Connector lines for next round */}
                       {roundIndex < bracketLayout.length - 1 && (
-                        <div className="absolute top-1/2 -right-8 w-8 h-px bg-gray-300 transform -translate-y-1/2">
-                          <div className="absolute right-0 top-0 w-px h-8 bg-gray-300 transform -translate-y-1/2"></div>
+                        <div className="absolute top-1/2 -right-8 w-8 transform -translate-y-1/2">
+                          {/* Horizontal line */}
+                          <div className="w-full h-0.5 bg-gray-300"></div>
+                          
+                          {/* Vertical connector */}
+                          <div className="absolute right-0 top-0 w-0.5 bg-gray-300" style={{
+                            height: matchupIndex % 2 === 0 ? (spacing / 2 + 16) + 'px' : (spacing / 2 + 16) + 'px',
+                            transform: matchupIndex % 2 === 0 ? 'translateY(-50%)' : 'translateY(-50%)'
+                          }}></div>
+                          
+                          {/* Connect pairs of matchups */}
                           {matchupIndex % 2 === 1 && (
-                            <div className="absolute right-0 top-0 w-px bg-gray-300 transform -translate-y-1/2"
-                                 style={{ height: spacing + 32 }}></div>
+                            <div className="absolute right-0 bg-gray-300 w-0.5" style={{
+                              height: spacing + 32 + 'px',
+                              top: -(spacing / 2 + 16) + 'px'
+                            }}></div>
                           )}
                         </div>
                       )}
@@ -202,11 +213,15 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
           ))}
 
           {/* Final winner display */}
-          {bracketLayout.length > 0 && bracketLayout[bracketLayout.length - 1].status === 'completed' && (
-            <div className="flex flex-col justify-center min-w-[200px]">
-              <div className="text-center">
-                <Trophy className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-gray-900">Champion</h3>
+          {bracketLayout.length > 0 && (
+            <div className="flex flex-col justify-center min-w-[240px] pl-8">
+              {/* Connector line from final round */}
+              <div className="absolute top-1/2 -left-8 w-8 h-0.5 bg-gray-300 transform -translate-y-1/2"></div>
+              
+              <div className="text-center bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6">
+                <Trophy className="w-12 h-12 text-yellow-500 mx-auto mb-3" />
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Championship</h3>
+                
                 {(() => {
                   const finalRound = bracketLayout[bracketLayout.length - 1];
                   const finalMatchup = finalRound.matchups[0];
@@ -214,23 +229,39 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
                   
                   if (winner) {
                     return (
-                      <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <div className="space-y-3">
                         {winner.image_url && (
                           <img
                             src={winner.image_url}
                             alt={winner.name}
-                            className="w-16 h-16 object-cover rounded-full mx-auto mb-2"
+                            className="w-16 h-16 object-cover rounded-full mx-auto border-2 border-yellow-300"
                           />
                         )}
-                        <div className="font-semibold text-lg">{winner.name}</div>
-                        <div className="text-sm text-gray-600">
-                          Tournament Winner
+                        <div>
+                          <div className="font-bold text-lg text-yellow-800">{winner.name}</div>
+                          <div className="text-sm text-yellow-600 font-medium">
+                            🏆 Tournament Winner
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  } else if (finalRound.status === 'completed') {
+                    return (
+                      <div className="text-gray-600">
+                        <div className="text-sm">Tournament Complete</div>
+                        <div className="text-xs mt-1">Winner will appear here</div>
+                      </div>
+                    );
+                  } else {
+                    return (
+                      <div className="text-gray-500">
+                        <div className="text-sm">Final Match</div>
+                        <div className="text-xs mt-1">
+                          {finalRound.status === 'active' ? 'Currently voting' : 'Coming soon'}
                         </div>
                       </div>
                     );
                   }
-                  
-                  return null;
                 })()}
               </div>
             </div>

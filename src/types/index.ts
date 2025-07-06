@@ -158,6 +158,7 @@ export interface VotingFormData {
 export interface AuthData {
   email: string;
   password: string;
+  rememberMe?: boolean;
 }
 
 export interface SignUpData extends AuthData {
