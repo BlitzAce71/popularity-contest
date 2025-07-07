@@ -9,7 +9,7 @@ import EmptyState from '@/components/ui/EmptyState';
 import { Plus, Trophy, Users, Calendar, Filter, Search } from 'lucide-react';
 
 const TournamentList: React.FC = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'completed'>('all');
@@ -85,7 +85,7 @@ const TournamentList: React.FC = () => {
             Participate in popularity contests and vote for your favorites
           </p>
         </div>
-        {isAuthenticated && (
+        {isAdmin && (
           <Link to="/tournaments/create">
             <Button className="flex items-center gap-2">
               <Plus className="w-4 h-4" />

@@ -37,7 +37,7 @@ type CreateTournamentFormData = z.infer<typeof createTournamentSchema>;
 
 const CreateTournament: React.FC = () => {
   const [loading, setLoading] = useState(false);
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   const {
@@ -126,6 +126,21 @@ const CreateTournament: React.FC = () => {
           <p className="text-gray-600 mb-6">You must be logged in to create a tournament.</p>
           <Link to="/auth/login">
             <Button>Sign In</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+        <div className="max-w-md w-full text-center">
+          <Settings className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Admin Access Required</h2>
+          <p className="text-gray-600 mb-6">Only administrators can create tournaments.</p>
+          <Link to="/tournaments">
+            <Button>View Tournaments</Button>
           </Link>
         </div>
       </div>

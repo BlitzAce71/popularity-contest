@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { AdminService } from '@/services/admin';
 import type { Tournament, CreateTournamentData, FilterOptions, SortOptions, PaginatedResponse } from '@/types';
 
 export class TournamentService {
@@ -104,6 +105,14 @@ export class TournamentService {
         throw new Error('User not authenticated');
       }
       console.log('✅ User authenticated:', user.user.id);
+
+      console.log('🔐 Checking admin status...');
+      const isAdminUser = await AdminService.isAdmin();
+      if (!isAdminUser) {
+        console.log('❌ User is not an admin');
+        throw new Error('Unauthorized: Only administrators can create tournaments');
+      }
+      console.log('✅ Admin access confirmed');
 
       const insertData = {
         name: tournamentData.name,
