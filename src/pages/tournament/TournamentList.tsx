@@ -31,14 +31,6 @@ const TournamentList: React.FC = () => {
     isPublic: true,
   });
 
-  // Debug: Log tournament data to see what fields are available
-  React.useEffect(() => {
-    if (tournaments.length > 0) {
-      console.log('🐛 Tournament data:', tournaments[0]);
-      console.log('🐛 Image URL field:', tournaments[0].image_url);
-    }
-  }, [tournaments]);
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':

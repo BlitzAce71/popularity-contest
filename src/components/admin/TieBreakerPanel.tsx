@@ -96,7 +96,7 @@ const TieBreakerPanel: React.FC<TieBreakerPanelProps> = ({ tournamentId, classNa
       </div>
 
       <p className="text-sm text-red-600 mb-4">
-        Break ties in close matchups (vote difference ≤ 3). Your admin vote will be clearly marked and logged.
+        Break ties in matchups with equal votes (vote difference = 0). Your admin vote will be clearly marked and logged.
       </p>
 
       {error && (
@@ -113,8 +113,8 @@ const TieBreakerPanel: React.FC<TieBreakerPanelProps> = ({ tournamentId, classNa
       ) : opportunities.length === 0 ? (
         <div className="text-center py-8">
           <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-2" />
-          <p className="text-green-700 font-medium">No tie-breaking needed</p>
-          <p className="text-sm text-green-600 mt-1">All active matchups have clear vote differences</p>
+          <p className="text-green-700 font-medium">No tied matchups</p>
+          <p className="text-sm text-green-600 mt-1">All active matchups have winners or different vote counts</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -127,7 +127,7 @@ const TieBreakerPanel: React.FC<TieBreakerPanelProps> = ({ tournamentId, classNa
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-amber-500" />
                   <span className="text-sm font-medium text-gray-700">
-                    Close Matchup ({opportunity.voteDifference} vote difference)
+                    {opportunity.voteDifference === 0 ? 'Tied Matchup' : `Close Matchup (${opportunity.voteDifference} vote difference)`}
                   </span>
                 </div>
                 {opportunity.hasAdminVote && (

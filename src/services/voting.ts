@@ -399,12 +399,12 @@ export class VotingService {
         throw new Error('Unauthorized: Admin access required for tie-breaking votes');
       }
 
-      // Check if matchup is tied or close
+      // Check if matchup is actually tied
       const results = await this.getMatchupResults(matchupId);
       const voteDifference = Math.abs(results.contestant1Votes - results.contestant2Votes);
       
-      if (voteDifference > 3) {
-        throw new Error('Tie-breaking votes can only be used when the vote difference is 3 or less');
+      if (voteDifference !== 0) {
+        throw new Error('Tie-breaking votes can only be used for actual ties (vote difference = 0)');
       }
 
       // Submit admin vote with special marking
@@ -473,8 +473,8 @@ export class VotingService {
         const results = await this.getMatchupResults(matchup.id);
         const voteDifference = Math.abs(results.contestant1Votes - results.contestant2Votes);
         
-        // Only show matchups with close votes (difference of 3 or less)
-        if (voteDifference <= 3) {
+        // Only show matchups that are actually tied (difference of 0)
+        if (voteDifference === 0) {
           // Get contestant data separately
           const { data: contestant1 } = await supabase
             .from('contestants')
