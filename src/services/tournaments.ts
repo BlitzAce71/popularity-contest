@@ -63,7 +63,6 @@ export class TournamentService {
   // Get single tournament with full details
   static async getTournament(id: string): Promise<Tournament> {
     try {
-      console.log('🔍 getTournament called for ID:', id);
       const { data, error } = await supabase
         .from('tournaments')
         .select(`
@@ -86,8 +85,6 @@ export class TournamentService {
       if (error) throw error;
       if (!data) throw new Error('Tournament not found');
 
-      console.log('🔍 getTournament returning data:', data);
-      console.log('🔍 Retrieved quadrant_names:', data.quadrant_names);
       return data;
     } catch (error) {
       console.error('Error fetching tournament:', error);
@@ -108,9 +105,6 @@ export class TournamentService {
       }
       console.log('✅ User authenticated:', user.user.id);
 
-      console.log('🔍 TournamentService received data:', tournamentData);
-      console.log('🔍 Quadrant names from input:', tournamentData.quadrant_names);
-      
       const insertData = {
         name: tournamentData.name,
         description: tournamentData.description,
@@ -125,7 +119,6 @@ export class TournamentService {
       };
       
       console.log('📤 Inserting tournament data:', insertData);
-      console.log('📤 Final quadrant_names being sent to DB:', insertData.quadrant_names);
 
       // Add timeout to prevent infinite hanging
       const insertPromise = supabase
@@ -141,9 +134,6 @@ export class TournamentService {
       const { data, error } = await Promise.race([insertPromise, timeoutPromise]) as any;
 
       console.log('📥 Database response - data:', data, 'error:', error);
-      if (data) {
-        console.log('📥 Returned quadrant_names from DB:', data.quadrant_names);
-      }
 
       if (error) {
         console.log('💥 Database error:', error);

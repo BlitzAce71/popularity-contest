@@ -74,14 +74,6 @@ const CreateTournament: React.FC = () => {
       console.log('🔄 Setting loading to true');
       
       // Clean up data before submission
-      console.log('🔍 Raw form data before processing:', data);
-      console.log('🔍 Individual quadrant names:', {
-        quadrant_1: data.quadrant_1_name,
-        quadrant_2: data.quadrant_2_name, 
-        quadrant_3: data.quadrant_3_name,
-        quadrant_4: data.quadrant_4_name
-      });
-      
       const tournamentData = {
         ...data,
         image_url: data.image_url || undefined,
@@ -98,9 +90,6 @@ const CreateTournament: React.FC = () => {
         quadrant_3_name: undefined,
         quadrant_4_name: undefined,
       };
-      
-      console.log('📝 Cleaned tournament data:', tournamentData);
-      console.log('📝 Final quadrant_names array:', tournamentData.quadrant_names);
       console.log('🚀 Calling TournamentService.createTournament...');
 
       // Add client-side timeout protection
@@ -112,11 +101,6 @@ const CreateTournament: React.FC = () => {
       const newTournament = await Promise.race([createPromise, timeoutPromise]);
       
       console.log('✅ Tournament created successfully:', newTournament);
-      console.log('✅ Created tournament quadrant_names:', newTournament.quadrant_names);
-      console.log('🧭 Navigating to:', `/tournaments/${newTournament.id}`);
-      
-      // Small delay to ensure database transaction is committed
-      await new Promise(resolve => setTimeout(resolve, 500));
       
       // Navigate to the newly created tournament
       navigate(`/tournaments/${newTournament.id}`);
