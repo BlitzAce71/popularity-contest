@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useBracketData } from '@/hooks/tournaments/useTournament';
-import { useLiveVoteCounts } from '@/hooks/voting/useVoting';
+import { useLiveVoteCounts, useVoting } from '@/hooks/voting/useVoting';
 import type { BracketRound, BracketMatchup } from '@/types';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import Button from '@/components/ui/Button';
 import MatchupCard from './MatchupCard';
 import { Trophy, Users } from 'lucide-react';
 
@@ -12,6 +13,126 @@ interface BracketVisualizationProps {
   showVotingInterface?: boolean;
   className?: string;
 }
+
+interface RoundVotingInterfaceProps {
+  round: BracketRound;
+  onVotesSubmitted: () => void;
+}
+
+const RoundVotingInterface: React.FC<RoundVotingInterfaceProps> = ({ round, onVotesSubmitted }) => {
+  const [selections, setSelections] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Get voting hooks for each matchup
+  const votingHooks = round.matchups.map(matchup => ({
+    matchupId: matchup.id,
+    hook: useVoting(matchup.id)
+  }));
+
+  const totalMatchups = round.matchups.length;
+  const selectedCount = Object.keys(selections).length;
+  const allSelected = selectedCount === totalMatchups;
+
+  const handleContestantSelect = (matchupId: string, contestantId: string) => {
+    setSelections(prev => ({
+      ...prev,
+      [matchupId]: contestantId
+    }));
+  };
+
+  const handleSubmitAllVotes = async () => {
+    if (!allSelected) return;
+
+    setSubmitting(true);
+    setError(null);
+
+    try {
+      // Submit votes for all matchups
+      const promises = votingHooks.map(({ matchupId, hook }) => {
+        const selectedContestant = selections[matchupId];
+        if (selectedContestant) {
+          return hook.submitVote(selectedContestant);
+        }
+        return Promise.resolve(false);
+      });
+
+      const results = await Promise.all(promises);
+      const allSuccessful = results.every(result => result);
+
+      if (allSuccessful) {
+        onVotesSubmitted();
+      } else {
+        setError('Some votes failed to submit. Please try again.');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to submit votes');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="mt-6 pt-6 border-t border-gray-200">
+      <h4 className="text-lg font-semibold text-gray-900 mb-4">Make Your Selections</h4>
+      
+      {/* Matchup selection list */}
+      <div className="space-y-4 mb-6">
+        {round.matchups.map((matchup) => (
+          <div key={matchup.id} className="bg-gray-50 rounded-lg p-4">
+            <h5 className="font-medium text-gray-900 mb-3">
+              {matchup.contestant1?.name} vs {matchup.contestant2?.name}
+            </h5>
+            <div className="flex gap-3">
+              <button
+                onClick={() => handleContestantSelect(matchup.id, matchup.contestant1?.id || '')}
+                className={`flex-1 p-3 rounded-lg border transition-colors ${
+                  selections[matchup.id] === matchup.contestant1?.id
+                    ? 'bg-primary-100 border-primary-500 text-primary-700'
+                    : 'bg-white border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                {matchup.contestant1?.name}
+              </button>
+              <button
+                onClick={() => handleContestantSelect(matchup.id, matchup.contestant2?.id || '')}
+                className={`flex-1 p-3 rounded-lg border transition-colors ${
+                  selections[matchup.id] === matchup.contestant2?.id
+                    ? 'bg-primary-100 border-primary-500 text-primary-700'
+                    : 'bg-white border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                {matchup.contestant2?.name}
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Error message */}
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+          <p className="text-sm text-red-600">{error}</p>
+        </div>
+      )}
+
+      {/* Submit button */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-gray-600">
+          {selectedCount} of {totalMatchups} selections made
+        </p>
+        <Button
+          onClick={handleSubmitAllVotes}
+          disabled={!allSelected || submitting}
+          loading={submitting}
+          className="px-6"
+        >
+          {submitting ? 'Submitting Votes...' : `Submit All Votes (${selectedCount}/${totalMatchups})`}
+        </Button>
+      </div>
+    </div>
+  );
+};
 
 const BracketVisualization: React.FC<BracketVisualizationProps> = ({
   tournamentId,
@@ -132,21 +253,27 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
                   )}
                 </h3>
                 <div className="space-y-4">
-                  {console.log('🎯 DEBUG: displayRound.matchups:', displayRound.matchups)}
-                  {console.log('🎯 DEBUG: canVote:', canVote, 'showVotingInterface:', showVotingInterface)}
-                  {(displayRound.matchups || []).map((matchup: BracketMatchup, index: number) => {
-                    console.log(`🎯 DEBUG: Rendering matchup ${index}:`, matchup);
-                    console.log(`🎯 DEBUG: Matchup canVote: ${canVote && displayRound.isActive && matchup.status === 'active'}`);
-                    return (
-                      <MatchupCard
-                        key={matchup.id}
-                        matchup={matchup}
-                        canVote={canVote && displayRound.isActive && matchup.status === 'active'}
-                        showVotingInterface={showVotingInterface}
-                        loading={voteLoading}
-                      />
-                    );
-                  })}
+                  {(displayRound.matchups || []).map((matchup: BracketMatchup) => (
+                    <MatchupCard
+                      key={matchup.id}
+                      matchup={matchup}
+                      canVote={false} // Disable individual voting
+                      showVotingInterface={false} // Hide individual submit buttons
+                      loading={voteLoading}
+                    />
+                  ))}
+                </div>
+                
+                {/* Round-level voting interface */}
+                {showVotingInterface && displayRound.isActive && canVote && (
+                  <RoundVotingInterface 
+                    round={displayRound}
+                    onVotesSubmitted={() => {
+                      // Refresh the page data
+                      window.location.reload();
+                    }}
+                  />
+                )}
                 </div>
               </div>
             );
