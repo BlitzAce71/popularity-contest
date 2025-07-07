@@ -64,6 +64,11 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
         isActive: round.status === 'active',
         matchups: (round.matchups || []).map((matchup: BracketMatchup) => ({
           ...matchup,
+          voteCounts: {
+            contestant1Votes: matchup.contestant1_votes || 0,
+            contestant2Votes: matchup.contestant2_votes || 0,
+            totalVotes: matchup.total_votes || 0,
+          },
           vote_counts: voteCounts[matchup.id] || {
             contestant1_votes: matchup.contestant1_votes || 0,
             contestant2_votes: matchup.contestant2_votes || 0,
