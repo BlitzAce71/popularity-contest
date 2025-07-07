@@ -236,14 +236,23 @@ export class TournamentService {
   // Get bracket visualization data
   static async getBracketData(id: string): Promise<any> {
     try {
+      console.log('Calling get_bracket_data with tournament_uuid:', id);
       const { data, error } = await supabase.rpc('get_bracket_data', {
         tournament_uuid: id,
       });
 
-      if (error) throw error;
+      console.log('Supabase response - data:', data, 'error:', error);
+      
+      if (error) {
+        console.error('Supabase error details:', JSON.stringify(error, null, 2));
+        throw error;
+      }
       return data;
     } catch (error) {
       console.error('Error fetching bracket data:', error);
+      console.error('Error type:', typeof error);
+      console.error('Error message:', error instanceof Error ? error.message : 'Unknown error');
+      console.error('Full error object:', JSON.stringify(error, null, 2));
       throw new Error(error instanceof Error ? error.message : 'Failed to fetch bracket data');
     }
   }
