@@ -19,11 +19,6 @@ BEGIN
     USING public.matchups m
     WHERE v.matchup_id = m.id AND m.tournament_id = tournament_uuid;
     
-    -- Delete all vote results (if table exists)
-    DELETE FROM public.vote_results vr
-    USING public.matchups m
-    WHERE vr.matchup_id = m.id AND m.tournament_id = tournament_uuid;
-    
     -- Delete all matchups
     DELETE FROM public.matchups
     WHERE tournament_id = tournament_uuid;

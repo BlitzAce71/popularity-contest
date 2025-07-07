@@ -1,5 +1,5 @@
--- Fix reset function to work with current database schema
--- Removes references to non-existent tables and columns
+-- Minimal reset function that only uses core functionality
+-- Only resets what's absolutely necessary for tournament restart
 
 DROP FUNCTION IF EXISTS public.reset_tournament_bracket(UUID);
 
@@ -34,11 +34,9 @@ BEGIN
     SET status = 'registration'
     WHERE id = tournament_uuid;
     
-    -- Reset contestant stats (only reset columns that definitely exist)
+    -- Reset only basic contestant status (minimal columns)
     UPDATE public.contestants
-    SET 
-        eliminated_round = NULL,
-        is_active = TRUE
+    SET is_active = TRUE
     WHERE tournament_id = tournament_uuid;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
