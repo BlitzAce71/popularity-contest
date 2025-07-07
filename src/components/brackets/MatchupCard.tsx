@@ -167,7 +167,7 @@ const MatchupCard: React.FC<MatchupCardProps> = ({
           {/* Contestant image */}
           {contestant.image_url ? (
             <img
-              src={getFileUrl('contestants', contestant.image_url)}
+              src={getFileUrl('contestant-images', contestant.image_url)}
               alt={contestant.name}
               className={`object-cover rounded-full ${compact ? 'w-10 h-10' : 'w-12 h-12'}`}
             />
