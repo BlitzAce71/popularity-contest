@@ -458,17 +458,27 @@ DECLARE
 BEGIN
     -- Get all rounds for tournament
     FOR round_record IN
-        SELECT * FROM public.rounds
-        WHERE tournament_id = tournament_uuid
-        ORDER BY round_number
+        SELECT r.id, r.round_number, r.name, r.status, r.total_matchups, r.completed_matchups 
+        FROM public.rounds r
+        WHERE r.tournament_id = tournament_uuid
+        ORDER BY r.round_number
     LOOP
         -- Reset matchups array for this round
         matchups_array := '[]'::JSONB;
         
-        -- Get all matchups for this round
+        -- Get all matchups for this round with explicit column selection
         FOR matchup_record IN
             SELECT 
-                m.*,
+                m.id,
+                m.position,
+                m.status,
+                m.contestant1_id,
+                m.contestant2_id,
+                m.winner_id,
+                m.contestant1_votes,
+                m.contestant2_votes,
+                m.total_votes,
+                m.is_tie,
                 c1.name as contestant1_name,
                 c1.image_url as contestant1_image,
                 c2.name as contestant2_name,

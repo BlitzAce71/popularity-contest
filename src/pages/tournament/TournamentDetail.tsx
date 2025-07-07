@@ -67,7 +67,6 @@ const TournamentDetail: React.FC = () => {
 
   const canManage = user?.id === tournament?.created_by || user?.is_admin;
   const isActive = tournament.status === 'active';
-  const isRegistration = tournament.status === 'registration';
 
   const getStatusColor = () => {
     switch (tournament.status) {
@@ -75,8 +74,6 @@ const TournamentDetail: React.FC = () => {
         return 'bg-green-100 text-green-800 border-green-200';
       case 'completed':
         return 'bg-gray-100 text-gray-800 border-gray-200';
-      case 'registration':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'draft':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       default:
@@ -211,23 +208,15 @@ const TournamentDetail: React.FC = () => {
       <div className="min-h-96">
         {activeTab === 'bracket' && (
           <>
-            {tournament.status === 'draft' || tournament.status === 'registration' ? (
+            {tournament.status === 'draft' ? (
               <div className="text-center py-12">
                 <Trophy className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  {tournament.status === 'draft' ? 'Tournament Not Started' : 'Registration Open'}
+                  Tournament Not Started
                 </h3>
                 <p className="text-gray-600 mb-6">
-                  {tournament.status === 'draft' 
-                    ? 'The tournament creator is still setting up contestants and bracket.'
-                    : 'Waiting for more contestants to join before the tournament can begin.'
-                  }
+                  The tournament creator is still setting up contestants and bracket.
                 </p>
-                {tournament.status === 'registration' && !isAuthenticated && (
-                  <Link to="/auth/login">
-                    <Button>Sign In to Join</Button>
-                  </Link>
-                )}
               </div>
             ) : (
               <BracketVisualization 

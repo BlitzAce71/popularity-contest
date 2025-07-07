@@ -14,7 +14,7 @@ export interface Tournament {
   name: string;
   description: string;
   image_url?: string;
-  status: 'draft' | 'registration' | 'active' | 'completed' | 'cancelled';
+  status: 'draft' | 'active' | 'completed' | 'cancelled';
   start_date: string;
   end_date?: string;
   max_contestants: number;

@@ -299,17 +299,31 @@ export class VotingService {
     totalVotes: number;
   }>> {
     try {
+      // First get active matchups for this tournament
+      const { data: matchups, error: matchupsError } = await supabase
+        .from('matchups')
+        .select('id')
+        .eq('tournament_id', tournamentId)
+        .eq('status', 'active');
+
+      if (matchupsError) throw matchupsError;
+
+      if (!matchups || matchups.length === 0) {
+        return {};
+      }
+
+      const matchupIds = matchups.map(m => m.id);
+
+      // Then get results for those matchups
       const { data, error } = await supabase
         .from('results')
         .select(`
           matchup_id,
           contestant1_votes,
           contestant2_votes,
-          total_votes,
-          matchups!inner(tournament_id, status)
+          total_votes
         `)
-        .eq('matchups.tournament_id', tournamentId)
-        .eq('matchups.status', 'active');
+        .in('matchup_id', matchupIds);
 
       if (error) throw error;
 
@@ -446,9 +460,7 @@ export class VotingService {
           id,
           contestant1_id,
           contestant2_id,
-          status,
-          contestants!matchups_contestant1_id_fkey(id, name, image_url),
-          contestants!matchups_contestant2_id_fkey(id, name, image_url)
+          status
         `)
         .eq('tournament_id', tournamentId)
         .eq('status', 'active');
@@ -463,6 +475,19 @@ export class VotingService {
         
         // Only show matchups with close votes (difference of 3 or less)
         if (voteDifference <= 3) {
+          // Get contestant data separately
+          const { data: contestant1 } = await supabase
+            .from('contestants')
+            .select('id, name, image_url')
+            .eq('id', matchup.contestant1_id)
+            .single();
+
+          const { data: contestant2 } = await supabase
+            .from('contestants')
+            .select('id, name, image_url')
+            .eq('id', matchup.contestant2_id)
+            .single();
+
           // Check if admin has already voted
           const { data: adminVote } = await supabase
             .from('votes')
@@ -472,15 +497,17 @@ export class VotingService {
             .eq('is_admin_vote', true)
             .maybeSingle();
 
-          opportunities.push({
-            matchupId: matchup.id,
-            contestant1: matchup.contestants[0],
-            contestant2: matchup.contestants[1], 
-            contestant1Votes: results.contestant1Votes,
-            contestant2Votes: results.contestant2Votes,
-            voteDifference,
-            hasAdminVote: !!adminVote,
-          });
+          if (contestant1 && contestant2) {
+            opportunities.push({
+              matchupId: matchup.id,
+              contestant1,
+              contestant2, 
+              contestant1Votes: results.contestant1Votes,
+              contestant2Votes: results.contestant2Votes,
+              voteDifference,
+              hasAdminVote: !!adminVote,
+            });
+          }
         }
       }
 

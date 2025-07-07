@@ -12,7 +12,7 @@ const TournamentList: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'registration' | 'completed'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'completed'>('all');
   
   const {
     tournaments,
@@ -37,8 +37,6 @@ const TournamentList: React.FC = () => {
         return 'bg-green-100 text-green-800 border-green-200';
       case 'completed':
         return 'bg-gray-100 text-gray-800 border-gray-200';
-      case 'registration':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'draft':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       default:
@@ -119,7 +117,6 @@ const TournamentList: React.FC = () => {
             className="input-field min-w-[140px]"
           >
             <option value="all">All Status</option>
-            <option value="registration">Registration</option>
             <option value="active">Active</option>
             <option value="completed">Completed</option>
           </select>
@@ -208,8 +205,7 @@ const TournamentList: React.FC = () => {
                 <div className="pt-4 border-t">
                   <Link to={`/tournaments/${tournament.id}`}>
                     <Button variant="outline" className="w-full">
-                      {tournament.status === 'active' ? 'Vote Now' : 
-                       tournament.status === 'registration' ? 'Join Tournament' : 'View Details'}
+                      {tournament.status === 'active' ? 'Vote Now' : 'View Details'}
                     </Button>
                   </Link>
                 </div>

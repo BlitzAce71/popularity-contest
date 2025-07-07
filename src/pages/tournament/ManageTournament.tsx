@@ -104,35 +104,13 @@ const ManageTournament: React.FC = () => {
       case 'draft':
         return (
           <Button 
-            onClick={() => handleStatusChange('registration')}
+            onClick={() => handleStatusChange('active')}
             disabled={loading || (tournament.current_contestants || 0) < 2}
             className="flex items-center gap-2"
           >
             <Play className="w-4 h-4" />
-            Open Registration
+            Start Tournament
           </Button>
-        );
-      case 'registration':
-        return (
-          <div className="flex gap-2">
-            <Button 
-              onClick={() => handleStatusChange('active')}
-              disabled={loading}
-              className="flex items-center gap-2"
-            >
-              <Play className="w-4 h-4" />
-              Start Tournament
-            </Button>
-            <Button 
-              onClick={() => handleStatusChange('draft')}
-              disabled={loading}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <Pause className="w-4 h-4" />
-              Back to Draft
-            </Button>
-          </div>
         );
       case 'active':
         return (
@@ -645,15 +623,6 @@ const TournamentSettings: React.FC<{ tournament: any; onRefresh: () => void }> =
     const confirmMessage = `Are you sure you want to delete "${tournament.name}"?\n\nThis action cannot be undone. All contestants, matches, and votes will be permanently removed.`;
     
     if (!window.confirm(confirmMessage)) return;
-    
-    const finalConfirm = window.confirm('This is your final warning. Type "DELETE" in the next prompt to confirm.');
-    if (!finalConfirm) return;
-    
-    const userInput = window.prompt('Type "DELETE" (in capital letters) to confirm deletion:');
-    if (userInput !== 'DELETE') {
-      alert('Deletion cancelled - you must type "DELETE" exactly.');
-      return;
-    }
     
     try {
       setLoading(true);
