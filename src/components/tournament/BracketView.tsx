@@ -8,6 +8,15 @@ interface BracketViewProps {
 }
 
 const BracketView: React.FC<BracketViewProps> = ({ contestants, tournament }) => {
+  // Guard against undefined contestants
+  if (!contestants || !Array.isArray(contestants)) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-500">Loading bracket data...</p>
+      </div>
+    );
+  }
+
   // Group contestants by quadrant
   const quadrants = {
     1: contestants.filter(c => c.quadrant === 1).sort((a, b) => a.seed - b.seed),
