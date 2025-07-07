@@ -31,6 +31,14 @@ const TournamentList: React.FC = () => {
     isPublic: true,
   });
 
+  // Debug: Log tournament data to see what fields are available
+  React.useEffect(() => {
+    if (tournaments.length > 0) {
+      console.log('🐛 Tournament data:', tournaments[0]);
+      console.log('🐛 Image URL field:', tournaments[0].image_url);
+    }
+  }, [tournaments]);
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
@@ -161,11 +169,11 @@ const TournamentList: React.FC = () => {
             <div key={tournament.id} className="card p-0 hover:shadow-xl transition-shadow overflow-hidden">
               {/* Tournament Image or Placeholder */}
               <div className="relative h-48 w-full">
-                {tournament.imageUrl ? (
+                {tournament.image_url ? (
                   <>
                     <img
-                      src={tournament.imageUrl}
-                      alt={tournament.title}
+                      src={tournament.image_url}
+                      alt={tournament.name}
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-black bg-opacity-20"></div>
@@ -173,7 +181,7 @@ const TournamentList: React.FC = () => {
                       <div className="flex items-end justify-between">
                         <div>
                           <h3 className="text-xl font-semibold text-white mb-1">
-                            {tournament.title}
+                            {tournament.name}
                           </h3>
                           <div className="flex items-center gap-2">
                             <span
@@ -191,7 +199,7 @@ const TournamentList: React.FC = () => {
                     <div className="text-center">
                       <Trophy className="w-16 h-16 text-primary-400 mx-auto mb-2" />
                       <h3 className="text-xl font-semibold text-primary-700 mb-1">
-                        {tournament.title}
+                        {tournament.name}
                       </h3>
                       <div className="flex items-center justify-center gap-2">
                         <span
@@ -210,7 +218,7 @@ const TournamentList: React.FC = () => {
               <div className="p-6 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-500">
-                    {tournament.bracketType?.replace('-', ' ') || 'single elimination'}
+                    {tournament.bracket_type?.replace('-', ' ') || 'single elimination'}
                   </span>
                 </div>
 
@@ -221,12 +229,12 @@ const TournamentList: React.FC = () => {
                 <div className="flex items-center gap-4 text-sm text-gray-500">
                   <div className="flex items-center gap-1">
                     <Users className="w-4 h-4" />
-                    {tournament.currentParticipants || 0}/{tournament.maxParticipants}
+                    {tournament.current_contestants || 0}/{tournament.max_contestants}
                   </div>
-                  {tournament.startDate && (
+                  {tournament.tournament_start_date && (
                     <div className="flex items-center gap-1">
                       <Calendar className="w-4 h-4" />
-                      {new Date(tournament.startDate).toLocaleDateString()}
+                      {new Date(tournament.tournament_start_date).toLocaleDateString()}
                     </div>
                   )}
                 </div>
