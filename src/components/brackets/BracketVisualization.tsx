@@ -19,8 +19,14 @@ interface RoundVotingInterfaceProps {
   onVotesSubmitted: () => void;
 }
 
-const RoundVotingInterface: React.FC<RoundVotingInterfaceProps> = ({ round, onVotesSubmitted }) => {
-  const [selections, setSelections] = useState<Record<string, string>>({});
+interface RoundVotingProps {
+  round: BracketRound;
+  onVotesSubmitted: () => void;
+  onSelectionChange: (matchupId: string, contestantId: string | null) => void;
+  selections: Record<string, string>;
+}
+
+const RoundVotingInterface: React.FC<RoundVotingProps> = ({ round, onVotesSubmitted, onSelectionChange, selections }) => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,13 +39,6 @@ const RoundVotingInterface: React.FC<RoundVotingInterfaceProps> = ({ round, onVo
   const totalMatchups = round.matchups.length;
   const selectedCount = Object.keys(selections).length;
   const allSelected = selectedCount === totalMatchups;
-
-  const handleContestantSelect = (matchupId: string, contestantId: string) => {
-    setSelections(prev => ({
-      ...prev,
-      [matchupId]: contestantId
-    }));
-  };
 
   const handleSubmitAllVotes = async () => {
     if (!allSelected) return;
@@ -74,41 +73,6 @@ const RoundVotingInterface: React.FC<RoundVotingInterfaceProps> = ({ round, onVo
 
   return (
     <div className="mt-6 pt-6 border-t border-gray-200">
-      <h4 className="text-lg font-semibold text-gray-900 mb-4">Make Your Selections</h4>
-      
-      {/* Matchup selection list */}
-      <div className="space-y-4 mb-6">
-        {round.matchups.map((matchup) => (
-          <div key={matchup.id} className="bg-gray-50 rounded-lg p-4">
-            <h5 className="font-medium text-gray-900 mb-3">
-              {matchup.contestant1?.name} vs {matchup.contestant2?.name}
-            </h5>
-            <div className="flex gap-3">
-              <button
-                onClick={() => handleContestantSelect(matchup.id, matchup.contestant1?.id || '')}
-                className={`flex-1 p-3 rounded-lg border transition-colors ${
-                  selections[matchup.id] === matchup.contestant1?.id
-                    ? 'bg-primary-100 border-primary-500 text-primary-700'
-                    : 'bg-white border-gray-300 hover:bg-gray-50'
-                }`}
-              >
-                {matchup.contestant1?.name}
-              </button>
-              <button
-                onClick={() => handleContestantSelect(matchup.id, matchup.contestant2?.id || '')}
-                className={`flex-1 p-3 rounded-lg border transition-colors ${
-                  selections[matchup.id] === matchup.contestant2?.id
-                    ? 'bg-primary-100 border-primary-500 text-primary-700'
-                    : 'bg-white border-gray-300 hover:bg-gray-50'
-                }`}
-              >
-                {matchup.contestant2?.name}
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
       {/* Error message */}
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
@@ -143,6 +107,21 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
   const { bracketData, loading: bracketLoading, error } = useBracketData(tournamentId);
   const { voteCounts, loading: voteLoading } = useLiveVoteCounts(tournamentId);
   const [selectedRound, setSelectedRound] = useState<number | null>(null);
+  const [selections, setSelections] = useState<Record<string, string>>({});
+
+  const handleContestantSelect = (matchupId: string, contestantId: string | null) => {
+    setSelections(prev => {
+      if (contestantId === null) {
+        const newSelections = { ...prev };
+        delete newSelections[matchupId];
+        return newSelections;
+      }
+      return {
+        ...prev,
+        [matchupId]: contestantId
+      };
+    });
+  };
 
   if (bracketLoading && !bracketData) {
     return (
@@ -241,6 +220,8 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
           
           if (!displayRound) return null;
 
+          const hasRoundVoting = showVotingInterface && displayRound.isActive && canVote;
+
           return (
             <div className="space-y-4">
               <div>
@@ -257,19 +238,23 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
                     <MatchupCard
                       key={matchup.id}
                       matchup={matchup}
-                      canVote={false}
-                      showVotingInterface={false}
+                      canVote={canVote && displayRound.isActive && matchup.status === 'active'}
+                      showVotingInterface={showVotingInterface && !hasRoundVoting}
                       loading={voteLoading}
+                      onSelectionChange={hasRoundVoting ? handleContestantSelect : undefined}
+                      externalSelection={hasRoundVoting ? selections[matchup.id] : undefined}
                     />
                   ))}
                 </div>
                 
-                {showVotingInterface && displayRound.isActive && canVote && (
+                {hasRoundVoting && (
                   <RoundVotingInterface 
                     round={displayRound}
                     onVotesSubmitted={() => {
                       window.location.reload();
                     }}
+                    onSelectionChange={handleContestantSelect}
+                    selections={selections}
                   />
                 )}
               </div>

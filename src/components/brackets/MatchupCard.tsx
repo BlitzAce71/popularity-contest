@@ -31,6 +31,9 @@ interface MatchupCardProps {
   loading?: boolean;
   compact?: boolean;
   className?: string;
+  onSelectionChange?: (matchupId: string, contestantId: string | null) => void;
+  externalSelection?: string | null;
+  disableIndividualVoting?: boolean;
 }
 
 const MatchupCard: React.FC<MatchupCardProps> = ({
@@ -40,6 +43,9 @@ const MatchupCard: React.FC<MatchupCardProps> = ({
   loading = false,
   compact = false,
   className = '',
+  onSelectionChange,
+  externalSelection,
+  disableIndividualVoting = false,
 }) => {
   const [selectedContestant, setSelectedContestant] = useState<string | null>(null);
   const { 
@@ -77,8 +83,15 @@ const MatchupCard: React.FC<MatchupCardProps> = ({
   const handleContestantSelect = (contestantId: string) => {
     if (!canVote || hasVoted || submitting) return;
     
-    setSelectedContestant(contestantId);
-    saveDraft(contestantId);
+    if (onSelectionChange) {
+      // External selection handling for round-level voting
+      const newSelection = externalSelection === contestantId ? null : contestantId;
+      onSelectionChange(matchup.id, newSelection);
+    } else {
+      // Individual matchup voting
+      setSelectedContestant(contestantId);
+      saveDraft(contestantId);
+    }
   };
 
   const getContestantCardClass = (contestantId: string) => {
@@ -98,7 +111,8 @@ const MatchupCard: React.FC<MatchupCardProps> = ({
 
     // Active voting state
     if (isActive && canVote && !hasVoted) {
-      if (selectedContestant === contestantId) {
+      const currentSelection = onSelectionChange ? externalSelection : selectedContestant;
+      if (currentSelection === contestantId) {
         return `${baseClass} bg-primary-50 border-primary-300 ring-2 ring-primary-200 cursor-pointer`;
       }
       return `${baseClass} bg-white border-gray-200 hover:border-primary-300 hover:bg-primary-25 cursor-pointer`;
@@ -188,7 +202,7 @@ const MatchupCard: React.FC<MatchupCardProps> = ({
         </div>
 
         {/* Selection indicator for voting */}
-        {isActive && canVote && !hasVoted && selectedContestant === contestant.id && (
+        {isActive && canVote && !hasVoted && (onSelectionChange ? externalSelection : selectedContestant) === contestant.id && (
           <div className="absolute inset-0 bg-primary-500 bg-opacity-10 rounded-lg pointer-events-none" />
         )}
       </div>
@@ -227,8 +241,8 @@ const MatchupCard: React.FC<MatchupCardProps> = ({
         {renderContestant(contestant2, false)}
       </div>
 
-      {/* Voting controls */}
-      {showVotingInterface && isActive && canVote && !hasVoted && contestant1 && contestant2 && (
+      {/* Voting controls - only show for individual voting, not external selection */}
+      {showVotingInterface && isActive && canVote && !hasVoted && contestant1 && contestant2 && !onSelectionChange && (
         <div className="pt-4 border-t border-gray-200">
           {error && (
             <div className="text-red-600 text-sm mb-3">{error}</div>
