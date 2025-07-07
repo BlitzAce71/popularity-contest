@@ -117,6 +117,8 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 GRANT EXECUTE ON FUNCTION public.generate_single_elimination_bracket(UUID) TO authenticated;
 
 -- Create helper function to advance rounds
+DROP FUNCTION IF EXISTS public.advance_tournament_round(UUID);
+
 CREATE OR REPLACE FUNCTION public.advance_tournament_round(tournament_uuid UUID)
 RETURNS BOOLEAN AS $$
 DECLARE
