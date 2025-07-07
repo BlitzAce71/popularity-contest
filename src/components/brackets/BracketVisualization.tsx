@@ -51,7 +51,7 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
     );
   }
 
-  const rounds = bracketData.rounds;
+  const rounds = bracketData.rounds || [];
   const totalRounds = rounds.length;
 
   // Calculate bracket layout
@@ -62,7 +62,7 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
       const roundData = {
         ...round,
         isActive: round.status === 'active',
-        matchups: round.matchups.map((matchup: BracketMatchup) => ({
+        matchups: (round.matchups || []).map((matchup: BracketMatchup) => ({
           ...matchup,
           vote_counts: voteCounts[matchup.id] || {
             contestant1_votes: matchup.contestant1_votes || 0,
@@ -123,7 +123,7 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
                   )}
                 </h3>
                 <div className="space-y-4">
-                  {displayRound.matchups.map((matchup: BracketMatchup) => (
+                  {(displayRound.matchups || []).map((matchup: BracketMatchup) => (
                     <MatchupCard
                       key={matchup.id}
                       matchup={matchup}
@@ -165,7 +165,7 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
 
               {/* Matchups */}
               <div className="flex flex-col justify-center space-y-8 flex-1">
-                {round.matchups.map((matchup: BracketMatchup, matchupIndex: number) => {
+                {(round.matchups || []).map((matchup: BracketMatchup, matchupIndex: number) => {
                   // Calculate vertical spacing for bracket layout
                   const spacing = Math.pow(2, roundIndex) * 60;
                   const topMargin = matchupIndex > 0 ? spacing : 0;
