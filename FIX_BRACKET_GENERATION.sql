@@ -1,6 +1,10 @@
 -- Fix bracket generation function to use max_contestants instead of size
 -- This ensures that new tournaments can generate brackets properly
 
+-- Drop existing function first
+DROP FUNCTION IF EXISTS public.generate_single_elimination_bracket(UUID);
+
+-- Recreate function with fix
 CREATE OR REPLACE FUNCTION public.generate_single_elimination_bracket(tournament_uuid UUID)
 RETURNS VOID AS $$
 DECLARE

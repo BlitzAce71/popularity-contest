@@ -626,6 +626,26 @@ const TournamentSettings: React.FC<{ tournament: any; onRefresh: () => void }> =
     }
   };
 
+  const handleResetTournament = async () => {
+    const confirmMessage = `Are you sure you want to reset "${tournament.name}"?\n\nThis will:\n• Delete all votes and voting results\n• Delete the tournament bracket\n• Reset tournament status to registration\n• Keep all contestants\n\nYou can restart the tournament after resetting.`;
+    
+    if (!window.confirm(confirmMessage)) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
+      
+      await TournamentService.resetTournament(tournament.id);
+      
+      // Refresh the tournament data
+      onRefresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to reset tournament');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDeleteTournament = async () => {
     const confirmMessage = `Are you sure you want to delete "${tournament.name}"?\n\nThis action cannot be undone. All contestants, matches, and votes will be permanently removed.`;
     
@@ -735,6 +755,28 @@ const TournamentSettings: React.FC<{ tournament: any; onRefresh: () => void }> =
 
       <div className="card p-6">
         <h3 className="text-lg font-medium text-gray-900 mb-4">Danger Zone</h3>
+        
+        {/* Reset Tournament Section */}
+        {(tournament.status === 'active' || tournament.status === 'completed') && (
+          <div className="border border-yellow-200 rounded-lg p-4 bg-yellow-50 mb-4">
+            <h4 className="text-sm font-medium text-yellow-800 mb-2">Reset Tournament</h4>
+            <p className="text-sm text-yellow-700 mb-4">
+              Reset the tournament to start over. This will delete all votes and the bracket, 
+              but keep all contestants. The tournament status will be changed back to registration.
+              You can then restart the tournament when ready.
+            </p>
+            <Button
+              onClick={() => handleResetTournament()}
+              variant="outline"
+              className="border-yellow-300 text-yellow-700 hover:bg-yellow-100"
+              disabled={loading}
+            >
+              {loading ? 'Resetting...' : 'Reset Tournament'}
+            </Button>
+          </div>
+        )}
+
+        {/* Delete Tournament Section */}
         <div className="border border-red-200 rounded-lg p-4 bg-red-50">
           <h4 className="text-sm font-medium text-red-800 mb-2">Delete Tournament</h4>
           <p className="text-sm text-red-600 mb-4">
@@ -745,8 +787,9 @@ const TournamentSettings: React.FC<{ tournament: any; onRefresh: () => void }> =
             onClick={() => handleDeleteTournament()}
             variant="outline"
             className="border-red-300 text-red-700 hover:bg-red-100"
+            disabled={loading}
           >
-            Delete Tournament
+            {loading ? 'Deleting...' : 'Delete Tournament'}
           </Button>
         </div>
       </div>

@@ -298,6 +298,20 @@ export class TournamentService {
     }
   }
 
+  // Reset tournament bracket and voting
+  static async resetTournament(id: string): Promise<void> {
+    try {
+      const { error } = await supabase.rpc('reset_tournament_bracket', {
+        tournament_uuid: id,
+      });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error resetting tournament:', error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to reset tournament');
+    }
+  }
+
   // Get user's tournaments
   static async getUserTournaments(userId: string): Promise<Tournament[]> {
     try {
