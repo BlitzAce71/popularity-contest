@@ -29,7 +29,7 @@ BEGIN
     DELETE FROM public.rounds
     WHERE tournament_id = tournament_uuid;
     
-    -- Reset tournament status to registration
+    -- Reset tournament status to registration so it can be started again
     UPDATE public.tournaments
     SET status = 'registration'
     WHERE id = tournament_uuid;

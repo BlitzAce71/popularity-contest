@@ -109,6 +109,7 @@ const ManageTournament: React.FC = () => {
   const getStatusActions = () => {
     switch (tournament.status) {
       case 'draft':
+      case 'registration':
         return (
           <Button 
             onClick={() => handleStatusChange('active')}
@@ -866,7 +867,7 @@ const BracketManagement: React.FC<{ tournament: any; onRefresh: () => void }> = 
           </p>
         </div>
         
-        {tournament.status === 'draft' && contestants.length >= 2 && (
+        {(tournament.status === 'draft' || tournament.status === 'registration') && contestants.length >= 2 && (
           <Button
             onClick={handleStartTournament}
             disabled={startingTournament}
