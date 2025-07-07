@@ -96,59 +96,135 @@ const TournamentDetail: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div className="flex items-start gap-4">
-          <Link to="/tournaments">
-            <Button variant="ghost" size="sm" className="flex items-center gap-2">
-              <ArrowLeft className="w-4 h-4" />
-              Back
-            </Button>
-          </Link>
-          
-          <div className="space-y-2">
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold text-gray-900">{tournament.name}</h1>
-              <span className={`px-3 py-1 text-sm font-medium rounded-full border ${getStatusColor()}`}>
-                {tournament.status.charAt(0).toUpperCase() + tournament.status.slice(1)}
-              </span>
-            </div>
-            
-            <p className="text-gray-600 max-w-2xl">{tournament.description}</p>
-            
-            <div className="flex items-center gap-6 text-sm text-gray-500">
-              <div className="flex items-center gap-1">
-                <Users className="w-4 h-4" />
-                {tournament.current_contestants || 0}/{tournament.max_contestants} contestants
-              </div>
-              <div className="flex items-center gap-1">
-                <Trophy className="w-4 h-4" />
-                {tournament.bracket_type?.replace('-', ' ') || 'Single elimination'}
-              </div>
-              {tournament.start_date && (
-                <div className="flex items-center gap-1">
-                  <Calendar className="w-4 h-4" />
-                  Started {new Date(tournament.start_date).toLocaleDateString()}
+      {/* Tournament Banner Image */}
+      {tournament.image_url && (
+        <div className="relative w-full h-64 md:h-80 lg:h-96 overflow-hidden rounded-lg bg-gray-100">
+          <img
+            src={tournament.image_url}
+            alt={tournament.name}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+          <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/60 to-transparent">
+            <div className="flex items-end justify-between">
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">{tournament.name}</h1>
+                <div className="flex items-center gap-3">
+                  <span className={`px-3 py-1 text-sm font-medium rounded-full border bg-white/90 text-gray-800 border-white/20`}>
+                    {tournament.status.charAt(0).toUpperCase() + tournament.status.slice(1)}
+                  </span>
+                  <span className="text-white/90 text-sm">
+                    {tournament.bracket_type?.replace('-', ' ') || 'Single elimination'}
+                  </span>
                 </div>
-              )}
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={handleShare} className="bg-white/90 text-gray-800 border-white/20 hover:bg-white">
+                  <Share2 className="w-4 h-4" />
+                </Button>
+                {canManage && (
+                  <Link to={`/tournaments/${id}/manage`}>
+                    <Button variant="outline" size="sm" className="bg-white/90 text-gray-800 border-white/20 hover:bg-white">
+                      <Settings className="w-4 h-4" />
+                    </Button>
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
         </div>
+      )}
 
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleShare}>
-            <Share2 className="w-4 h-4" />
-          </Button>
-          
-          {canManage && (
-            <Link to={`/tournaments/${id}/manage`}>
-              <Button variant="outline" size="sm">
-                <Settings className="w-4 h-4" />
+      {/* Header (for tournaments without banner image) */}
+      {!tournament.image_url && (
+        <div className="flex items-start justify-between">
+          <div className="flex items-start gap-4">
+            <Link to="/tournaments">
+              <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                <ArrowLeft className="w-4 h-4" />
+                Back
               </Button>
             </Link>
-          )}
+            
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <h1 className="text-3xl font-bold text-gray-900">{tournament.name}</h1>
+                <span className={`px-3 py-1 text-sm font-medium rounded-full border ${getStatusColor()}`}>
+                  {tournament.status.charAt(0).toUpperCase() + tournament.status.slice(1)}
+                </span>
+              </div>
+              
+              <p className="text-gray-600 max-w-2xl">{tournament.description}</p>
+              
+              <div className="flex items-center gap-6 text-sm text-gray-500">
+                <div className="flex items-center gap-1">
+                  <Users className="w-4 h-4" />
+                  {tournament.current_contestants || 0}/{tournament.max_contestants} contestants
+                </div>
+                <div className="flex items-center gap-1">
+                  <Trophy className="w-4 h-4" />
+                  {tournament.bracket_type?.replace('-', ' ') || 'Single elimination'}
+                </div>
+                {tournament.start_date && (
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-4 h-4" />
+                    Started {new Date(tournament.start_date).toLocaleDateString()}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={handleShare}>
+              <Share2 className="w-4 h-4" />
+            </Button>
+            
+            {canManage && (
+              <Link to={`/tournaments/${id}/manage`}>
+                <Button variant="outline" size="sm">
+                  <Settings className="w-4 h-4" />
+                </Button>
+              </Link>
+            )}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Tournament Info (for tournaments with banner image) */}
+      {tournament.image_url && (
+        <div className="flex items-start justify-between">
+          <div className="flex items-start gap-4">
+            <Link to="/tournaments">
+              <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                <ArrowLeft className="w-4 h-4" />
+                Back
+              </Button>
+            </Link>
+            
+            <div className="space-y-2">
+              <p className="text-gray-600 max-w-2xl">{tournament.description}</p>
+              
+              <div className="flex items-center gap-6 text-sm text-gray-500">
+                <div className="flex items-center gap-1">
+                  <Users className="w-4 h-4" />
+                  {tournament.current_contestants || 0}/{tournament.max_contestants} contestants
+                </div>
+                <div className="flex items-center gap-1">
+                  <Trophy className="w-4 h-4" />
+                  {tournament.bracket_type?.replace('-', ' ') || 'Single elimination'}
+                </div>
+                {tournament.start_date && (
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-4 h-4" />
+                    Started {new Date(tournament.start_date).toLocaleDateString()}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Voting Progress for authenticated users */}
       {isAuthenticated && isActive && (

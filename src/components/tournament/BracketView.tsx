@@ -108,12 +108,33 @@ const BracketView: React.FC<BracketViewProps> = ({ contestants, tournament }) =>
 
   return (
     <div className="bg-white rounded-lg border overflow-hidden">
-      <div className="p-4 border-b bg-gray-50">
-        <h2 className="text-xl font-semibold text-gray-900">Tournament Bracket</h2>
-        <p className="text-sm text-gray-600 mt-1">
-          {contestants.length} contestants across 4 quadrants
-        </p>
-      </div>
+      {/* Tournament Banner Image */}
+      {tournament.image_url && (
+        <div className="relative w-full h-32 overflow-hidden bg-gray-100">
+          <img
+            src={tournament.image_url}
+            alt={tournament.name}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black bg-opacity-30"></div>
+          <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent">
+            <h2 className="text-xl font-semibold text-white">Tournament Bracket</h2>
+            <p className="text-sm text-white/90 mt-1">
+              {contestants.length} contestants across 4 quadrants
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Header (for tournaments without banner image) */}
+      {!tournament.image_url && (
+        <div className="p-4 border-b bg-gray-50">
+          <h2 className="text-xl font-semibold text-gray-900">Tournament Bracket</h2>
+          <p className="text-sm text-gray-600 mt-1">
+            {contestants.length} contestants across 4 quadrants
+          </p>
+        </div>
+      )}
       
       {/* Bracket container with relative positioning for absolute children */}
       <div className="relative min-h-96">

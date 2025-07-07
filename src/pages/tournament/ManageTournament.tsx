@@ -138,40 +138,85 @@ const ManageTournament: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link
-            to={`/tournaments/${id}`}
-            className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
-          >
-            <ArrowLeft className="w-4 h-4 mr-1" />
-            Back to Tournament
-          </Link>
+      {/* Tournament Banner Image */}
+      {tournament.image_url && (
+        <div className="relative w-full h-48 md:h-64 overflow-hidden rounded-lg bg-gray-100">
+          <img
+            src={tournament.image_url}
+            alt={tournament.name}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black bg-opacity-30"></div>
+          <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/60 to-transparent">
+            <div className="flex items-end justify-between">
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">Manage Tournament</h1>
+                <p className="text-white/90 text-lg">{tournament.name}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={`px-3 py-1 text-sm font-medium rounded-full border bg-white/90 text-gray-800 border-white/20`}>
+                  {tournament.status.charAt(0).toUpperCase() + tournament.status.slice(1)}
+                </span>
+                {getStatusActions()}
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Manage Tournament</h1>
-          <p className="text-gray-600 mt-1">{tournament.name}</p>
+      {/* Header (for tournaments without banner image) */}
+      {!tournament.image_url && (
+        <>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Link
+                to={`/tournaments/${id}`}
+                className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
+              >
+                <ArrowLeft className="w-4 h-4 mr-1" />
+                Back to Tournament
+              </Link>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Manage Tournament</h1>
+              <p className="text-gray-600 mt-1">{tournament.name}</p>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <span className={`px-3 py-1 text-sm font-medium rounded-full border ${
+                tournament.status === 'active' 
+                  ? 'bg-green-100 text-green-800 border-green-200'
+                  : tournament.status === 'registration'
+                  ? 'bg-blue-100 text-blue-800 border-blue-200'
+                  : tournament.status === 'completed'
+                  ? 'bg-gray-100 text-gray-800 border-gray-200'
+                  : 'bg-yellow-100 text-yellow-800 border-yellow-200'
+              }`}>
+                {tournament.status.charAt(0).toUpperCase() + tournament.status.slice(1)}
+              </span>
+              {getStatusActions()}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Navigation (for tournaments with banner image) */}
+      {tournament.image_url && (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link
+              to={`/tournaments/${id}`}
+              className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
+            >
+              <ArrowLeft className="w-4 h-4 mr-1" />
+              Back to Tournament
+            </Link>
+          </div>
         </div>
-        
-        <div className="flex items-center gap-2">
-          <span className={`px-3 py-1 text-sm font-medium rounded-full border ${
-            tournament.status === 'active' 
-              ? 'bg-green-100 text-green-800 border-green-200'
-              : tournament.status === 'registration'
-              ? 'bg-blue-100 text-blue-800 border-blue-200'
-              : tournament.status === 'completed'
-              ? 'bg-gray-100 text-gray-800 border-gray-200'
-              : 'bg-yellow-100 text-yellow-800 border-yellow-200'
-          }`}>
-            {tournament.status.charAt(0).toUpperCase() + tournament.status.slice(1)}
-          </span>
-          {getStatusActions()}
-        </div>
-      </div>
+      )}
 
       {/* Tab Navigation */}
       <div className="border-b border-gray-200">
