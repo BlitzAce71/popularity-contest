@@ -234,15 +234,15 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
         </div>
 
         {/* Selected round matchups */}
-        <div className="space-y-4">
-          {(() => {
-            const displayRound = selectedRound !== null 
-              ? bracketLayout[selectedRound] 
-              : activeRound || bracketLayout[0];
-            
-            if (!displayRound) return null;
+        {(() => {
+          const displayRound = selectedRound !== null 
+            ? bracketLayout[selectedRound] 
+            : activeRound || bracketLayout[0];
+          
+          if (!displayRound) return null;
 
-            return (
+          return (
+            <div className="space-y-4">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   {displayRound.name}
@@ -257,28 +257,25 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
                     <MatchupCard
                       key={matchup.id}
                       matchup={matchup}
-                      canVote={false} // Disable individual voting
-                      showVotingInterface={false} // Hide individual submit buttons
+                      canVote={false}
+                      showVotingInterface={false}
                       loading={voteLoading}
                     />
                   ))}
                 </div>
                 
-                {/* Round-level voting interface */}
                 {showVotingInterface && displayRound.isActive && canVote && (
                   <RoundVotingInterface 
                     round={displayRound}
                     onVotesSubmitted={() => {
-                      // Refresh the page data
                       window.location.reload();
                     }}
                   />
                 )}
-                </div>
               </div>
-            );
-          })()}
-        </div>
+            </div>
+          );
+        })()}
       </div>
     );
   }
@@ -301,7 +298,7 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
                   </span>
                 )}
                 <div className="text-sm text-gray-500 mt-1">
-                  {round.completed_matchups}/{round.total_matchups} completed
+                  {round.matchups.filter(m => m.status === 'completed').length}/{round.matchups.length} completed
                 </div>
               </div>
 
