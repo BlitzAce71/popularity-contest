@@ -159,62 +159,60 @@ const TournamentList: React.FC = () => {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {tournaments.map((tournament) => (
             <div key={tournament.id} className="card p-0 hover:shadow-xl transition-shadow overflow-hidden">
-              {tournament.imageUrl && (
-                <div className="relative h-48 w-full">
-                  <img
-                    src={tournament.imageUrl}
-                    alt={tournament.title}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black bg-opacity-20"></div>
-                  <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent">
-                    <div className="flex items-end justify-between">
-                      <div>
-                        <h3 className="text-xl font-semibold text-white mb-1">
-                          {tournament.title}
-                        </h3>
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={`px-2 py-1 text-xs font-medium rounded-full border bg-white/90 text-gray-800 border-white/20`}
-                          >
-                            {tournament.status.charAt(0).toUpperCase() + tournament.status.slice(1)}
-                          </span>
+              {/* Tournament Image or Placeholder */}
+              <div className="relative h-48 w-full">
+                {tournament.imageUrl ? (
+                  <>
+                    <img
+                      src={tournament.imageUrl}
+                      alt={tournament.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+                    <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent">
+                      <div className="flex items-end justify-between">
+                        <div>
+                          <h3 className="text-xl font-semibold text-white mb-1">
+                            {tournament.title}
+                          </h3>
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`px-2 py-1 text-xs font-medium rounded-full border bg-white/90 text-gray-800 border-white/20`}
+                            >
+                              {tournament.status.charAt(0).toUpperCase() + tournament.status.slice(1)}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
+                  </>
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
+                    <div className="text-center">
+                      <Trophy className="w-16 h-16 text-primary-400 mx-auto mb-2" />
+                      <h3 className="text-xl font-semibold text-primary-700 mb-1">
+                        {tournament.title}
+                      </h3>
+                      <div className="flex items-center justify-center gap-2">
+                        <span
+                          className={`px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(
+                            tournament.status
+                          )}`}
+                        >
+                          {tournament.status.charAt(0).toUpperCase() + tournament.status.slice(1)}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
               
               <div className="p-6 space-y-3">
-                {!tournament.imageUrl && (
-                  <>
-                    <div className="flex items-center justify-between">
-                      <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(
-                          tournament.status
-                        )}`}
-                      >
-                        {tournament.status.charAt(0).toUpperCase() + tournament.status.slice(1)}
-                      </span>
-                      <span className="text-sm text-gray-500">
-                        {tournament.bracketType?.replace('-', ' ') || 'single elimination'}
-                      </span>
-                    </div>
-
-                    <h3 className="text-xl font-semibold text-gray-900">
-                      {tournament.title}
-                    </h3>
-                  </>
-                )}
-
-                {tournament.imageUrl && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-500">
-                      {tournament.bracketType?.replace('-', ' ') || 'single elimination'}
-                    </span>
-                  </div>
-                )}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-500">
+                    {tournament.bracketType?.replace('-', ' ') || 'single elimination'}
+                  </span>
+                </div>
 
                 <p className="text-gray-600 text-sm line-clamp-2">
                   {tournament.description}
