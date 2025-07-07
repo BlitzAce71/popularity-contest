@@ -649,7 +649,6 @@ const AddContestantForm: React.FC<{
 // Tournament Settings Component
 const TournamentSettings: React.FC<{ tournament: any; onRefresh: () => void }> = ({ tournament, onRefresh }) => {
   const navigate = useNavigate();
-  const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | undefined>();
@@ -711,7 +710,6 @@ const TournamentSettings: React.FC<{ tournament: any; onRefresh: () => void }> =
       
       await TournamentService.updateTournament(tournament.id, updateData);
       
-      setEditMode(false);
       setImageFile(undefined);
       onRefresh();
     } catch (err) {
@@ -735,7 +733,6 @@ const TournamentSettings: React.FC<{ tournament: any; onRefresh: () => void }> =
       quadrant_names: tournament.quadrant_names || ['Region A', 'Region B', 'Region C', 'Region D']
     });
     setImageFile(undefined);
-    setEditMode(false);
     setError(null);
   };
 
@@ -781,18 +778,7 @@ const TournamentSettings: React.FC<{ tournament: any; onRefresh: () => void }> =
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-gray-900">Tournament Settings</h2>
-        {!editMode && (
-          <Button
-            onClick={() => setEditMode(true)}
-            className="flex items-center gap-2"
-          >
-            <Edit className="w-4 h-4" />
-            Edit Tournament
-          </Button>
-        )}
-      </div>
+      <h2 className="text-xl font-semibold text-gray-900">Tournament Settings</h2>
 
       {error && (
         <div className="p-3 bg-red-50 border border-red-200 rounded-md">
@@ -809,18 +795,14 @@ const TournamentSettings: React.FC<{ tournament: any; onRefresh: () => void }> =
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Tournament Name *
             </label>
-            {editMode ? (
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="input-field"
-                placeholder="Enter tournament name"
-                disabled={loading}
-              />
-            ) : (
-              <p className="text-gray-900 py-2">{formData.name}</p>
-            )}
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="input-field"
+              placeholder="Enter tournament name"
+              disabled={loading}
+            />
           </div>
 
           {/* Description */}
@@ -828,18 +810,14 @@ const TournamentSettings: React.FC<{ tournament: any; onRefresh: () => void }> =
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Description *
             </label>
-            {editMode ? (
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="input-field"
-                rows={3}
-                placeholder="Describe your tournament..."
-                disabled={loading}
-              />
-            ) : (
-              <p className="text-gray-900 py-2">{formData.description}</p>
-            )}
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="input-field"
+              rows={3}
+              placeholder="Describe your tournament..."
+              disabled={loading}
+            />
           </div>
 
           {/* Image URL */}
@@ -847,49 +825,42 @@ const TournamentSettings: React.FC<{ tournament: any; onRefresh: () => void }> =
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Tournament Image URL
             </label>
-            {editMode ? (
-              <div className="space-y-3">
+            <div className="space-y-3">
+              <input
+                type="url"
+                value={formData.image_url}
+                onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                className="input-field"
+                placeholder="https://example.com/image.jpg"
+                disabled={loading}
+              />
+              <div className="text-sm text-gray-500">
+                <p>Or upload a new image:</p>
                 <input
-                  type="url"
-                  value={formData.image_url}
-                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                  className="input-field"
-                  placeholder="https://example.com/image.jpg"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setImageFile(e.target.files?.[0])}
+                  className="input-field mt-1"
                   disabled={loading}
                 />
-                <div className="text-sm text-gray-500">
-                  <p>Or upload a new image:</p>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setImageFile(e.target.files?.[0])}
-                    className="input-field mt-1"
-                    disabled={loading}
-                  />
-                  {imageFile && (
-                    <p className="text-green-600 mt-1">New image selected: {imageFile.name}</p>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="py-2">
-                {formData.image_url ? (
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={formData.image_url}
-                      alt="Tournament"
-                      className="w-16 h-16 object-cover rounded-lg"
-                    />
-                    <div>
-                      <p className="text-gray-900">Image set</p>
-                      <p className="text-sm text-gray-500 truncate max-w-xs">{formData.image_url}</p>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-gray-500">No image set</p>
+                {imageFile && (
+                  <p className="text-green-600 mt-1">New image selected: {imageFile.name}</p>
                 )}
               </div>
-            )}
+              {formData.image_url && (
+                <div className="flex items-center gap-3 mt-3 p-3 bg-gray-50 rounded-lg">
+                  <img
+                    src={formData.image_url}
+                    alt="Tournament"
+                    className="w-16 h-16 object-cover rounded-lg"
+                  />
+                  <div>
+                    <p className="text-gray-900 font-medium">Current image</p>
+                    <p className="text-sm text-gray-500 truncate max-w-xs">{formData.image_url}</p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Dates */}
@@ -898,38 +869,26 @@ const TournamentSettings: React.FC<{ tournament: any; onRefresh: () => void }> =
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Start Date *
               </label>
-              {editMode ? (
-                <input
-                  type="date"
-                  value={formData.start_date}
-                  onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                  className="input-field"
-                  disabled={loading}
-                />
-              ) : (
-                <p className="text-gray-900 py-2">
-                  {formData.start_date ? new Date(formData.start_date).toLocaleDateString() : 'Not set'}
-                </p>
-              )}
+              <input
+                type="date"
+                value={formData.start_date}
+                onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                className="input-field"
+                disabled={loading}
+              />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 End Date (optional)
               </label>
-              {editMode ? (
-                <input
-                  type="date"
-                  value={formData.end_date}
-                  onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
-                  className="input-field"
-                  disabled={loading}
-                />
-              ) : (
-                <p className="text-gray-900 py-2">
-                  {formData.end_date ? new Date(formData.end_date).toLocaleDateString() : 'Not set'}
-                </p>
-              )}
+              <input
+                type="date"
+                value={formData.end_date}
+                onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                className="input-field"
+                disabled={loading}
+              />
             </div>
           </div>
 
@@ -939,41 +898,31 @@ const TournamentSettings: React.FC<{ tournament: any; onRefresh: () => void }> =
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Maximum Contestants *
               </label>
-              {editMode ? (
-                <input
-                  type="number"
-                  value={formData.max_contestants}
-                  onChange={(e) => setFormData({ ...formData, max_contestants: parseInt(e.target.value) || 16 })}
-                  className="input-field"
-                  min="4"
-                  max="128"
-                  disabled={loading}
-                />
-              ) : (
-                <p className="text-gray-900 py-2">{formData.max_contestants} contestants</p>
-              )}
+              <input
+                type="number"
+                value={formData.max_contestants}
+                onChange={(e) => setFormData({ ...formData, max_contestants: parseInt(e.target.value) || 16 })}
+                className="input-field"
+                min="4"
+                max="128"
+                disabled={loading}
+              />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Bracket Type *
               </label>
-              {editMode ? (
-                <select
-                  value={formData.bracket_type}
-                  onChange={(e) => setFormData({ ...formData, bracket_type: e.target.value })}
-                  className="input-field"
-                  disabled={loading}
-                >
-                  <option value="single-elimination">Single Elimination</option>
-                  <option value="double-elimination">Double Elimination</option>
-                  <option value="round-robin">Round Robin</option>
-                </select>
-              ) : (
-                <p className="text-gray-900 py-2 capitalize">
-                  {formData.bracket_type.replace('-', ' ')}
-                </p>
-              )}
+              <select
+                value={formData.bracket_type}
+                onChange={(e) => setFormData({ ...formData, bracket_type: e.target.value })}
+                className="input-field"
+                disabled={loading}
+              >
+                <option value="single-elimination">Single Elimination</option>
+                <option value="double-elimination">Double Elimination</option>
+                <option value="round-robin">Round Robin</option>
+              </select>
             </div>
           </div>
 
@@ -982,55 +931,44 @@ const TournamentSettings: React.FC<{ tournament: any; onRefresh: () => void }> =
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Visibility
             </label>
-            {editMode ? (
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={formData.is_public}
-                  onChange={(e) => setFormData({ ...formData, is_public: e.target.checked })}
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                  disabled={loading}
-                />
-                <label className="ml-2 block text-sm text-gray-700">
-                  Make this tournament public (visible to all users)
-                </label>
-              </div>
-            ) : (
-              <p className="text-gray-900 py-2">
-                {formData.is_public ? 'Public' : 'Private'}
-              </p>
-            )}
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                checked={formData.is_public}
+                onChange={(e) => setFormData({ ...formData, is_public: e.target.checked })}
+                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                disabled={loading}
+              />
+              <label className="ml-2 block text-sm text-gray-700">
+                Make this tournament public (visible to all users)
+              </label>
+            </div>
           </div>
         </div>
 
-        {editMode && (
-          <div className="flex justify-end gap-3 pt-6 border-t mt-6">
-            <Button
-              variant="outline"
-              onClick={handleCancel}
-              disabled={loading}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSaveTournament}
-              disabled={loading || !formData.name.trim() || !formData.description.trim()}
-              className="flex items-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <LoadingSpinner size="sm" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Edit className="w-4 h-4" />
-                  Save Changes
-                </>
-              )}
-            </Button>
-          </div>
-        )}
+        <div className="flex justify-end gap-3 pt-6 border-t mt-6">
+          <Button
+            variant="outline"
+            onClick={handleCancel}
+            disabled={loading}
+          >
+            Reset Changes
+          </Button>
+          <Button
+            onClick={handleSaveTournament}
+            disabled={loading || !formData.name.trim() || !formData.description.trim()}
+            className="flex items-center gap-2"
+          >
+            {loading ? (
+              <>
+                <LoadingSpinner size="sm" />
+                Saving...
+              </>
+            ) : (
+              'Save Changes'
+            )}
+          </Button>
+        </div>
       </div>
 
       <div className="card p-6">
@@ -1040,89 +978,73 @@ const TournamentSettings: React.FC<{ tournament: any; onRefresh: () => void }> =
           when contestants select their quadrant placement.
         </p>
 
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Quadrant 1 (Top Left)
             </label>
-            {editMode ? (
-              <input
-                type="text"
-                value={formData.quadrant_names[0]}
-                onChange={(e) => setFormData({ 
-                  ...formData, 
-                  quadrant_names: [e.target.value, formData.quadrant_names[1], formData.quadrant_names[2], formData.quadrant_names[3]] 
-                })}
-                className="input-field"
-                placeholder="e.g., Region A, North Division, etc."
-                disabled={loading}
-              />
-            ) : (
-              <p className="text-gray-900 py-2">{formData.quadrant_names[0]}</p>
-            )}
+            <input
+              type="text"
+              value={formData.quadrant_names[0]}
+              onChange={(e) => setFormData({ 
+                ...formData, 
+                quadrant_names: [e.target.value, formData.quadrant_names[1], formData.quadrant_names[2], formData.quadrant_names[3]] 
+              })}
+              className="input-field"
+              placeholder="e.g., Region A, North Division, etc."
+              disabled={loading}
+            />
           </div>
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Quadrant 2 (Top Right)
             </label>
-            {editMode ? (
-              <input
-                type="text"
-                value={formData.quadrant_names[1]}
-                onChange={(e) => setFormData({ 
-                  ...formData, 
-                  quadrant_names: [formData.quadrant_names[0], e.target.value, formData.quadrant_names[2], formData.quadrant_names[3]] 
-                })}
-                className="input-field"
-                placeholder="e.g., Region B, South Division, etc."
-                disabled={loading}
-              />
-            ) : (
-              <p className="text-gray-900 py-2">{formData.quadrant_names[1]}</p>
-            )}
+            <input
+              type="text"
+              value={formData.quadrant_names[1]}
+              onChange={(e) => setFormData({ 
+                ...formData, 
+                quadrant_names: [formData.quadrant_names[0], e.target.value, formData.quadrant_names[2], formData.quadrant_names[3]] 
+              })}
+              className="input-field"
+              placeholder="e.g., Region B, South Division, etc."
+              disabled={loading}
+            />
           </div>
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Quadrant 3 (Bottom Left)
             </label>
-            {editMode ? (
-              <input
-                type="text"
-                value={formData.quadrant_names[2]}
-                onChange={(e) => setFormData({ 
-                  ...formData, 
-                  quadrant_names: [formData.quadrant_names[0], formData.quadrant_names[1], e.target.value, formData.quadrant_names[3]] 
-                })}
-                className="input-field"
-                placeholder="e.g., Region C, East Division, etc."
-                disabled={loading}
-              />
-            ) : (
-              <p className="text-gray-900 py-2">{formData.quadrant_names[2]}</p>
-            )}
+            <input
+              type="text"
+              value={formData.quadrant_names[2]}
+              onChange={(e) => setFormData({ 
+                ...formData, 
+                quadrant_names: [formData.quadrant_names[0], formData.quadrant_names[1], e.target.value, formData.quadrant_names[3]] 
+              })}
+              className="input-field"
+              placeholder="e.g., Region C, East Division, etc."
+              disabled={loading}
+            />
           </div>
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Quadrant 4 (Bottom Right)
             </label>
-            {editMode ? (
-              <input
-                type="text"
-                value={formData.quadrant_names[3]}
-                onChange={(e) => setFormData({ 
-                  ...formData, 
-                  quadrant_names: [formData.quadrant_names[0], formData.quadrant_names[1], formData.quadrant_names[2], e.target.value] 
-                })}
-                className="input-field"
-                placeholder="e.g., Region D, West Division, etc."
-                disabled={loading}
-              />
-            ) : (
-              <p className="text-gray-900 py-2">{formData.quadrant_names[3]}</p>
-            )}
+            <input
+              type="text"
+              value={formData.quadrant_names[3]}
+              onChange={(e) => setFormData({ 
+                ...formData, 
+                quadrant_names: [formData.quadrant_names[0], formData.quadrant_names[1], formData.quadrant_names[2], e.target.value] 
+              })}
+              className="input-field"
+              placeholder="e.g., Region D, West Division, etc."
+              disabled={loading}
+            />
           </div>
         </div>
       </div>
