@@ -63,6 +63,7 @@ export class TournamentService {
   // Get single tournament with full details
   static async getTournament(id: string): Promise<Tournament> {
     try {
+      console.log('🔍 getTournament called for ID:', id);
       const { data, error } = await supabase
         .from('tournaments')
         .select(`
@@ -85,6 +86,8 @@ export class TournamentService {
       if (error) throw error;
       if (!data) throw new Error('Tournament not found');
 
+      console.log('🔍 getTournament returning data:', data);
+      console.log('🔍 Retrieved quadrant_names:', data.quadrant_names);
       return data;
     } catch (error) {
       console.error('Error fetching tournament:', error);

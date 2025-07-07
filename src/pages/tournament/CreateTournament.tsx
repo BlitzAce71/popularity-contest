@@ -112,7 +112,11 @@ const CreateTournament: React.FC = () => {
       const newTournament = await Promise.race([createPromise, timeoutPromise]);
       
       console.log('✅ Tournament created successfully:', newTournament);
+      console.log('✅ Created tournament quadrant_names:', newTournament.quadrant_names);
       console.log('🧭 Navigating to:', `/tournaments/${newTournament.id}`);
+      
+      // Small delay to ensure database transaction is committed
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       // Navigate to the newly created tournament
       navigate(`/tournaments/${newTournament.id}`);
