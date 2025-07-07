@@ -52,6 +52,7 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
   }
 
   const rounds = bracketData.rounds || [];
+  const matchups = bracketData.matchups || [];
   const totalRounds = rounds.length;
 
   // Calculate bracket layout
@@ -59,10 +60,13 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
     const layout: BracketRound[] = [];
     
     rounds.forEach((round: BracketRound) => {
+      // Group matchups by round_id
+      const roundMatchups = matchups.filter((matchup: any) => matchup.round_id === round.id);
+      
       const roundData = {
         ...round,
         isActive: round.status === 'active',
-        matchups: (round.matchups || []).map((matchup: BracketMatchup) => ({
+        matchups: roundMatchups.map((matchup: BracketMatchup) => ({
           ...matchup,
           voteCounts: {
             contestant1Votes: matchup.contestant1_votes || 0,
