@@ -750,6 +750,7 @@ const TournamentSettings: React.FC<{ tournament: any; onRefresh: () => void }> =
 const BracketManagement: React.FC<{ tournament: any; onRefresh: () => void }> = ({ tournament, onRefresh }) => {
   const [contestants, setContestants] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [startingTournament, setStartingTournament] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchContestants = async () => {
@@ -768,6 +769,23 @@ const BracketManagement: React.FC<{ tournament: any; onRefresh: () => void }> = 
   React.useEffect(() => {
     fetchContestants();
   }, [tournament.id]);
+
+  const handleStartTournament = async () => {
+    if (!window.confirm('Are you sure you want to start this tournament? This will generate the bracket and make it active.')) {
+      return;
+    }
+
+    try {
+      setStartingTournament(true);
+      setError(null);
+      await TournamentService.startTournament(tournament.id);
+      onRefresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to start tournament');
+    } finally {
+      setStartingTournament(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -797,7 +815,33 @@ const BracketManagement: React.FC<{ tournament: any; onRefresh: () => void }> = 
             Visual representation of tournament bracket with {contestants.length} contestants
           </p>
         </div>
+        
+        {tournament.status === 'draft' && contestants.length >= 2 && (
+          <Button
+            onClick={handleStartTournament}
+            disabled={startingTournament}
+            className="flex items-center gap-2"
+          >
+            {startingTournament ? (
+              <>
+                <LoadingSpinner size="sm" />
+                Starting...
+              </>
+            ) : (
+              <>
+                <Play className="w-4 h-4" />
+                Start Tournament
+              </>
+            )}
+          </Button>
+        )}
       </div>
+      
+      {error && (
+        <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+          <p className="text-sm text-red-600">{error}</p>
+        </div>
+      )}
       
       <BracketView contestants={contestants} tournament={tournament} />
     </div>
