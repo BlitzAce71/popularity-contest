@@ -56,7 +56,7 @@ BEGIN
         DECLARE
             contestant1_id UUID := NULL;
             contestant2_id UUID := NULL;
-        END DECLARE;
+        BEGIN
         
         -- Assign contestants to matchups (standard tournament seeding)
         IF (i * 2 - 1) <= contestant_count THEN
@@ -101,6 +101,7 @@ BEGIN
             SET winner_id = contestant1_id, status = 'completed'
             WHERE round_id = round_id AND position = i;
         END IF;
+        END;
     END LOOP;
     
     -- Update tournament status to active
