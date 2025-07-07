@@ -128,15 +128,21 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
                   )}
                 </h3>
                 <div className="space-y-4">
-                  {(displayRound.matchups || []).map((matchup: BracketMatchup) => (
-                    <MatchupCard
-                      key={matchup.id}
-                      matchup={matchup}
-                      canVote={canVote && displayRound.isActive && matchup.status === 'active'}
-                      showVotingInterface={showVotingInterface}
-                      loading={voteLoading}
-                    />
-                  ))}
+                  {console.log('🎯 DEBUG: displayRound.matchups:', displayRound.matchups)}
+                  {console.log('🎯 DEBUG: canVote:', canVote, 'showVotingInterface:', showVotingInterface)}
+                  {(displayRound.matchups || []).map((matchup: BracketMatchup, index: number) => {
+                    console.log(`🎯 DEBUG: Rendering matchup ${index}:`, matchup);
+                    console.log(`🎯 DEBUG: Matchup canVote: ${canVote && displayRound.isActive && matchup.status === 'active'}`);
+                    return (
+                      <MatchupCard
+                        key={matchup.id}
+                        matchup={matchup}
+                        canVote={canVote && displayRound.isActive && matchup.status === 'active'}
+                        showVotingInterface={showVotingInterface}
+                        loading={voteLoading}
+                      />
+                    );
+                  })}
                 </div>
               </div>
             );
