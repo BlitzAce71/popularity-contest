@@ -114,6 +114,7 @@ export class TournamentService {
         max_contestants: tournamentData.max_contestants,
         bracket_type: tournamentData.bracket_type,
         is_public: tournamentData.is_public,
+        quadrant_names: tournamentData.quadrant_names,
         created_by: user.user.id,
       };
       
@@ -136,6 +137,30 @@ export class TournamentService {
 
       if (error) {
         console.log('💥 Database error:', error);
+        
+        // Handle column doesn't exist error gracefully for quadrant_names
+        if (error.code === 'PGRST116' || error.message?.includes('column') || error.message?.includes('quadrant_names')) {
+          console.warn('Database schema not updated yet, trying without quadrant_names:', error.message);
+          
+          // Try creation without quadrant_names
+          const basicInsertData = { ...insertData };
+          delete basicInsertData.quadrant_names;
+          
+          const { data: retryData, error: retryError } = await supabase
+            .from('tournaments')
+            .insert([basicInsertData])
+            .select()
+            .single();
+            
+          if (retryError) {
+            console.log('💥 Retry failed:', retryError);
+            throw retryError;
+          }
+          
+          console.log('⚠️ Tournament created without quadrant_names (database schema needs update)');
+          return retryData;
+        }
+        
         throw error;
       }
       
