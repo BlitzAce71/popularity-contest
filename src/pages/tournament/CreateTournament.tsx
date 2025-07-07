@@ -74,6 +74,14 @@ const CreateTournament: React.FC = () => {
       console.log('🔄 Setting loading to true');
       
       // Clean up data before submission
+      console.log('🔍 Raw form data before processing:', data);
+      console.log('🔍 Individual quadrant names:', {
+        quadrant_1: data.quadrant_1_name,
+        quadrant_2: data.quadrant_2_name, 
+        quadrant_3: data.quadrant_3_name,
+        quadrant_4: data.quadrant_4_name
+      });
+      
       const tournamentData = {
         ...data,
         image_url: data.image_url || undefined,
@@ -92,6 +100,7 @@ const CreateTournament: React.FC = () => {
       };
       
       console.log('📝 Cleaned tournament data:', tournamentData);
+      console.log('📝 Final quadrant_names array:', tournamentData.quadrant_names);
       console.log('🚀 Calling TournamentService.createTournament...');
 
       // Add client-side timeout protection
