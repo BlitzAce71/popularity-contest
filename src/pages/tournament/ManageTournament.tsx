@@ -90,7 +90,14 @@ const ManageTournament: React.FC = () => {
     
     try {
       setLoading(true);
-      await TournamentService.updateTournamentStatus(id, newStatus as any);
+      
+      // If we're starting the tournament (draft -> active), generate the bracket first
+      if (newStatus === 'active' && tournament?.status === 'draft') {
+        await TournamentService.startTournament(id);
+      } else {
+        await TournamentService.updateTournamentStatus(id, newStatus as any);
+      }
+      
       refresh();
     } catch (error) {
       console.error('Error updating tournament status:', error);
