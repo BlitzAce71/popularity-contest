@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useVoting } from '@/hooks/voting/useVoting';
+import { getFileUrl } from '@/lib/supabase';
 import Button from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { Crown, Users, Clock, CheckCircle } from 'lucide-react';
@@ -166,7 +167,7 @@ const MatchupCard: React.FC<MatchupCardProps> = ({
           {/* Contestant image */}
           {contestant.image_url ? (
             <img
-              src={contestant.image_url}
+              src={getFileUrl('contestants', contestant.image_url)}
               alt={contestant.name}
               className={`object-cover rounded-full ${compact ? 'w-10 h-10' : 'w-12 h-12'}`}
             />
