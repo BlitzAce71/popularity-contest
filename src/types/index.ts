@@ -49,8 +49,6 @@ export interface Round {
   status: 'upcoming' | 'active' | 'completed' | 'paused';
   total_matchups: number;
   completed_matchups: number;
-  start_date?: string;
-  end_date?: string;
   created_at: string;
   updated_at: string;
 }
