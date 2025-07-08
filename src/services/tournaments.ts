@@ -114,6 +114,7 @@ export class TournamentService {
       }
       console.log('✅ Admin access confirmed');
 
+      // Use new column names (start_date, end_date) with fallback to old names if migration not applied
       const insertData = {
         name: tournamentData.name,
         description: tournamentData.description,
@@ -146,6 +147,37 @@ export class TournamentService {
 
       if (error) {
         console.log('💥 Database error:', error);
+        
+        // Handle schema mismatch - try with old column names if migration not applied
+        if (error.code === 'PGRST204' && (error.message?.includes('start_date') || error.message?.includes('end_date'))) {
+          console.log('🔄 Retrying with legacy column names (tournament_start_date, tournament_end_date)...');
+          
+          const legacyInsertData = {
+            name: tournamentData.name,
+            description: tournamentData.description,
+            image_url: tournamentData.image_url,
+            tournament_start_date: tournamentData.start_date,
+            tournament_end_date: tournamentData.end_date,
+            max_contestants: tournamentData.max_contestants,
+            bracket_type: tournamentData.bracket_type,
+            is_public: tournamentData.is_public,
+            created_by: user.user.id,
+          };
+
+          const { data: legacyData, error: legacyError } = await supabase
+            .from('tournaments')
+            .insert([legacyInsertData])
+            .select()
+            .single();
+
+          if (legacyError) {
+            console.log('💥 Legacy retry failed:', legacyError);
+            throw legacyError;
+          }
+          
+          console.log('✅ Tournament created with legacy column names');
+          return legacyData;
+        }
         
         // Handle column doesn't exist error gracefully for quadrant_names
         if (error.code === 'PGRST116' || error.message?.includes('column') || error.message?.includes('quadrant_names')) {
