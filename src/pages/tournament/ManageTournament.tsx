@@ -486,9 +486,27 @@ const AddContestantForm: React.FC<{
   contestants: any[];
   tournament: any;
 }> = ({ onSubmit, onCancel, loading, contestants, tournament }) => {
+  // Calculate next available seed and quadrant globally (across all quadrants)
+  const getNextAvailableSeedAndQuadrant = () => {
+    const maxSeedsPerQuadrant = Math.ceil(tournament.max_contestants / 4);
+    
+    // For each seed level (1, 2, 3, etc.), check all quadrants before moving to next seed
+    for (let seed = 1; seed <= maxSeedsPerQuadrant; seed++) {
+      for (let quadrant = 1; quadrant <= 4; quadrant++) {
+        const isSlotTaken = contestants.some(c => c.seed === seed && c.quadrant === quadrant);
+        if (!isSlotTaken) {
+          return { seed, quadrant };
+        }
+      }
+    }
+    
+    // All slots are full, return next available (will show warning)
+    return { seed: maxSeedsPerQuadrant + 1, quadrant: 1 };
+  };
+
   // Calculate next available seed for selected quadrant (capped at max seeds per quadrant)
   const getNextSeedForQuadrant = (quadrant: number) => {
-    const maxSeedsPerQuadrant = Math.ceil(tournament.max_contestants / 4); // 1/4 of total participants
+    const maxSeedsPerQuadrant = Math.ceil(tournament.max_contestants / 4);
     const quadrantContestants = contestants.filter(c => c.quadrant === quadrant);
     if (quadrantContestants.length === 0) return 1;
     const usedSeeds = new Set(quadrantContestants.map(c => c.seed));
@@ -500,21 +518,26 @@ const AddContestantForm: React.FC<{
     return nextSeed <= maxSeedsPerQuadrant ? nextSeed : maxSeedsPerQuadrant + 1;
   };
 
-  const [formData, setFormData] = useState<CreateContestantData>({
-    name: '',
-    description: '',
-    seed: 1,
-    quadrant: 1,
+  const [formData, setFormData] = useState<CreateContestantData>(() => {
+    const nextAvailable = getNextAvailableSeedAndQuadrant();
+    return {
+      name: '',
+      description: '',
+      seed: nextAvailable.seed,
+      quadrant: nextAvailable.quadrant,
+    };
   });
   const [imageFile, setImageFile] = useState<File | undefined>();
 
-  // Update seed when quadrant changes or contestants change
+  // Update seed and quadrant when contestants change
   React.useEffect(() => {
+    const nextAvailable = getNextAvailableSeedAndQuadrant();
     setFormData(prev => ({ 
       ...prev, 
-      seed: getNextSeedForQuadrant(prev.quadrant || 1) 
+      seed: nextAvailable.seed,
+      quadrant: nextAvailable.quadrant
     }));
-  }, [contestants.length, formData.quadrant]);
+  }, [contestants.length]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -552,7 +575,23 @@ const AddContestantForm: React.FC<{
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Seed *</label>
+            <div className="flex items-center justify-between">
+              <label className="block text-sm font-medium text-gray-700">Seed *</label>
+              <button
+                type="button"
+                onClick={() => {
+                  const nextAvailable = getNextAvailableSeedAndQuadrant();
+                  setFormData(prev => ({ 
+                    ...prev, 
+                    seed: nextAvailable.seed,
+                    quadrant: nextAvailable.quadrant
+                  }));
+                }}
+                className="text-xs text-blue-600 hover:text-blue-700 underline"
+              >
+                Use next available
+              </button>
+            </div>
             <input
               type="number"
               value={formData.seed}
@@ -565,18 +604,22 @@ const AddContestantForm: React.FC<{
             <p className="text-xs text-gray-500 mt-1">
               {(() => {
                 const maxSeedsPerQuadrant = Math.ceil(tournament.max_contestants / 4);
-                const nextSeed = getNextSeedForQuadrant(formData.quadrant || 1);
+                const nextAvailable = getNextAvailableSeedAndQuadrant();
+                const nextSeedInQuadrant = getNextSeedForQuadrant(formData.quadrant || 1);
                 const seedTaken = contestants.some(c => c.seed === formData.seed && c.quadrant === formData.quadrant);
                 const seedTooHigh = formData.seed > maxSeedsPerQuadrant;
+                const isCurrentSeedNextAvailable = formData.seed === nextAvailable.seed && formData.quadrant === nextAvailable.quadrant;
                 
                 if (seedTaken) {
                   return '⚠️ This seed is already taken in this quadrant - will auto-assign next available';
                 } else if (seedTooHigh) {
                   return `⚠️ Max seed for this quadrant is ${maxSeedsPerQuadrant} (${tournament.max_contestants} participants ÷ 4 quadrants)`;
-                } else if (nextSeed > maxSeedsPerQuadrant) {
+                } else if (nextSeedInQuadrant > maxSeedsPerQuadrant) {
                   return `⚠️ This quadrant is full (max ${maxSeedsPerQuadrant} seeds)`;
+                } else if (isCurrentSeedNextAvailable) {
+                  return `✅ Next available globally: Seed ${nextAvailable.seed}, ${tournament.quadrant_names?.[nextAvailable.quadrant - 1] || `Quadrant ${nextAvailable.quadrant}`}`;
                 } else {
-                  return `Next suggested: ${nextSeed} (max ${maxSeedsPerQuadrant} per quadrant)`;
+                  return `Next in this quadrant: ${nextSeedInQuadrant} | Next globally: Seed ${nextAvailable.seed}, ${tournament.quadrant_names?.[nextAvailable.quadrant - 1] || `Quadrant ${nextAvailable.quadrant}`}`;
                 }
               })()}
             </p>

@@ -118,8 +118,8 @@ export class TournamentService {
         name: tournamentData.name,
         description: tournamentData.description,
         image_url: tournamentData.image_url,
-        tournament_start_date: tournamentData.start_date,
-        tournament_end_date: tournamentData.end_date,
+        start_date: tournamentData.start_date,
+        end_date: tournamentData.end_date,
         max_contestants: tournamentData.max_contestants,
         bracket_type: tournamentData.bracket_type,
         is_public: tournamentData.is_public,
@@ -192,8 +192,8 @@ export class TournamentService {
       if (updates.name) updateData.name = updates.name;
       if (updates.description !== undefined) updateData.description = updates.description;
       if (updates.image_url !== undefined) updateData.image_url = updates.image_url;
-      if (updates.start_date) updateData.tournament_start_date = updates.start_date;
-      if (updates.end_date !== undefined) updateData.tournament_end_date = updates.end_date;
+      if (updates.start_date) updateData.start_date = updates.start_date;
+      if (updates.end_date !== undefined) updateData.end_date = updates.end_date;
       if (updates.max_contestants) {
         updateData.max_contestants = updates.max_contestants;
       }

@@ -223,10 +223,10 @@ const TournamentList: React.FC = () => {
                     <Users className="w-4 h-4" />
                     {tournament.current_contestants || 0}/{tournament.max_contestants}
                   </div>
-                  {tournament.tournament_start_date && (
+                  {tournament.start_date && (
                     <div className="flex items-center gap-1">
                       <Calendar className="w-4 h-4" />
-                      {new Date(tournament.tournament_start_date).toLocaleDateString()}
+                      {new Date(tournament.start_date).toLocaleDateString()}
                     </div>
                   )}
                 </div>
