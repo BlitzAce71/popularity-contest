@@ -22,7 +22,6 @@ interface Matchup {
     contestant2Votes: number;
     totalVotes: number;
   };
-  is_tie?: boolean;
 }
 
 interface MatchupCardProps {
@@ -57,7 +56,7 @@ const MatchupCard: React.FC<MatchupCardProps> = ({
     saveDraft 
   } = useVoting(matchup.id);
 
-  const { contestant1, contestant2, winner, voteCounts, status, is_tie } = matchup;
+  const { contestant1, contestant2, winner, voteCounts, status } = matchup;
   const isActive = status === 'active';
   const isCompleted = status === 'completed';
   const hasVoted = !!userVote;
@@ -218,7 +217,6 @@ const MatchupCard: React.FC<MatchupCardProps> = ({
           {isActive && <Clock className="w-4 h-4 text-green-600" />}
           {isCompleted && <CheckCircle className="w-4 h-4 text-gray-600" />}
           <span className="capitalize">{status}</span>
-          {is_tie && <span className="text-yellow-600">(Tie)</span>}
         </div>
         
         {totalVotes > 0 && (

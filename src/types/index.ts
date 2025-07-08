@@ -63,13 +63,7 @@ export interface Match {
   contestant1_id?: string;
   contestant2_id?: string;
   winner_id?: string;
-  contestant1_votes: number;
-  contestant2_votes: number;
-  total_votes: number;
   status: 'upcoming' | 'active' | 'completed' | 'cancelled';
-  is_tie: boolean;
-  start_date?: string;
-  end_date?: string;
   completed_at?: string;
   created_at: string;
   updated_at: string;
@@ -231,7 +225,7 @@ export interface BracketMatchup extends Match {
   contestant1?: Contestant;
   contestant2?: Contestant;
   winner?: Contestant;
-  vote_counts: {
+  vote_counts?: {
     contestant1_votes: number;
     contestant2_votes: number;
     total_votes: number;

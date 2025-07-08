@@ -168,15 +168,15 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
         isActive: round.status === 'active',
         matchups: roundMatchups.map((matchup: BracketMatchup) => ({
           ...matchup,
-          voteCounts: {
-            contestant1Votes: matchup.contestant1_votes || 0,
-            contestant2Votes: matchup.contestant2_votes || 0,
-            totalVotes: matchup.total_votes || 0,
+          voteCounts: voteCounts[matchup.id] || {
+            contestant1Votes: 0,
+            contestant2Votes: 0,
+            totalVotes: 0,
           },
           vote_counts: voteCounts[matchup.id] || {
-            contestant1_votes: matchup.contestant1_votes || 0,
-            contestant2_votes: matchup.contestant2_votes || 0,
-            total_votes: matchup.total_votes || 0,
+            contestant1_votes: 0,
+            contestant2_votes: 0,
+            total_votes: 0,
           },
         })),
       };

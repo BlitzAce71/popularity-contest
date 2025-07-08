@@ -329,11 +329,10 @@ export class AdminService {
     }
   }
 
-  // Cast admin vote with higher weight
+  // Cast admin vote
   static async castAdminVote(
     matchupId: string,
-    selectedContestantId: string,
-    weight: number = 5
+    selectedContestantId: string
   ): Promise<void> {
     try {
       const isAdminUser = await this.isAdmin();
@@ -352,7 +351,6 @@ export class AdminService {
             matchup_id: matchupId,
             selected_contestant_id: selectedContestantId,
             is_admin_vote: true,
-            weight: Math.min(Math.max(weight, 1), 10), // Clamp between 1-10
           },
         ]);
 
@@ -386,7 +384,6 @@ export class AdminService {
       // Analyze vote patterns
       const regularVotes = data?.filter(v => !v.is_admin_vote) || [];
       const adminVotes = data?.filter(v => v.is_admin_vote) || [];
-      const totalWeight = data?.reduce((sum, vote) => sum + (vote.weight || 1), 0) || 0;
 
       return {
         votes: data || [],
@@ -394,8 +391,6 @@ export class AdminService {
           totalVotes: data?.length || 0,
           regularVotes: regularVotes.length,
           adminVotes: adminVotes.length,
-          totalWeight,
-          averageWeight: data?.length ? totalWeight / data.length : 0,
           votingTimespan: data?.length ? {
             first: data[data.length - 1]?.created_at,
             last: data[0]?.created_at,

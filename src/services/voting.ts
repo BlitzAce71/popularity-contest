@@ -585,10 +585,10 @@ export class VotingService {
         return { canVote: false, reason: 'User not authenticated' };
       }
 
-      // Check matchup status and timing
+      // Check matchup status
       const { data: matchup, error } = await supabase
         .from('matchups')
-        .select('status, start_date, end_date')
+        .select('status')
         .eq('id', matchupId)
         .single();
 
@@ -596,15 +596,6 @@ export class VotingService {
 
       if (matchup.status !== 'active') {
         return { canVote: false, reason: 'Matchup is not currently active' };
-      }
-
-      const now = new Date();
-      if (matchup.start_date && new Date(matchup.start_date) > now) {
-        return { canVote: false, reason: 'Voting has not started yet' };
-      }
-
-      if (matchup.end_date && new Date(matchup.end_date) < now) {
-        return { canVote: false, reason: 'Voting has ended' };
       }
 
       return { canVote: true };
