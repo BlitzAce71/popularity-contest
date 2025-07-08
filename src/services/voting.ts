@@ -20,7 +20,6 @@ export class VotingService {
         matchup_id: matchupId,
         selected_contestant_id: selectedContestantId,
         is_admin_vote: false,
-        weight: 1,
         created_at: new Date().toISOString(),
       };
 
@@ -378,11 +377,10 @@ export class VotingService {
     };
   }
 
-  // Submit admin tie-breaking vote
+  // Submit admin tie-breaking vote (simplified - no weight)
   static async submitAdminTieBreaker(
     matchupId: string,
-    selectedContestantId: string,
-    weight: number = 1
+    selectedContestantId: string
   ): Promise<Vote> {
     try {
       const { data: user } = await supabase.auth.getUser();
@@ -407,7 +405,7 @@ export class VotingService {
         throw new Error('Tie-breaking votes can only be used for actual ties (vote difference = 0)');
       }
 
-      // Submit admin vote with special marking
+      // Submit admin vote with special marking (no weight - just marked as admin)
       const { data, error } = await supabase
         .from('votes')
         .upsert([
@@ -416,7 +414,6 @@ export class VotingService {
             matchup_id: matchupId,
             selected_contestant_id: selectedContestantId,
             is_admin_vote: true,
-            weight: weight,
           },
         ])
         .select()
@@ -549,9 +546,9 @@ export class VotingService {
     }
   }
 
-  // Batch vote submission (for admin or special cases)
+  // Batch vote submission (simplified - no weight)
   static async submitBatchVotes(
-    votes: { matchupId: string; selectedContestantId: string; weight?: number }[]
+    votes: { matchupId: string; selectedContestantId: string; isAdminVote?: boolean }[]
   ): Promise<Vote[]> {
     try {
       const { data: user } = await supabase.auth.getUser();
@@ -561,7 +558,7 @@ export class VotingService {
         user_id: user.user.id,
         matchup_id: vote.matchupId,
         selected_contestant_id: vote.selectedContestantId,
-        weight: vote.weight || 1,
+        is_admin_vote: vote.isAdminVote || false,
       }));
 
       const { data, error } = await supabase

@@ -61,7 +61,7 @@ const TieBreakerPanel: React.FC<TieBreakerPanelProps> = ({ tournamentId, classNa
       setSubmitting(matchupId);
       setError(null);
       
-      await VotingService.submitAdminTieBreaker(matchupId, selectedContestantId, 1);
+      await VotingService.submitAdminTieBreaker(matchupId, selectedContestantId);
       await fetchOpportunities(); // Refresh the list
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to submit tie-breaker vote');

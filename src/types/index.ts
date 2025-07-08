@@ -81,7 +81,6 @@ export interface Vote {
   user_id: string;
   selected_contestant_id: string;
   is_admin_vote: boolean;
-  weight: number;
   created_at: string;
 }
 
