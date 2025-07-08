@@ -4,6 +4,7 @@ import { useTournament } from '@/hooks/tournaments/useTournament';
 import { useAuth } from '@/contexts/AuthContext';
 import { ContestantService } from '@/services/contestants';
 import { TournamentService } from '@/services/tournaments';
+import { AdminService } from '@/services/admin';
 import Button from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import ErrorRecovery from '@/components/ui/ErrorRecovery';
@@ -20,7 +21,9 @@ import {
   Upload,
   Download,
   GripVertical,
-  Image
+  Image,
+  FastForward,
+  AlertTriangle
 } from 'lucide-react';
 import BracketView from '@/components/tournament/BracketView';
 import { CreateContestantData } from '@/types';
@@ -32,6 +35,7 @@ const ManageTournament: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'contestants' | 'settings' | 'bracket'>('contestants');
   const [showAddContestant, setShowAddContestant] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [forceAdvancing, setForceAdvancing] = useState(false);
 
   const { tournament, loading: tournamentLoading, error: tournamentError, refresh } = useTournament(id);
 
@@ -106,6 +110,32 @@ const ManageTournament: React.FC = () => {
     }
   };
 
+  const handleForceAdvanceRound = async () => {
+    if (!id || !user?.is_admin) return;
+    
+    const confirmMessage = `Force advance to next round?\n\nThis will:\n• Declare winners for all active matchups based on current vote leaders\n• Automatically resolve any ties (ties go to first contestant)\n• Advance the tournament to the next round\n\nThis action cannot be undone.`;
+    
+    if (!window.confirm(confirmMessage)) return;
+    
+    try {
+      setForceAdvancing(true);
+      
+      const result = await AdminService.forceAdvanceRound(id);
+      
+      if (result.success) {
+        alert(`Round advanced successfully!\n\n• ${result.winnersDeclared} winners declared\n• ${result.tiesResolved} ties resolved\n\n${result.message}`);
+        refresh();
+      } else {
+        throw new Error(result.error || 'Failed to advance round');
+      }
+    } catch (error) {
+      console.error('Error force advancing round:', error);
+      alert(`Failed to advance round: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setForceAdvancing(false);
+    }
+  };
+
   const getStatusActions = () => {
     switch (tournament.status) {
       case 'draft':
@@ -122,14 +152,36 @@ const ManageTournament: React.FC = () => {
         );
       case 'active':
         return (
-          <Button 
-            onClick={() => handleStatusChange('completed')}
-            disabled={loading}
-            className="flex items-center gap-2"
-          >
-            <Trophy className="w-4 h-4" />
-            Complete Tournament
-          </Button>
+          <div className="flex items-center gap-2">
+            {user?.is_admin && (
+              <Button 
+                onClick={handleForceAdvanceRound}
+                disabled={forceAdvancing || loading}
+                variant="outline"
+                className="flex items-center gap-2 border-amber-300 text-amber-700 hover:bg-amber-50"
+              >
+                {forceAdvancing ? (
+                  <>
+                    <LoadingSpinner size="sm" />
+                    Advancing...
+                  </>
+                ) : (
+                  <>
+                    <FastForward className="w-4 h-4" />
+                    Force Advance Round
+                  </>
+                )}
+              </Button>
+            )}
+            <Button 
+              onClick={() => handleStatusChange('completed')}
+              disabled={loading}
+              className="flex items-center gap-2"
+            >
+              <Trophy className="w-4 h-4" />
+              Complete Tournament
+            </Button>
+          </div>
         );
       default:
         return null;

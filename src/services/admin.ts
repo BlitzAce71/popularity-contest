@@ -72,7 +72,7 @@ export class AdminService {
     }
   }
 
-  // Advance tournament to next round
+  // Advance tournament to next round (only if all matchups completed)
   static async advanceToNextRound(tournamentId: string): Promise<void> {
     try {
       const isAdminUser = await this.isAdmin();
@@ -89,6 +89,39 @@ export class AdminService {
     } catch (error) {
       console.error('Error advancing tournament:', error);
       throw new Error(error instanceof Error ? error.message : 'Failed to advance tournament');
+    }
+  }
+
+  // Force advance tournament round by declaring winners for all active matchups
+  static async forceAdvanceRound(tournamentId: string): Promise<{
+    success: boolean;
+    winnersDeclared: number;
+    tiesResolved: number;
+    message: string;
+    error?: string;
+  }> {
+    try {
+      const isAdminUser = await this.isAdmin();
+      if (!isAdminUser) {
+        throw new Error('Unauthorized: Admin access required');
+      }
+
+      const { data, error } = await supabase.rpc('force_advance_round', {
+        tournament_uuid: tournamentId,
+      });
+
+      if (error) throw error;
+      
+      return {
+        success: data.success,
+        winnersDeclared: data.winners_declared || 0,
+        tiesResolved: data.ties_resolved || 0,
+        message: data.message || 'Round advanced successfully',
+        error: data.error,
+      };
+    } catch (error) {
+      console.error('Error force advancing tournament:', error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to force advance tournament');
     }
   }
 
