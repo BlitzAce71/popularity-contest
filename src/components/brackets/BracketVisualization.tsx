@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useBracketData } from '@/hooks/tournaments/useTournament';
-import { useLiveVoteCounts, useVoting } from '@/hooks/voting/useVoting';
+import { useLiveVoteCounts, useVoting, useBatchVoting } from '@/hooks/voting/useVoting';
 import type { BracketRound, BracketMatchup } from '@/types';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Button from '@/components/ui/Button';
@@ -27,14 +27,7 @@ interface RoundVotingProps {
 }
 
 const RoundVotingInterface: React.FC<RoundVotingProps> = ({ round, onVotesSubmitted, onSelectionChange, selections }) => {
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // Get voting hooks for each matchup
-  const votingHooks = round.matchups.map(matchup => ({
-    matchupId: matchup.id,
-    hook: useVoting(matchup.id)
-  }));
+  const { submitting, error, submitBatchVotes } = useBatchVoting();
 
   const totalMatchups = round.matchups.length;
   const selectedCount = Object.keys(selections).length;
@@ -43,31 +36,15 @@ const RoundVotingInterface: React.FC<RoundVotingProps> = ({ round, onVotesSubmit
   const handleSubmitAllVotes = async () => {
     if (!allSelected) return;
 
-    setSubmitting(true);
-    setError(null);
+    // Convert selections to batch vote format
+    const votes = Object.entries(selections).map(([matchupId, selectedContestantId]) => ({
+      matchupId,
+      selectedContestantId,
+    }));
 
-    try {
-      // Submit votes for all matchups
-      const promises = votingHooks.map(({ matchupId, hook }) => {
-        const selectedContestant = selections[matchupId];
-        if (selectedContestant) {
-          return hook.submitVote(selectedContestant);
-        }
-        return Promise.resolve(false);
-      });
-
-      const results = await Promise.all(promises);
-      const allSuccessful = results.every(result => result);
-
-      if (allSuccessful) {
-        onVotesSubmitted();
-      } else {
-        setError('Some votes failed to submit. Please try again.');
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to submit votes');
-    } finally {
-      setSubmitting(false);
+    const success = await submitBatchVotes(votes);
+    if (success) {
+      onVotesSubmitted();
     }
   };
 
