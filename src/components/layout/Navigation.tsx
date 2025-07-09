@@ -18,8 +18,6 @@ const Navigation: React.FC = () => {
 
   const adminNavigation = [
     { name: 'Dashboard', href: '/admin' },
-    { name: 'Manage Tournaments', href: '/admin/tournaments' },
-    { name: 'Users', href: '/admin/users' },
   ];
 
   return (
