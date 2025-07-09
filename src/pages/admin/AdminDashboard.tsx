@@ -240,7 +240,7 @@ const AdminDashboard: React.FC = () => {
                   Role
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Joined
+                  Participation
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Activity
@@ -279,19 +279,30 @@ const AdminDashboard: React.FC = () => {
                       {userData.is_admin ? 'Admin' : userData.is_moderator ? 'Moderator' : 'User'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(userData.created_at).toLocaleDateString()}
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
+                      {userData.tournaments_count || 0} tournament{(userData.tournaments_count || 0) !== 1 ? 's' : ''}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {userData.total_votes || 0} votes cast
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      {userData.last_seen ? (
+                      {userData.last_activity ? (
                         <CheckCircle className="w-4 h-4 text-green-500 mr-1" />
                       ) : (
                         <XCircle className="w-4 h-4 text-gray-400 mr-1" />
                       )}
-                      <span className="text-sm text-gray-500">
-                        {userData.last_seen ? 'Active' : 'Inactive'}
-                      </span>
+                      <div className="text-sm text-gray-500">
+                        {userData.last_activity ? (
+                          <>
+                            Last vote: {new Date(userData.last_activity).toLocaleDateString()}
+                          </>
+                        ) : (
+                          'No activity'
+                        )}
+                      </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

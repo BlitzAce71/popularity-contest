@@ -211,12 +211,12 @@ export class AdminService {
     }
   }
 
-  // Get all users with admin controls
+  // Get all users with admin controls and participation data
   static async getAllUsers(
     page: number = 1,
     pageSize: number = 20,
     search?: string
-  ): Promise<{ data: User[]; total: number }> {
+  ): Promise<{ data: any[]; total: number }> {
     try {
       const isAdminUser = await this.isAdmin();
       if (!isAdminUser) {
@@ -239,8 +239,68 @@ export class AdminService {
 
       if (error) throw error;
 
+      // Enrich user data with tournament participation and vote history
+      const enrichedUsers = await Promise.all(
+        (data || []).map(async (user) => {
+          // Get tournament participation (tournaments user has voted in)
+          const { data: tournaments } = await supabase
+            .from('votes')
+            .select(`
+              matchups!inner(
+                tournament_id,
+                tournaments!inner(id, name, status)
+              )
+            `)
+            .eq('user_id', user.id);
+
+          // Get unique tournaments user has participated in
+          const uniqueTournaments = new Map();
+          (tournaments || []).forEach(vote => {
+            const tournament = vote.matchups.tournaments;
+            uniqueTournaments.set(tournament.id, tournament);
+          });
+
+          // Get vote history with more details
+          const { data: voteHistory } = await supabase
+            .from('votes')
+            .select(`
+              *,
+              matchups!inner(
+                id,
+                tournament_id,
+                contestant1_votes,
+                contestant2_votes,
+                winner_id,
+                rounds!inner(round_number, name),
+                tournaments!inner(id, name),
+                contestant1:contestants!contestant1_id(id, name),
+                contestant2:contestants!contestant2_id(id, name)
+              ),
+              contestants!selected_contestant_id(id, name)
+            `)
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
+
+          // Get vote count
+          const { count: voteCount } = await supabase
+            .from('votes')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id);
+
+          return {
+            ...user,
+            tournaments_participated: Array.from(uniqueTournaments.values()),
+            vote_history: voteHistory || [],
+            total_votes: voteCount || 0,
+            // Add computed fields
+            tournaments_count: uniqueTournaments.size,
+            last_activity: voteHistory?.[0]?.created_at || null
+          };
+        })
+      );
+
       return {
-        data: data || [],
+        data: enrichedUsers,
         total: count || 0,
       };
     } catch (error) {
