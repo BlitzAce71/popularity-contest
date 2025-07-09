@@ -299,6 +299,21 @@ export class TournamentService {
     }
   }
 
+  // Get participant performance data (round-by-round stats)
+  static async getParticipantPerformance(id: string): Promise<any> {
+    try {
+      const { data, error } = await supabase.rpc('get_participant_performance', {
+        tournament_uuid: id,
+      });
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error fetching participant performance:', error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to fetch participant performance');
+    }
+  }
+
   // Get bracket visualization data
   static async getBracketData(id: string): Promise<any> {
     try {
