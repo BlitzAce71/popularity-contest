@@ -207,63 +207,32 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
         </div>
         
         {/* Round Navigation */}
-        <div className="flex flex-wrap gap-2 mb-6">
+        <div className="flex flex-wrap gap-3 mb-6">
           {bracketLayout.map((round, index) => {
             const isSelected = index === currentRoundIndex;
             const isCompleted = round.status === 'completed';
             const isActive = round.isActive;
-            const isPending = round.status === 'pending';
             
             return (
               <button
                 key={round.id}
                 onClick={() => setSelectedRound(index)}
-                className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                className={`px-6 py-3 rounded-lg font-medium transition-colors border ${
                   isSelected
-                    ? 'bg-primary-600 text-white shadow-sm'
+                    ? 'bg-primary-600 text-white border-primary-600 shadow-sm'
                     : isCompleted
-                    ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    : isActive
-                    ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                    : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                    ? 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200'
+                    : 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200'
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  {isCompleted && <span className="text-xs">✓</span>}
-                  {isActive && <span className="w-2 h-2 bg-green-500 rounded-full"></span>}
-                  {isPending && <span className="w-2 h-2 bg-blue-500 rounded-full"></span>}
-                  {round.name}
+                  {isCompleted && <span className="text-sm">✓</span>}
+                  {isActive && <span className="w-2 h-2 bg-green-600 rounded-full"></span>}
+                  <span>{round.name || `Round ${index + 1}`}</span>
                 </div>
               </button>
             );
           })}
-        </div>
-
-        {/* Round Progression Timeline */}
-        <div className="flex items-center gap-4 overflow-x-auto pb-2">
-          {bracketLayout.map((round, index) => (
-            <div key={round.id} className="flex items-center gap-4 flex-shrink-0">
-              <div className="text-center min-w-[100px]">
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2 ${
-                  round.status === 'completed' ? 'bg-gray-100 text-gray-700' :
-                  round.isActive ? 'bg-green-100 text-green-700' :
-                  'bg-blue-50 text-blue-700'
-                }`}>
-                  {round.status === 'completed' ? '✓' : round.matchups.length}
-                </div>
-                <div className="text-xs font-medium text-gray-700">{round.name}</div>
-                <div className="text-xs text-gray-500">
-                  {round.matchups.filter(m => m.status === 'completed').length}/{round.matchups.length}
-                </div>
-              </div>
-              
-              {index < bracketLayout.length - 1 && (
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-0.5 bg-gray-300"></div>
-                </div>
-              )}
-            </div>
-          ))}
         </div>
       </div>
 
@@ -282,11 +251,6 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
                 {currentRound.status === 'completed' && (
                   <span className="ml-3 px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-full font-medium">
                     Completed
-                  </span>
-                )}
-                {currentRound.status === 'pending' && (
-                  <span className="ml-3 px-3 py-1 text-sm bg-blue-50 text-blue-700 rounded-full font-medium">
-                    Upcoming
                   </span>
                 )}
               </h3>
