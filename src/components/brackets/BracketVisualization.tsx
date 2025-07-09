@@ -290,7 +290,7 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
                 <MatchupCard
                   matchup={matchup}
                   canVote={canVote && currentRound.isActive && matchup.status === 'active'}
-                  showVotingInterface={showVotingInterface && !hasRoundVoting}
+                  showVotingInterface={showVotingInterface}
                   loading={voteLoading}
                   onSelectionChange={hasRoundVoting ? handleContestantSelect : undefined}
                   externalSelection={hasRoundVoting ? selections[matchup.id] : undefined}
