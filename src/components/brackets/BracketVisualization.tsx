@@ -208,28 +208,29 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
         
         {/* Round Navigation */}
         <div className="flex flex-wrap gap-3 mb-6">
-          {bracketLayout.filter(round => round.status === 'completed' || round.isActive).map((round, index) => {
-            const originalIndex = bracketLayout.findIndex(r => r.id === round.id);
-            const isSelected = originalIndex === currentRoundIndex;
+          {bracketLayout.map((round, index) => {
+            const isSelected = index === currentRoundIndex;
             const isCompleted = round.status === 'completed';
             const isActive = round.isActive;
             
             return (
               <button
                 key={round.id}
-                onClick={() => setSelectedRound(originalIndex)}
+                onClick={() => setSelectedRound(index)}
                 className={`px-6 py-3 rounded-lg font-medium transition-colors border ${
                   isSelected
                     ? 'bg-primary-600 text-white border-primary-600 shadow-sm'
                     : isCompleted
                     ? 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200'
-                    : 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200'
+                    : isActive
+                    ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200'
+                    : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
                 }`}
               >
                 <div className="flex items-center gap-2">
                   {isCompleted && <span className="text-sm">✓</span>}
                   {isActive && <span className="w-2 h-2 bg-green-600 rounded-full"></span>}
-                  <span>{round.name || `Round ${originalIndex + 1}`}</span>
+                  <span>{round.name || `Round ${index + 1}`}</span>
                 </div>
               </button>
             );
@@ -292,10 +293,8 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
                   externalSelection={hasRoundVoting ? selections[matchup.id] : undefined}
                 />
                 
-                {/* Next Round Preview - Only show if next round exists and is not pending */}
-                {matchup.winner && currentRoundIndex < bracketLayout.length - 1 && 
-                 bracketLayout[currentRoundIndex + 1] && 
-                 (bracketLayout[currentRoundIndex + 1].status === 'completed' || bracketLayout[currentRoundIndex + 1].isActive) && (
+                {/* Next Round Preview */}
+                {matchup.winner && currentRoundIndex < bracketLayout.length - 1 && (
                   <div className="bg-gray-50 rounded-lg p-4 border">
                     <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
                       <span>→</span>
