@@ -189,165 +189,78 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
   const bracketLayout = getBracketLayout();
   const activeRound = bracketLayout.find(round => round.isActive);
 
-  // Mobile/tablet view: scrollable bracket with better structure
-  const isMobile = window.innerWidth < 1024;
+  // Mobile view: show rounds in tabs
+  const isMobile = window.innerWidth < 768;
 
   if (isMobile) {
     return (
       <div className={`space-y-6 ${className}`}>
-        {/* Bracket navigation */}
-        <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide">
+        {/* Round selector */}
+        <div className="flex overflow-x-auto gap-2 pb-2">
           {bracketLayout.map((round, index) => (
             <button
               key={round.id}
               onClick={() => setSelectedRound(index)}
-              className={`flex-shrink-0 px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${
+              className={`flex-shrink-0 px-4 py-2 text-sm font-medium rounded-lg border ${
                 selectedRound === index || (selectedRound === null && round.isActive)
-                  ? 'bg-primary-600 text-white border-primary-600 shadow-sm'
+                  ? 'bg-primary-600 text-white border-primary-600'
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
               }`}
             >
               {round.name}
-              {round.isActive && (
-                <span className="ml-1 w-2 h-2 bg-green-400 rounded-full inline-block"></span>
-              )}
             </button>
           ))}
         </div>
 
-        {/* Mobile bracket view */}
-        <div className="overflow-x-auto bg-gray-50 rounded-lg p-4">
-          <div className="min-w-max flex gap-8">
-            {bracketLayout.map((round, roundIndex) => {
-              const isSelectedRound = selectedRound === roundIndex || (selectedRound === null && round.isActive);
-              const shouldShow = selectedRound !== null ? isSelectedRound : roundIndex <= (bracketLayout.findIndex(r => r.isActive) || 0);
-              
-              if (!shouldShow) return null;
-              
-              const roundMatchups = round.matchups || [];
-              const hasRoundVoting = showVotingInterface && round.isActive && canVote;
-              
-              return (
-                <div key={round.id} className={`flex flex-col min-w-[280px] ${
-                  isSelectedRound ? 'opacity-100' : 'opacity-60'
-                }`}>
-                  {/* Round header */}
-                  <div className="text-center mb-6">
-                    <h3 className={`text-lg font-bold mb-2 ${
-                      round.isActive ? 'text-green-700' : 
-                      round.status === 'completed' ? 'text-gray-700' : 'text-gray-500'
-                    }`}>
-                      {round.name}
-                    </h3>
-                    {round.isActive && (
-                      <span className="inline-block px-3 py-1 text-xs bg-green-100 text-green-800 rounded-full border border-green-200 font-medium">
-                        Active Round
-                      </span>
-                    )}
-                    {round.status === 'completed' && (
-                      <span className="inline-block px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded-full border border-gray-200 font-medium">
-                        Completed
-                      </span>
-                    )}
-                    {round.status === 'pending' && (
-                      <span className="inline-block px-3 py-1 text-xs bg-blue-50 text-blue-700 rounded-full border border-blue-200 font-medium">
-                        Upcoming
-                      </span>
-                    )}
-                    <div className="text-sm text-gray-500 mt-2">
-                      {round.matchups.filter(m => m.status === 'completed').length}/{round.matchups.length} completed
-                    </div>
-                  </div>
+        {/* Selected round matchups */}
+        {(() => {
+          const displayRound = selectedRound !== null 
+            ? bracketLayout[selectedRound] 
+            : activeRound || bracketLayout[0];
+          
+          if (!displayRound) return null;
 
-                  {/* Matchups */}
-                  <div className="space-y-4 flex-1">
-                    {roundMatchups.map((matchup: BracketMatchup, matchupIndex: number) => (
-                      <div key={matchup.id} className="relative">
-                        <MatchupCard
-                          matchup={matchup}
-                          canVote={canVote && round.isActive && matchup.status === 'active'}
-                          showVotingInterface={showVotingInterface && !hasRoundVoting}
-                          loading={voteLoading}
-                          onSelectionChange={hasRoundVoting ? handleContestantSelect : undefined}
-                          externalSelection={hasRoundVoting ? selections[matchup.id] : undefined}
-                        />
-                        
-                        {/* Simple connector line for mobile */}
-                        {roundIndex < bracketLayout.length - 1 && matchupIndex % 2 === 0 && (
-                          <div className="absolute top-1/2 -right-4 w-4 h-0.5 bg-gray-300 transform -translate-y-1/2"></div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {/* Round voting interface */}
-                  {hasRoundVoting && (
-                    <RoundVotingInterface 
-                      round={round}
-                      onVotesSubmitted={() => {
-                        window.location.reload();
-                      }}
-                      onSelectionChange={handleContestantSelect}
-                      selections={selections}
-                    />
+          const hasRoundVoting = showVotingInterface && displayRound.isActive && canVote;
+
+          return (
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  {displayRound.name}
+                  {displayRound.isActive && (
+                    <span className="ml-2 px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
+                      Active
+                    </span>
                   )}
+                </h3>
+                <div className="space-y-4">
+                  {(displayRound.matchups || []).map((matchup: BracketMatchup) => (
+                    <MatchupCard
+                      key={matchup.id}
+                      matchup={matchup}
+                      canVote={canVote && displayRound.isActive && matchup.status === 'active'}
+                      showVotingInterface={showVotingInterface && !hasRoundVoting}
+                      loading={voteLoading}
+                      onSelectionChange={hasRoundVoting ? handleContestantSelect : undefined}
+                      externalSelection={hasRoundVoting ? selections[matchup.id] : undefined}
+                    />
+                  ))}
                 </div>
-              );
-            })}
-            
-            {/* Mobile championship */}
-            {bracketLayout.length > 0 && (selectedRound === null || selectedRound === bracketLayout.length - 1) && (
-              <div className="flex flex-col justify-center min-w-[240px]">
-                <div className="text-center bg-gradient-to-br from-yellow-50 to-yellow-100 border-2 border-yellow-300 rounded-lg p-6 shadow-lg">
-                  <Trophy className="w-12 h-12 text-yellow-600 mx-auto mb-3" />
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">Championship</h3>
-                  
-                  {(() => {
-                    const finalRound = bracketLayout[bracketLayout.length - 1];
-                    const finalMatchup = finalRound.matchups[0];
-                    const winner = finalMatchup?.winner;
-                    
-                    if (winner) {
-                      return (
-                        <div className="space-y-3">
-                          {winner.image_url && (
-                            <img
-                              src={winner.image_url}
-                              alt={winner.name}
-                              className="w-16 h-16 object-cover rounded-full mx-auto border-2 border-yellow-400 shadow-md"
-                            />
-                          )}
-                          <div>
-                            <div className="font-bold text-lg text-yellow-800">{winner.name}</div>
-                            <div className="text-sm text-yellow-600 font-medium">
-                              🏆 Tournament Winner
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    } else if (finalRound.status === 'completed') {
-                      return (
-                        <div className="text-gray-600">
-                          <div className="text-sm font-medium">Tournament Complete</div>
-                          <div className="text-xs mt-1">Winner will appear here</div>
-                        </div>
-                      );
-                    } else {
-                      return (
-                        <div className="text-gray-500">
-                          <div className="text-sm font-medium">Final Match</div>
-                          <div className="text-xs mt-1">
-                            {finalRound.status === 'active' ? 'Currently voting' : 'Coming soon'}
-                          </div>
-                        </div>
-                      );
-                    }
-                  })()}
-                </div>
+                
+                {hasRoundVoting && (
+                  <RoundVotingInterface 
+                    round={displayRound}
+                    onVotesSubmitted={() => {
+                      window.location.reload();
+                    }}
+                    onSelectionChange={handleContestantSelect}
+                    selections={selections}
+                  />
+                )}
               </div>
-            )}
-          </div>
-        </div>
+            </div>
+          );
+        })()}
       </div>
     );
   }
@@ -355,123 +268,95 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
   // Desktop view: full bracket visualization
   return (
     <div className={`${className}`}>
-      <div className="overflow-x-auto bg-gray-50 p-6 rounded-lg">
-        <div className="min-w-max flex items-center" style={{ gap: '120px' }}>
-          {bracketLayout.map((round, roundIndex) => {
-            const roundMatchups = round.matchups || [];
-            const matchupHeight = 100; // Fixed height for each matchup
-            const baseSpacing = 120; // Base spacing between matchups
-            const spacing = baseSpacing * Math.pow(2, roundIndex);
-            
-            return (
-              <div key={round.id} className="flex flex-col" style={{ minWidth: '280px' }}>
-                {/* Round header */}
-                <div className="text-center mb-8">
-                  <h3 className={`text-lg font-bold mb-2 ${
-                    round.isActive ? 'text-green-700' : 
-                    round.status === 'completed' ? 'text-gray-700' : 'text-gray-500'
-                  }`}>
-                    {round.name}
-                  </h3>
-                  {round.isActive && (
-                    <span className="inline-block px-3 py-1 text-xs bg-green-100 text-green-800 rounded-full border border-green-200 font-medium">
-                      Active Round
-                    </span>
-                  )}
-                  {round.status === 'completed' && (
-                    <span className="inline-block px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded-full border border-gray-200 font-medium">
-                      Completed
-                    </span>
-                  )}
-                  {round.status === 'pending' && (
-                    <span className="inline-block px-3 py-1 text-xs bg-blue-50 text-blue-700 rounded-full border border-blue-200 font-medium">
-                      Upcoming
-                    </span>
-                  )}
-                  <div className="text-sm text-gray-500 mt-2">
-                    {round.matchups.filter(m => m.status === 'completed').length}/{round.matchups.length} completed
-                  </div>
-                </div>
-
-                {/* Matchups container */}
-                <div className="flex flex-col justify-center flex-1 relative">
-                  {roundMatchups.map((matchup: BracketMatchup, matchupIndex: number) => {
-                    const isFirstInPair = matchupIndex % 2 === 0;
-                    const isLastInPair = matchupIndex % 2 === 1;
-                    const pairIndex = Math.floor(matchupIndex / 2);
-                    
-                    // Calculate precise vertical positioning
-                    const totalHeight = (roundMatchups.length - 1) * spacing + matchupHeight;
-                    const centerOffset = totalHeight / 2;
-                    const matchupTop = matchupIndex * spacing - centerOffset;
-
-                    return (
-                      <div
-                        key={matchup.id}
-                        className="absolute w-full"
-                        style={{ 
-                          top: `calc(50% + ${matchupTop}px)`,
-                          transform: 'translateY(-50%)'
-                        }}
-                      >
-                        <div className="relative">
-                          <MatchupCard
-                            matchup={matchup}
-                            canVote={canVote && round.isActive && matchup.status === 'active'}
-                            showVotingInterface={showVotingInterface}
-                            loading={voteLoading}
-                            compact={totalRounds > 3}
-                          />
-
-                          {/* Bracket connector lines */}
-                          {roundIndex < bracketLayout.length - 1 && (
-                            <div className="absolute top-1/2 -right-[120px] w-[120px] transform -translate-y-1/2">
-                              {/* Horizontal line from matchup */}
-                              <div className="absolute top-0 left-0 w-16 h-0.5 bg-gray-400"></div>
-                              
-                              {/* Vertical connector for pairs */}
-                              {isFirstInPair && matchupIndex + 1 < roundMatchups.length && (
-                                <div className="absolute left-16 top-0 w-0.5 bg-gray-400" style={{
-                                  height: `${spacing}px`,
-                                  transform: 'translateY(-50%)'
-                                }}></div>
-                              )}
-                              
-                              {/* Horizontal line to next round (only for first in pair) */}
-                              {isFirstInPair && (
-                                <div className="absolute left-16 w-16 h-0.5 bg-gray-400" style={{
-                                  top: `${spacing / 2}px`,
-                                  transform: 'translateY(-50%)'
-                                }}></div>
-                              )}
-                              
-                              {/* Final connection to next round */}
-                              {isFirstInPair && (
-                                <div className="absolute right-0 top-0 w-8 h-0.5 bg-gray-400" style={{
-                                  top: `${spacing / 2}px`,
-                                  transform: 'translateY(-50%)'
-                                }}></div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
+      <div className="overflow-x-auto">
+        <div className="min-w-max flex gap-12 p-8">
+          {bracketLayout.map((round, roundIndex) => (
+            <div key={round.id} className="flex flex-col min-w-[320px]">
+              {/* Round header */}
+              <div className="text-center mb-8">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  {round.name}
+                </h3>
+                {round.isActive && (
+                  <span className="inline-block px-3 py-1 text-xs bg-green-100 text-green-800 rounded-full font-medium">
+                    Active Round
+                  </span>
+                )}
+                {round.status === 'completed' && (
+                  <span className="inline-block px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded-full font-medium">
+                    Completed
+                  </span>
+                )}
+                {round.status === 'pending' && (
+                  <span className="inline-block px-3 py-1 text-xs bg-blue-50 text-blue-700 rounded-full font-medium">
+                    Upcoming
+                  </span>
+                )}
+                <div className="text-sm text-gray-500 mt-2">
+                  {round.matchups.filter(m => m.status === 'completed').length}/{round.matchups.length} completed
                 </div>
               </div>
-            );
-          })}
 
-          {/* Championship area */}
+              {/* Matchups */}
+              <div className="flex flex-col justify-center space-y-12 flex-1">
+                {(round.matchups || []).map((matchup: BracketMatchup, matchupIndex: number) => {
+                  // Calculate vertical spacing for bracket layout
+                  const spacing = Math.pow(2, roundIndex) * 80;
+                  const topMargin = matchupIndex > 0 ? spacing : 0;
+
+                  return (
+                    <div
+                      key={matchup.id}
+                      style={{ marginTop: topMargin }}
+                      className="relative"
+                    >
+                      <MatchupCard
+                        matchup={matchup}
+                        canVote={canVote && round.isActive && matchup.status === 'active'}
+                        showVotingInterface={showVotingInterface}
+                        loading={voteLoading}
+                        compact={totalRounds > 3}
+                      />
+
+                      {/* Connector lines for next round */}
+                      {roundIndex < bracketLayout.length - 1 && (
+                        <div className="absolute top-1/2 -right-12 w-12 transform -translate-y-1/2">
+                          {/* Horizontal line from matchup */}
+                          <div className="w-8 h-0.5 bg-gray-400"></div>
+                          
+                          {/* Vertical line connecting pairs */}
+                          {matchupIndex % 2 === 0 && matchupIndex + 1 < (round.matchups || []).length && (
+                            <div className="absolute left-8 top-0 w-0.5 bg-gray-400" style={{
+                              height: `${spacing + 80}px`,
+                              transform: 'translateY(-50%)'
+                            }}></div>
+                          )}
+                          
+                          {/* Horizontal line to next round (center of pair) */}
+                          {matchupIndex % 2 === 0 && (
+                            <div className="absolute left-8 top-0 w-4 h-0.5 bg-gray-400" style={{
+                              top: `${(spacing + 80) / 2}px`,
+                              transform: 'translateY(-50%)'
+                            }}></div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+
+          {/* Final winner display */}
           {bracketLayout.length > 0 && (
-            <div className="flex flex-col justify-center" style={{ minWidth: '240px' }}>
+            <div className="flex flex-col justify-center min-w-[280px] pl-8">
               {/* Connector line from final round */}
-              <div className="absolute top-1/2 -left-[120px] w-8 h-0.5 bg-gray-400 transform -translate-y-1/2"></div>
+              <div className="absolute top-1/2 -left-8 w-8 h-0.5 bg-gray-400 transform -translate-y-1/2"></div>
               
-              <div className="text-center bg-gradient-to-br from-yellow-50 to-yellow-100 border-2 border-yellow-300 rounded-lg p-6 shadow-lg">
-                <Trophy className="w-12 h-12 text-yellow-600 mx-auto mb-3" />
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Championship</h3>
+              <div className="text-center bg-gradient-to-br from-yellow-50 to-yellow-100 border-2 border-yellow-300 rounded-lg p-8 shadow-lg">
+                <Trophy className="w-16 h-16 text-yellow-600 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-gray-900 mb-4">Championship</h3>
                 
                 {(() => {
                   const finalRound = bracketLayout[bracketLayout.length - 1];
@@ -480,17 +365,17 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
                   
                   if (winner) {
                     return (
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         {winner.image_url && (
                           <img
                             src={winner.image_url}
                             alt={winner.name}
-                            className="w-16 h-16 object-cover rounded-full mx-auto border-2 border-yellow-400 shadow-md"
+                            className="w-20 h-20 object-cover rounded-full mx-auto border-3 border-yellow-400 shadow-lg"
                           />
                         )}
                         <div>
-                          <div className="font-bold text-lg text-yellow-800">{winner.name}</div>
-                          <div className="text-sm text-yellow-600 font-medium">
+                          <div className="font-bold text-xl text-yellow-800">{winner.name}</div>
+                          <div className="text-sm text-yellow-600 font-medium mt-1">
                             🏆 Tournament Winner
                           </div>
                         </div>
@@ -522,7 +407,7 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
 
       {/* Legend */}
       <div className="mt-8 p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
-        <h4 className="text-sm font-medium text-gray-900 mb-3">Legend</h4>
+        <h4 className="text-sm font-medium text-gray-900 mb-3">Tournament Status</h4>
         <div className="flex flex-wrap items-center gap-6 text-sm">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-green-100 border border-green-300 rounded"></div>
@@ -542,10 +427,6 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
               <span className="text-gray-700">Click to vote</span>
             </div>
           )}
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-0.5 bg-gray-400"></div>
-            <span className="text-gray-700">Bracket connections</span>
-          </div>
         </div>
       </div>
     </div>
