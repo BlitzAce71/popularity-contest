@@ -1,6 +1,5 @@
--- Fix force_advance_round function signature to match expected parameters
--- This function should take p_round_id and p_tournament_id as parameters
--- But we'll also keep a wrapper that accepts tournament_uuid for backward compatibility
+-- MANUAL SQL TO FIX FORCE ADVANCE ROUND FUNCTION
+-- Copy and paste this into your Supabase SQL editor and run it
 
 -- First, create the new function with proper signature
 CREATE OR REPLACE FUNCTION public.force_advance_round_new(p_round_id UUID, p_tournament_id UUID)

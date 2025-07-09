@@ -106,26 +106,8 @@ export class AdminService {
         throw new Error('Unauthorized: Admin access required');
       }
 
-      // First, get the current active round ID
-      const { data: rounds, error: roundError } = await supabase
-        .from('rounds')
-        .select('id')
-        .eq('tournament_id', tournamentId)
-        .eq('status', 'active')
-        .order('round_number', { ascending: false })
-        .limit(1);
-
-      if (roundError) throw roundError;
-      
-      if (!rounds || rounds.length === 0) {
-        throw new Error('No active round found for tournament');
-      }
-
-      const currentRoundId = rounds[0].id;
-
       const { data, error } = await supabase.rpc('force_advance_round', {
-        p_round_id: currentRoundId,
-        p_tournament_id: tournamentId,
+        tournament_uuid: tournamentId,
       });
 
       if (error) throw error;

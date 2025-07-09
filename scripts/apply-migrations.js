@@ -18,7 +18,8 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 async function applyMigrations() {
   const migrationFiles = [
     '20250107000003_fix_get_bracket_data_function.sql',
-    '20250107000004_add_comprehensive_error_handling.sql'
+    '20250107000004_add_comprehensive_error_handling.sql',
+    '20250109000001_fix_force_advance_round_function.sql'
   ];
 
   for (const filename of migrationFiles) {
