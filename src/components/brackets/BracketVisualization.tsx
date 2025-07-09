@@ -190,9 +190,16 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
   const activeRound = bracketLayout.find(round => round.isActive);
 
 
-  // Round-by-round tournament view
-  const currentRoundIndex = selectedRound !== null ? selectedRound : (bracketLayout.findIndex(r => r.isActive) || 0);
+  // Round-by-round tournament view - default to active round
+  const activeRoundIndex = bracketLayout.findIndex(r => r.isActive);
+  const defaultRoundIndex = activeRoundIndex >= 0 ? activeRoundIndex : 0;
+  const currentRoundIndex = selectedRound !== null ? selectedRound : defaultRoundIndex;
   const currentRound = bracketLayout[currentRoundIndex];
+  
+  // Only show rounds up to and including the active round
+  const visibleRounds = bracketLayout.filter((round, index) => {
+    return round.status === 'completed' || round.isActive;
+  });
   const hasRoundVoting = showVotingInterface && currentRound?.isActive && canVote;
 
   return (
@@ -206,17 +213,18 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
           </div>
         </div>
         
-        {/* Round Navigation */}
+        {/* Round Navigation - Only show completed and active rounds */}
         <div className="flex flex-wrap gap-3 mb-6">
-          {bracketLayout.map((round, index) => {
-            const isSelected = index === currentRoundIndex;
+          {visibleRounds.map((round) => {
+            const originalIndex = bracketLayout.findIndex(r => r.id === round.id);
+            const isSelected = originalIndex === currentRoundIndex;
             const isCompleted = round.status === 'completed';
             const isActive = round.isActive;
             
             return (
               <button
                 key={round.id}
-                onClick={() => setSelectedRound(index)}
+                onClick={() => setSelectedRound(originalIndex)}
                 className={`px-6 py-3 rounded-lg font-medium transition-colors border ${
                   isSelected
                     ? 'bg-primary-600 text-white border-primary-600 shadow-sm'
@@ -230,7 +238,7 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
                 <div className="flex items-center gap-2">
                   {isCompleted && <span className="text-sm">✓</span>}
                   {isActive && <span className="w-2 h-2 bg-green-600 rounded-full"></span>}
-                  <span>{round.name || `Round ${index + 1}`}</span>
+                  <span>{round.name || `Round ${originalIndex + 1}`}</span>
                 </div>
               </button>
             );
@@ -261,18 +269,32 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
               </p>
             </div>
             
-            {/* Navigation arrows */}
+            {/* Navigation arrows - Only navigate through visible rounds */}
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setSelectedRound(Math.max(0, currentRoundIndex - 1))}
-                disabled={currentRoundIndex === 0}
+                onClick={() => {
+                  const currentVisibleIndex = visibleRounds.findIndex(r => r.id === currentRound.id);
+                  if (currentVisibleIndex > 0) {
+                    const prevRound = visibleRounds[currentVisibleIndex - 1];
+                    const prevIndex = bracketLayout.findIndex(r => r.id === prevRound.id);
+                    setSelectedRound(prevIndex);
+                  }
+                }}
+                disabled={visibleRounds.findIndex(r => r.id === currentRound.id) === 0}
                 className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 ←
               </button>
               <button
-                onClick={() => setSelectedRound(Math.min(bracketLayout.length - 1, currentRoundIndex + 1))}
-                disabled={currentRoundIndex === bracketLayout.length - 1}
+                onClick={() => {
+                  const currentVisibleIndex = visibleRounds.findIndex(r => r.id === currentRound.id);
+                  if (currentVisibleIndex < visibleRounds.length - 1) {
+                    const nextRound = visibleRounds[currentVisibleIndex + 1];
+                    const nextIndex = bracketLayout.findIndex(r => r.id === nextRound.id);
+                    setSelectedRound(nextIndex);
+                  }
+                }}
+                disabled={visibleRounds.findIndex(r => r.id === currentRound.id) === visibleRounds.length - 1}
                 className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 →
