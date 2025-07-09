@@ -81,6 +81,7 @@ const MatchupCard: React.FC<MatchupCardProps> = ({
   };
 
   const handleContestantSelect = (contestantId: string) => {
+    console.log('MatchupCard handleContestantSelect:', { contestantId, canVote, hasVoted, submitting, onSelectionChange: !!onSelectionChange });
     if (!canVote || hasVoted || submitting) return;
     
     if (onSelectionChange) {

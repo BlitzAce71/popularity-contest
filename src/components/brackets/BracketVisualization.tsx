@@ -178,6 +178,16 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
     return round.status === 'completed' || round.isActive;
   });
   const hasRoundVoting = showVotingInterface && currentRound?.isActive && canVote;
+  
+  // Debug logging
+  console.log('BracketVisualization Debug:', {
+    showVotingInterface,
+    canVote,
+    currentRound: currentRound ? { id: currentRound.id, name: currentRound.name, isActive: currentRound.isActive, status: currentRound.status } : null,
+    hasRoundVoting,
+    bracketLayoutLength: bracketLayout.length,
+    activeRound: activeRound ? { id: activeRound.id, name: activeRound.name, status: activeRound.status } : null
+  });
 
   return (
     <div className={`space-y-8 ${className}`}>
