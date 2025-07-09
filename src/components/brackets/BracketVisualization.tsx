@@ -292,8 +292,10 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
                   externalSelection={hasRoundVoting ? selections[matchup.id] : undefined}
                 />
                 
-                {/* Next Round Preview */}
-                {matchup.winner && currentRoundIndex < bracketLayout.length - 1 && (
+                {/* Next Round Preview - Only show if next round exists and is not pending */}
+                {matchup.winner && currentRoundIndex < bracketLayout.length - 1 && 
+                 bracketLayout[currentRoundIndex + 1] && 
+                 (bracketLayout[currentRoundIndex + 1].status === 'completed' || bracketLayout[currentRoundIndex + 1].isActive) && (
                   <div className="bg-gray-50 rounded-lg p-4 border">
                     <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
                       <span>→</span>
