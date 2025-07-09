@@ -208,15 +208,16 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
         
         {/* Round Navigation */}
         <div className="flex flex-wrap gap-3 mb-6">
-          {bracketLayout.map((round, index) => {
-            const isSelected = index === currentRoundIndex;
+          {bracketLayout.filter(round => round.status === 'completed' || round.isActive).map((round, index) => {
+            const originalIndex = bracketLayout.findIndex(r => r.id === round.id);
+            const isSelected = originalIndex === currentRoundIndex;
             const isCompleted = round.status === 'completed';
             const isActive = round.isActive;
             
             return (
               <button
                 key={round.id}
-                onClick={() => setSelectedRound(index)}
+                onClick={() => setSelectedRound(originalIndex)}
                 className={`px-6 py-3 rounded-lg font-medium transition-colors border ${
                   isSelected
                     ? 'bg-primary-600 text-white border-primary-600 shadow-sm'
@@ -228,7 +229,7 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
                 <div className="flex items-center gap-2">
                   {isCompleted && <span className="text-sm">✓</span>}
                   {isActive && <span className="w-2 h-2 bg-green-600 rounded-full"></span>}
-                  <span>{round.name || `Round ${index + 1}`}</span>
+                  <span>{round.name || `Round ${originalIndex + 1}`}</span>
                 </div>
               </button>
             );
