@@ -139,7 +139,7 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
     );
   }
 
-  if (!bracketData || !bracketData.rounds || bracketData.rounds.length === 0) {
+  if (!bracketData || !Array.isArray(bracketData) || bracketData.length === 0) {
     return (
       <div className="text-center py-12">
         <Trophy className="w-16 h-16 text-gray-400 mx-auto mb-4" />
@@ -151,8 +151,8 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
     );
   }
 
-  const rounds = bracketData.rounds || [];
-  const matchups = bracketData.matchups || [];
+  const rounds = bracketData || [];
+  const matchups = rounds.flatMap(round => round.matchups || []);
   const totalRounds = rounds.length;
 
   // Calculate bracket layout
