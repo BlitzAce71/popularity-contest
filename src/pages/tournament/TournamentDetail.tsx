@@ -119,6 +119,11 @@ const TournamentDetail: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                <Link to={`/tournaments/${id}/stats`}>
+                  <Button variant="outline" size="sm" className="bg-white/90 text-gray-800 border-white/20 hover:bg-white">
+                    <BarChart3 className="w-4 h-4" />
+                  </Button>
+                </Link>
                 <Button variant="outline" size="sm" onClick={handleShare} className="bg-white/90 text-gray-800 border-white/20 hover:bg-white">
                   <Share2 className="w-4 h-4" />
                 </Button>
@@ -176,6 +181,11 @@ const TournamentDetail: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
+            <Link to={`/tournaments/${id}/stats`}>
+              <Button variant="outline" size="sm">
+                <BarChart3 className="w-4 h-4" />
+              </Button>
+            </Link>
             <Button variant="outline" size="sm" onClick={handleShare}>
               <Share2 className="w-4 h-4" />
             </Button>
