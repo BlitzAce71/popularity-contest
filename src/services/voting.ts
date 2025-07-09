@@ -147,6 +147,105 @@ export class VotingService {
     }
   }
 
+  // Get user's voting history grouped by tournament
+  static async getUserVoteHistoryByTournament(): Promise<any[]> {
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) return [];
+
+      const { data, error } = await supabase
+        .from('votes')
+        .select(`
+          *,
+          matchups!inner(
+            id,
+            position,
+            status,
+            contestant1_votes,
+            contestant2_votes,
+            winner_id,
+            rounds!inner(
+              id,
+              round_number,
+              name
+            ),
+            tournaments!inner(id, name, status),
+            contestant1:contestants!contestant1_id(id, name),
+            contestant2:contestants!contestant2_id(id, name)
+          ),
+          contestants!selected_contestant_id(id, name)
+        `)
+        .eq('user_id', user.user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Group votes by tournament
+      const tournamentGroups = new Map();
+      
+      (data || []).forEach((vote) => {
+        const tournament = vote.matchups.tournaments;
+        const tournamentKey = tournament.id;
+        
+        if (!tournamentGroups.has(tournamentKey)) {
+          tournamentGroups.set(tournamentKey, {
+            tournament: {
+              id: tournament.id,
+              name: tournament.name,
+              status: tournament.status
+            },
+            votes: []
+          });
+        }
+        
+        // Determine opponent
+        const myContestant = vote.contestants;
+        const opponent = vote.matchups.contestant1.id === myContestant.id 
+          ? vote.matchups.contestant2 
+          : vote.matchups.contestant1;
+        
+        // Determine my votes and opponent votes
+        const myVotes = vote.matchups.contestant1.id === myContestant.id 
+          ? vote.matchups.contestant1_votes 
+          : vote.matchups.contestant2_votes;
+        const opponentVotes = vote.matchups.contestant1.id === myContestant.id 
+          ? vote.matchups.contestant2_votes 
+          : vote.matchups.contestant1_votes;
+
+        // Determine result
+        let result = 'PENDING';
+        if (vote.matchups.winner_id) {
+          result = vote.matchups.winner_id === myContestant.id ? 'WON' : 'LOST';
+        }
+        
+        tournamentGroups.get(tournamentKey).votes.push({
+          id: vote.id,
+          matchup_id: vote.matchup_id,
+          round_number: vote.matchups.rounds.round_number,
+          round_name: vote.matchups.rounds.name,
+          my_contestant: myContestant,
+          opponent: opponent,
+          my_votes: myVotes,
+          opponent_votes: opponentVotes,
+          result: result,
+          matchup_status: vote.matchups.status,
+          voted_at: vote.created_at
+        });
+      });
+
+      // Convert to array and sort votes within each tournament by round
+      const result = Array.from(tournamentGroups.values()).map(group => ({
+        ...group,
+        votes: group.votes.sort((a, b) => a.round_number - b.round_number)
+      }));
+
+      return result;
+    } catch (error) {
+      console.error('Error fetching vote history by tournament:', error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to fetch vote history');
+    }
+  }
+
   // Get voting status for user in a tournament
   static async getVotingStatus(tournamentId: string): Promise<{
     totalMatchups: number;
