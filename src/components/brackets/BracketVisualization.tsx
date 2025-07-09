@@ -257,7 +257,7 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
                 )}
               </h3>
               <p className="text-gray-600">
-                {currentRound.matchups.filter(m => m.status === 'completed').length} of {currentRound.matchups.length} matchups completed
+                {currentRound.matchups.filter(m => m.status === 'completed' && m.contestant1 && m.contestant2 && m.contestant1.name && m.contestant2.name && m.contestant1.name !== 'TBD' && m.contestant2.name !== 'TBD').length} of {currentRound.matchups.filter(m => m.contestant1 && m.contestant2 && m.contestant1.name && m.contestant2.name && m.contestant1.name !== 'TBD' && m.contestant2.name !== 'TBD').length} matchups completed
               </p>
             </div>
             
@@ -280,9 +280,13 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
             </div>
           </div>
 
-          {/* Matchups Grid */}
+          {/* Matchups Grid - Only show matchups that have contestants */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {(currentRound.matchups || []).map((matchup: BracketMatchup) => (
+            {(currentRound.matchups || []).filter((matchup: BracketMatchup) => 
+              matchup.contestant1 && matchup.contestant2 && 
+              matchup.contestant1.name && matchup.contestant2.name &&
+              matchup.contestant1.name !== 'TBD' && matchup.contestant2.name !== 'TBD'
+            ).map((matchup: BracketMatchup) => (
               <div key={matchup.id} className="space-y-4">
                 <MatchupCard
                   matchup={matchup}
