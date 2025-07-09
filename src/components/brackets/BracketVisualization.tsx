@@ -136,14 +136,15 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
   const getBracketLayout = (): BracketRound[] => {
     const layout: BracketRound[] = [];
     
-    rounds.forEach((round: BracketRound) => {
-      // Group matchups by round_id
-      const roundMatchups = matchups.filter((matchup: any) => matchup.round_id === round.id);
-      
+    rounds.forEach((round: any) => {
+      // Map the API response structure to our expected structure
       const roundData = {
-        ...round,
-        isActive: round.status === 'active',
-        matchups: roundMatchups.map((matchup: BracketMatchup) => ({
+        id: round.id || `round-${round.round_number}`,
+        name: round.round_name || `Round ${round.round_number}`,
+        status: round.round_status,
+        round_number: round.round_number,
+        isActive: round.round_status === 'active',
+        matchups: (round.matchups || []).map((matchup: any) => ({
           ...matchup,
           voteCounts: voteCounts[matchup.id] || {
             contestant1Votes: 0,
