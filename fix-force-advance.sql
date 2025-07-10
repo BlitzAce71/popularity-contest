@@ -10,6 +10,10 @@ DECLARE
     winners_declared INTEGER := 0;
     ties_found INTEGER := 0;
     result JSONB;
+    next_round_id UUID;
+    winner_record RECORD;
+    next_matchup_position INTEGER := 1;
+    contestant_position INTEGER := 1;
 BEGIN
     -- Find current active round
     SELECT id, round_number INTO current_round_id, current_round_number
@@ -76,6 +80,55 @@ BEGIN
             winners_declared := winners_declared + 1;
         END IF;
     END LOOP;
+    
+    -- Now advance to the next round
+    -- 1. Mark current round as completed
+    UPDATE public.rounds 
+    SET status = 'completed'
+    WHERE id = current_round_id;
+    
+    -- 2. Populate next round with winners and activate it
+    -- Find next round
+    SELECT id INTO next_round_id
+    FROM public.rounds
+    WHERE tournament_id = tournament_uuid 
+    AND round_number = current_round_number + 1;
+    
+    IF next_round_id IS NOT NULL THEN
+        -- Get winners from current round in order
+        FOR winner_record IN
+            SELECT winner_id, position
+            FROM public.matchups
+            WHERE round_id = current_round_id 
+            AND status = 'completed'
+            AND winner_id IS NOT NULL
+            ORDER BY position
+        LOOP
+            -- Every 2 winners form a new matchup
+            IF contestant_position % 2 = 1 THEN
+                -- First contestant in new matchup
+                UPDATE public.matchups
+                SET contestant1_id = winner_record.winner_id
+                WHERE round_id = next_round_id 
+                AND position = next_matchup_position;
+            ELSE
+                -- Second contestant in matchup, advance to next matchup
+                UPDATE public.matchups
+                SET contestant2_id = winner_record.winner_id
+                WHERE round_id = next_round_id 
+                AND position = next_matchup_position;
+                
+                next_matchup_position := next_matchup_position + 1;
+            END IF;
+            
+            contestant_position := contestant_position + 1;
+        END LOOP;
+        
+        -- Activate the next round
+        UPDATE public.rounds 
+        SET status = 'active'
+        WHERE id = next_round_id;
+    END IF;
     
     -- Return results
     result := jsonb_build_object(
