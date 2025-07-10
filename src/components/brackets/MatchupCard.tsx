@@ -173,30 +173,30 @@ const MatchupCard: React.FC<MatchupCardProps> = ({
           </div>
         )}
 
-        <div className="flex items-center gap-3">
-          {/* Contestant image */}
+        <div className="flex flex-col items-center gap-3">
+          {/* Contestant image - Larger square format */}
           {contestant.image_url ? (
             <img
               src={getFileUrl('contestant-images', contestant.image_url)}
               alt={contestant.name}
-              className={`object-cover rounded-full ${compact ? 'w-10 h-10' : 'w-12 h-12'}`}
+              className={`object-cover ${compact ? 'w-20 h-20' : 'w-24 h-24'} rounded-lg`}
             />
           ) : (
-            <div className={`bg-gray-200 rounded-full flex items-center justify-center ${
-              compact ? 'w-10 h-10' : 'w-12 h-12'
+            <div className={`bg-gray-200 flex items-center justify-center rounded-lg ${
+              compact ? 'w-20 h-20' : 'w-24 h-24'
             }`}>
-              <Users className="w-5 h-5 text-gray-500" />
+              <Users className="w-8 h-8 text-gray-500" />
             </div>
           )}
 
-          <div className="flex-1 min-w-0">
+          <div className="text-center min-w-0 w-full">
             <div className={`font-medium text-gray-900 truncate ${compact ? 'text-sm' : ''}`}>
               {contestant.name}
             </div>
             
             {/* Vote count and percentage */}
             {(isCompleted || (isActive && totalVotes > 0)) && (
-              <div className="flex items-center gap-2 mt-1">
+              <div className="flex items-center justify-center gap-2 mt-1">
                 <div className={`text-gray-600 ${compact ? 'text-xs' : 'text-sm'}`}>
                   {votes} votes ({percentage}%)
                 </div>
@@ -237,18 +237,22 @@ const MatchupCard: React.FC<MatchupCardProps> = ({
         )}
       </div>
 
-      {/* Contestants */}
-      <div className="space-y-3">
-        {renderContestant(contestant1, true)}
+      {/* Contestants - Side by side layout */}
+      <div className="flex items-center gap-6">
+        <div className="flex-1">
+          {renderContestant(contestant1, true)}
+        </div>
         
         {/* VS divider */}
-        <div className="text-center">
-          <span className="text-sm font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+        <div className="flex-shrink-0">
+          <span className="text-lg font-bold text-gray-500 bg-gray-100 px-4 py-2 rounded-full">
             VS
           </span>
         </div>
         
-        {renderContestant(contestant2, false)}
+        <div className="flex-1">
+          {renderContestant(contestant2, false)}
+        </div>
       </div>
 
       {/* Voting controls - only show for individual voting, not external selection */}
