@@ -62,21 +62,6 @@ const MatchupCard: React.FC<MatchupCardProps> = ({
   const hasVoted = !!userVote;
   const totalVotes = voteCounts.totalVotes;
 
-  // Debug logging for vote counts and winner data
-  console.log('MatchupCard Debug:', {
-    matchupId: matchup.id,
-    voteCounts,
-    vote_counts: matchup.vote_counts,
-    totalVotes,
-    contestant1Votes: voteCounts.contestant1Votes,
-    contestant2Votes: voteCounts.contestant2Votes,
-    status,
-    winner: winner,
-    winnerId: winner?.id,
-    contestant1Id: contestant1?.id,
-    contestant2Id: contestant2?.id,
-    isCompleted,
-  });
 
   // Calculate vote percentages
   const getVotePercentage = (votes: number) => {
@@ -160,15 +145,6 @@ const MatchupCard: React.FC<MatchupCardProps> = ({
     const isWinner = winner?.id === contestant.id;
     const isUserChoice = userVote?.selected_contestant_id === contestant.id;
 
-    // Debug winner highlighting
-    console.log('Winner Debug:', {
-      contestantName: contestant.name,
-      contestantId: contestant.id,
-      winnerId: winner?.id,
-      isWinner,
-      status,
-      isCompleted
-    });
 
     return (
       <div
