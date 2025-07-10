@@ -312,39 +312,54 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
             </div>
           </div>
 
-          {/* Matchups Grid - Only show matchups that have contestants */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Matchups List - Single column layout with separators */}
+          <div className="space-y-8">
             {(currentRound.matchups || []).filter((matchup: BracketMatchup) => 
               matchup.contestant1 && matchup.contestant2 && 
               matchup.contestant1.name && matchup.contestant2.name &&
               matchup.contestant1.name !== 'TBD' && matchup.contestant2.name !== 'TBD'
-            ).map((matchup: BracketMatchup) => (
-              <div key={matchup.id} className="space-y-4">
-                <MatchupCard
-                  matchup={matchup}
-                  canVote={canVote && currentRound.isActive && matchup.status === 'active'}
-                  showVotingInterface={showVotingInterface}
-                  loading={voteLoading}
-                  onSelectionChange={hasRoundVoting ? handleContestantSelect : undefined}
-                  externalSelection={hasRoundVoting ? selections[matchup.id] : undefined}
-                />
-                
-                {/* Next Round Preview */}
-                {matchup.winner && currentRoundIndex < bracketLayout.length - 1 && (
-                  <div className="bg-gray-50 rounded-lg p-4 border">
-                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                      <span>→</span>
-                      <span>Advances to {bracketLayout[currentRoundIndex + 1]?.name}</span>
+            ).map((matchup: BracketMatchup, index: number, filteredMatchups: BracketMatchup[]) => (
+              <div key={matchup.id}>
+                <div className="space-y-4">
+                  <MatchupCard
+                    matchup={matchup}
+                    canVote={canVote && currentRound.isActive && matchup.status === 'active'}
+                    showVotingInterface={showVotingInterface}
+                    loading={voteLoading}
+                    onSelectionChange={hasRoundVoting ? handleContestantSelect : undefined}
+                    externalSelection={hasRoundVoting ? selections[matchup.id] : undefined}
+                  />
+                  
+                  {/* Next Round Preview */}
+                  {matchup.winner && currentRoundIndex < bracketLayout.length - 1 && (
+                    <div className="bg-gray-50 rounded-lg p-4 border">
+                      <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                        <span>→</span>
+                        <span>Advances to {bracketLayout[currentRoundIndex + 1]?.name}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {matchup.winner.image_url && (
+                          <img
+                            src={matchup.winner.image_url}
+                            alt={matchup.winner.name}
+                            className="w-8 h-8 rounded-full object-cover"
+                          />
+                        )}
+                        <span className="font-medium text-gray-900">{matchup.winner.name}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {matchup.winner.image_url && (
-                        <img
-                          src={matchup.winner.image_url}
-                          alt={matchup.winner.name}
-                          className="w-8 h-8 rounded-full object-cover"
-                        />
-                      )}
-                      <span className="font-medium text-gray-900">{matchup.winner.name}</span>
+                  )}
+                </div>
+                
+                {/* Separator between matchups - not shown after the last matchup */}
+                {index < filteredMatchups.length - 1 && (
+                  <div className="mt-8 pt-8 border-t border-gray-200">
+                    <div className="flex items-center justify-center">
+                      <div className="bg-gray-100 rounded-full px-4 py-2">
+                        <span className="text-sm font-medium text-gray-600">
+                          Matchup {index + 2}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 )}
