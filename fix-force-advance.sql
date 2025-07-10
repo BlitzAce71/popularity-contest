@@ -128,6 +128,13 @@ BEGIN
         UPDATE public.rounds 
         SET status = 'active'
         WHERE id = next_round_id;
+        
+        -- Activate all matchups in the next round that have both contestants
+        UPDATE public.matchups
+        SET status = 'active'
+        WHERE round_id = next_round_id 
+        AND contestant1_id IS NOT NULL 
+        AND contestant2_id IS NOT NULL;
     END IF;
     
     -- Return results
