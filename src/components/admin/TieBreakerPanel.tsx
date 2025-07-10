@@ -49,10 +49,6 @@ const TieBreakerPanel: React.FC<TieBreakerPanelProps> = ({ tournamentId, classNa
   useEffect(() => {
     if (isAdmin) {
       fetchOpportunities();
-      
-      // Refresh every 30 seconds for live updates
-      const interval = setInterval(fetchOpportunities, 30000);
-      return () => clearInterval(interval);
     }
   }, [tournamentId, isAdmin]);
 

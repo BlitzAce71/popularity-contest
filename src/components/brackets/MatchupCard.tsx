@@ -190,7 +190,11 @@ const MatchupCard: React.FC<MatchupCardProps> = ({
           )}
 
           <div className="text-center min-w-0 w-full">
-            <div className={`font-medium text-gray-900 truncate ${compact ? 'text-sm' : ''}`}>
+            <div className={`font-medium truncate ${compact ? 'text-sm' : ''} ${
+              isWinner 
+                ? 'bg-green-100 text-green-800 px-3 py-1 rounded-lg' 
+                : 'text-gray-900'
+            }`}>
               {contestant.name}
             </div>
             
