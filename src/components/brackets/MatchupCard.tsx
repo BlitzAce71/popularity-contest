@@ -190,8 +190,8 @@ const MatchupCard: React.FC<MatchupCardProps> = ({
               {contestant.name}
             </div>
             
-            {/* Vote count and percentage */}
-            {(isCompleted || (isActive && totalVotes > 0)) && (
+            {/* Vote count and percentage - only show on completed rounds */}
+            {isCompleted && (
               <div className="flex items-center justify-center gap-2 mt-1">
                 <div className={`text-gray-600 ${compact ? 'text-xs' : 'text-sm'}`}>
                   {votes} votes ({percentage}%)
