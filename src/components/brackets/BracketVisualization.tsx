@@ -144,19 +144,34 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
         status: round.round_status,
         round_number: round.round_number,
         isActive: round.round_status === 'active',
-        matchups: (round.matchups || []).map((matchup: any) => ({
-          ...matchup,
-          voteCounts: voteCounts[matchup.id] || {
+        matchups: (round.matchups || []).map((matchup: any) => {
+          const voteData = voteCounts[matchup.id] || {
             contestant1Votes: 0,
             contestant2Votes: 0,
             totalVotes: 0,
-          },
-          vote_counts: voteCounts[matchup.id] || {
-            contestant1_votes: 0,
-            contestant2_votes: 0,
-            total_votes: 0,
-          },
-        })),
+          };
+          
+          console.log('BracketVisualization Debug Mapping:', {
+            matchupId: matchup.id,
+            rawVoteData: voteCounts[matchup.id],
+            mappedVoteData: voteData,
+            finalVoteCounts: {
+              contestant1Votes: voteData.contestant1Votes,
+              contestant2Votes: voteData.contestant2Votes,
+              totalVotes: voteData.totalVotes,
+            }
+          });
+          
+          return {
+            ...matchup,
+            voteCounts: voteData,
+            vote_counts: {
+              contestant1_votes: voteData.contestant1Votes,
+              contestant2_votes: voteData.contestant2Votes,
+              total_votes: voteData.totalVotes,
+            },
+          };
+        }),
       };
       layout.push(roundData);
     });

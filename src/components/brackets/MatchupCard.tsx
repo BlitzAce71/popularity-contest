@@ -62,6 +62,16 @@ const MatchupCard: React.FC<MatchupCardProps> = ({
   const hasVoted = !!userVote;
   const totalVotes = voteCounts.totalVotes;
 
+  // Debug logging for vote counts
+  console.log('MatchupCard Debug:', {
+    matchupId: matchup.id,
+    voteCounts,
+    vote_counts: matchup.vote_counts,
+    totalVotes,
+    contestant1Votes: voteCounts.contestant1Votes,
+    contestant2Votes: voteCounts.contestant2Votes,
+  });
+
   // Calculate vote percentages
   const getVotePercentage = (votes: number) => {
     if (totalVotes === 0) return 0;
