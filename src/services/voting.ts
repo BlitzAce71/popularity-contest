@@ -503,12 +503,13 @@ export class VotingService {
         throw new Error('Tie-breaking votes can only be used for actual ties (vote difference = 0)');
       }
 
-      // Submit admin vote with special marking (no weight - just marked as admin)
+      // Submit admin vote using system admin user to avoid conflicts with personal votes
+      const SYSTEM_ADMIN_USER_ID = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
       const { data, error } = await supabase
         .from('votes')
         .upsert([
           {
-            user_id: user.user.id,
+            user_id: SYSTEM_ADMIN_USER_ID,
             matchup_id: matchupId,
             selected_contestant_id: selectedContestantId,
             is_admin_vote: true,
@@ -583,11 +584,12 @@ export class VotingService {
             .eq('id', matchup.contestant2_id)
             .single();
 
-          // Check if admin has already voted
+          // Check if system admin has already cast a tie-breaker vote
+          const SYSTEM_ADMIN_USER_ID = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
           const { data: adminVote } = await supabase
             .from('votes')
             .select('id')
-            .eq('user_id', user.user.id)
+            .eq('user_id', SYSTEM_ADMIN_USER_ID)
             .eq('matchup_id', matchup.id)
             .eq('is_admin_vote', true)
             .maybeSingle();
@@ -630,10 +632,12 @@ export class VotingService {
         throw new Error('Unauthorized: Admin access required');
       }
 
+      // Remove tie-breaker vote from system admin user
+      const SYSTEM_ADMIN_USER_ID = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
       const { error } = await supabase
         .from('votes')
         .delete()
-        .eq('user_id', user.user.id)
+        .eq('user_id', SYSTEM_ADMIN_USER_ID)
         .eq('matchup_id', matchupId)
         .eq('is_admin_vote', true);
 
