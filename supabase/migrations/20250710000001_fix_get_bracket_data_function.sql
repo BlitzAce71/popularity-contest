@@ -20,7 +20,7 @@ BEGIN
         WHERE r.tournament_id = tournament_uuid
         ORDER BY r.round_number
     LOOP
-        -- Get matchups for this round with vote counts
+        -- Get matchups for this round with vote counts and winner details
         SELECT COALESCE(
             jsonb_agg(
                 jsonb_build_object(
@@ -29,6 +29,16 @@ BEGIN
                     'contestant1_id', m.contestant1_id,
                     'contestant2_id', m.contestant2_id,
                     'winner_id', m.winner_id,
+                    'winner', CASE 
+                        WHEN m.winner_id IS NOT NULL THEN 
+                            jsonb_build_object(
+                                'id', winner.id,
+                                'name', winner.name,
+                                'image_url', winner.image_url,
+                                'seed', winner.seed
+                            )
+                        ELSE NULL 
+                    END,
                     'status', m.status,
                     'voteCounts', jsonb_build_object(
                         'contestant1Votes', COALESCE(vr.contestant1_votes, 0),
@@ -54,6 +64,7 @@ BEGIN
         ) INTO matchup_data
         FROM public.matchups m
         LEFT JOIN public.vote_results vr ON m.id = vr.matchup_id
+        LEFT JOIN public.contestants winner ON m.winner_id = winner.id
         WHERE m.round_id = round_record.round_id;
 
         -- Build round object

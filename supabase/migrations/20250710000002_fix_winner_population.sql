@@ -1,5 +1,5 @@
--- Fix get_bracket_data function to properly return vote history
--- This will preserve all existing vote data and make historical matchups show proper vote counts
+-- Update get_bracket_data function to populate winner object instead of just winner_id
+-- This fixes the green highlighting for winners by providing full contestant details
 
 CREATE OR REPLACE FUNCTION public.get_bracket_data(tournament_uuid UUID)
 RETURNS JSONB AS $$
@@ -87,4 +87,4 @@ EXCEPTION WHEN OTHERS THEN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-COMMENT ON FUNCTION public.get_bracket_data(UUID) IS 'Returns bracket data with vote history for a tournament - preserves all historical vote counts';
+COMMENT ON FUNCTION public.get_bracket_data(UUID) IS 'Returns bracket data with vote history and winner details for a tournament';
