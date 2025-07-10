@@ -390,19 +390,18 @@ export class VotingService {
     }
   }
 
-  // Get live vote counts for active matchups in a tournament
+  // Get vote counts for all matchups in a tournament (both active and completed)
   static async getLiveVoteCounts(tournamentId: string): Promise<Record<string, {
     contestant1Votes: number;
     contestant2Votes: number;
     totalVotes: number;
   }>> {
     try {
-      // First get active matchups for this tournament
+      // Get all matchups for this tournament (both active and completed)
       const { data: matchups, error: matchupsError } = await supabase
         .from('matchups')
         .select('id')
-        .eq('tournament_id', tournamentId)
-        .eq('status', 'active');
+        .eq('tournament_id', tournamentId);
 
       if (matchupsError) throw matchupsError;
 
@@ -436,8 +435,8 @@ export class VotingService {
 
       return voteCounts;
     } catch (error) {
-      console.error('Error fetching live vote counts:', error);
-      throw new Error(error instanceof Error ? error.message : 'Failed to fetch live vote counts');
+      console.error('Error fetching vote counts:', error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to fetch vote counts');
     }
   }
 
