@@ -193,7 +193,7 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
   const visibleRounds = bracketLayout.filter((round, index) => {
     return round.status === 'completed' || round.isActive;
   });
-  const hasRoundVoting = showVotingInterface && currentRound?.isActive && canVote;
+  const hasRoundVoting = showVotingInterface && currentRound?.isActive && currentRound?.status !== 'completed' && canVote;
   
   // Debug logging
   console.log('BracketVisualization Debug:', {
@@ -202,7 +202,14 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
     currentRound: currentRound ? { id: currentRound.id, name: currentRound.name, isActive: currentRound.isActive, status: currentRound.status } : null,
     hasRoundVoting,
     bracketLayoutLength: bracketLayout.length,
-    activeRound: activeRound ? { id: activeRound.id, name: activeRound.name, status: activeRound.status } : null
+    activeRound: activeRound ? { id: activeRound.id, name: activeRound.name, status: activeRound.status } : null,
+    votingInterfaceConditions: {
+      showVotingInterface,
+      currentRoundIsActive: currentRound?.isActive,
+      currentRoundNotCompleted: currentRound?.status !== 'completed',
+      canVote,
+      finalResult: hasRoundVoting
+    }
   });
 
   return (
