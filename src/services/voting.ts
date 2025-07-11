@@ -284,19 +284,20 @@ export class VotingService {
         };
       }
 
-      // Get user's votes for these matchups
+      // Get user's votes for these matchups (exclude admin votes)
       const matchupIds = activeMatchups.map((m) => m.id);
       const { data: userVotes, error: votesError } = await supabase
         .from('votes')
         .select('matchup_id')
         .eq('user_id', user.user.id)
+        .eq('is_admin_vote', false)
         .in('matchup_id', matchupIds);
 
       if (votesError) throw votesError;
 
       const votedMatchups = userVotes?.length || 0;
-      const availableMatchups = totalMatchups - votedMatchups;
-      const completionPercentage = totalMatchups > 0 ? (votedMatchups / totalMatchups) * 100 : 0;
+      const availableMatchups = Math.max(0, totalMatchups - votedMatchups);
+      const completionPercentage = totalMatchups > 0 ? Math.min(100, (votedMatchups / totalMatchups) * 100) : 0;
 
       return {
         totalMatchups,
@@ -411,27 +412,43 @@ export class VotingService {
 
       const matchupIds = matchups.map(m => m.id);
 
-      // Then get results for those matchups
-      const { data, error } = await supabase
-        .from('vote_results')
-        .select(`
-          matchup_id,
-          contestant1_votes,
-          contestant2_votes,
-          total_votes
-        `)
-        .in('matchup_id', matchupIds);
-
-      if (error) throw error;
-
+      // Calculate vote counts excluding admin tie-breaker votes
       const voteCounts: Record<string, any> = {};
-      (data || []).forEach((result) => {
-        voteCounts[result.matchup_id] = {
-          contestant1Votes: result.contestant1_votes,
-          contestant2Votes: result.contestant2_votes,
-          totalVotes: result.total_votes,
+      
+      for (const matchupId of matchupIds) {
+        // Get matchup details to know which contestant is which
+        const { data: matchupData } = await supabase
+          .from('matchups')
+          .select('contestant1_id, contestant2_id')
+          .eq('id', matchupId)
+          .single();
+          
+        if (!matchupData) continue;
+        
+        // Count regular votes (exclude admin votes) for each contestant
+        const { data: contestant1Votes } = await supabase
+          .from('votes')
+          .select('id')
+          .eq('matchup_id', matchupId)
+          .eq('selected_contestant_id', matchupData.contestant1_id)
+          .eq('is_admin_vote', false);
+          
+        const { data: contestant2Votes } = await supabase
+          .from('votes')
+          .select('id')
+          .eq('matchup_id', matchupId)
+          .eq('selected_contestant_id', matchupData.contestant2_id)
+          .eq('is_admin_vote', false);
+          
+        const c1Count = contestant1Votes?.length || 0;
+        const c2Count = contestant2Votes?.length || 0;
+        
+        voteCounts[matchupId] = {
+          contestant1Votes: c1Count,
+          contestant2Votes: c2Count,
+          totalVotes: c1Count + c2Count,
         };
-      });
+      }
 
       return voteCounts;
     } catch (error) {

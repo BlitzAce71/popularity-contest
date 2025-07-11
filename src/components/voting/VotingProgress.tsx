@@ -19,7 +19,16 @@ const VotingProgress: React.FC<VotingProgressProps> = ({
   votingStatus,
   className = '',
 }) => {
-  const { totalMatchups, votedMatchups, availableMatchups, completionPercentage } = votingStatus;
+  const { 
+    totalMatchups, 
+    votedMatchups, 
+    availableMatchups: rawAvailableMatchups, 
+    completionPercentage: rawCompletionPercentage 
+  } = votingStatus;
+  
+  // Additional safeguards to prevent negative values and cap percentages
+  const availableMatchups = Math.max(0, rawAvailableMatchups);
+  const completionPercentage = Math.min(100, Math.max(0, rawCompletionPercentage));
 
   if (totalMatchups === 0) {
     return null;
