@@ -162,8 +162,21 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
             }
           });
           
+          // Determine winner based on vote counts for completed matchups
+          let winner = matchup.winner;
+          if (matchup.status === 'completed' && !winner && matchup.contestant1 && matchup.contestant2) {
+            if (voteData.contestant1Votes > voteData.contestant2Votes) {
+              winner = matchup.contestant1;
+              console.log(`Winner determined: ${winner.name} (contestant1) - ${voteData.contestant1Votes} vs ${voteData.contestant2Votes}`);
+            } else if (voteData.contestant2Votes > voteData.contestant1Votes) {
+              winner = matchup.contestant2;
+              console.log(`Winner determined: ${winner.name} (contestant2) - ${voteData.contestant1Votes} vs ${voteData.contestant2Votes}`);
+            }
+          }
+          
           return {
             ...matchup,
+            winner,
             voteCounts: voteData,
             vote_counts: {
               contestant1_votes: voteData.contestant1Votes,
