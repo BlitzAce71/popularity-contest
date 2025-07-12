@@ -525,15 +525,19 @@ export class ContestantService {
       }
       
       console.log(`📋 Generated ${dummyContestants.length} dummy contestants`);
+      console.log('First 10 contestant names:', dummyContestants.slice(0, 10).map(c => c.name));
+      console.log('Last 10 contestant names:', dummyContestants.slice(-10).map(c => c.name));
       
       // Create all contestants using direct database insert (works in frontend with authentication)
       const insertData = dummyContestants.map((contestant, index) => ({
         tournament_id: tournamentId,
         name: contestant.name,
         description: contestant.description,
-        seed: index + 1, // Sequential seeding
+        seed: contestant.seed, // Use the seed from the contestant object
         quadrant: contestant.quadrant,
       }));
+      
+      console.log('Insert data sample:', insertData.slice(0, 5));
 
       const { data, error } = await supabase
         .from('contestants')
@@ -541,6 +545,13 @@ export class ContestantService {
         .select();
 
       if (error) {
+        console.error('Database insertion error details:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+        
         // Handle quadrant column not existing gracefully
         if (error.code === '42703' || error.message?.includes('column') || error.message?.includes('quadrant')) {
           console.warn('Quadrant column not ready yet, creating without quadrant:', error.message);
@@ -553,7 +564,15 @@ export class ContestantService {
             .insert(basicInsertData)
             .select();
             
-          if (retryError) throw retryError;
+          if (retryError) {
+            console.error('Retry error details:', {
+              code: retryError.code,
+              message: retryError.message,
+              details: retryError.details,
+              hint: retryError.hint
+            });
+            throw retryError;
+          }
           
           console.log(`✅ Created ${retryData?.length || 0} dummy contestants (without quadrant info)`);
           return retryData || [];
