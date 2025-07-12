@@ -136,6 +136,35 @@ const ManageTournament: React.FC = () => {
     }
   };
 
+  const handleGenerateDummyContestants = async () => {
+    if (!id || !tournament) return;
+    
+    const confirmMessage = `Generate ${tournament.max_contestants} dummy contestants?\n\nThis will create contestants named A1, A2, B1, B2, etc. based on your quadrant names.\n\nThis action will clear any existing contestants first.`;
+    
+    if (!window.confirm(confirmMessage)) return;
+    
+    try {
+      setLoading(true);
+      
+      // Use default quadrant names since we might not have them stored
+      const quadrantNames: [string, string, string, string] = ['A', 'B', 'C', 'D'];
+      
+      await ContestantService.generateDummyContestants(
+        id,
+        tournament.max_contestants,
+        quadrantNames
+      );
+      
+      alert(`Successfully generated ${tournament.max_contestants} dummy contestants!`);
+      refresh();
+    } catch (error) {
+      console.error('Error generating dummy contestants:', error);
+      alert(`Failed to generate contestants: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getStatusActions = () => {
     switch (tournament.status) {
       case 'draft':
@@ -428,6 +457,18 @@ const ContestantManagement: React.FC<{
             <Plus className="w-4 h-4" />
             Add Contestant
           </Button>
+          
+          {contestants.length === 0 && (
+            <Button
+              onClick={handleGenerateDummyContestants}
+              variant="outline"
+              className="flex items-center gap-2"
+              disabled={loading}
+            >
+              <Users className="w-4 h-4" />
+              Generate Dummy Contestants
+            </Button>
+          )}
         </div>
       </div>
 

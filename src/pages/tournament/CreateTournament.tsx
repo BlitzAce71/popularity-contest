@@ -103,48 +103,9 @@ const CreateTournament: React.FC = () => {
       
       console.log('✅ Tournament created successfully:', newTournament);
       
-      // Automatically generate dummy contestants for the tournament
-      console.log('🤖 Starting dummy contestant generation...');
-      console.log('   Tournament ID:', newTournament.id);
-      console.log('   Max contestants:', newTournament.max_contestants);
-      console.log('   Form data:', {
-        quadrant_1_name: data.quadrant_1_name,
-        quadrant_2_name: data.quadrant_2_name,
-        quadrant_3_name: data.quadrant_3_name,
-        quadrant_4_name: data.quadrant_4_name
-      });
-      
-      try {
-        const quadrantNames: [string, string, string, string] = [
-          data.quadrant_1_name,
-          data.quadrant_2_name,
-          data.quadrant_3_name,
-          data.quadrant_4_name
-        ];
-        
-        console.log('   Calling generateDummyContestants with:', {
-          tournamentId: newTournament.id,
-          maxContestants: newTournament.max_contestants,
-          quadrantNames
-        });
-        
-        const result = await ContestantService.generateDummyContestants(
-          newTournament.id,
-          newTournament.max_contestants,
-          quadrantNames
-        );
-        
-        console.log('✅ Dummy contestants generated successfully:', result);
-        console.log(`   Created ${result?.length || 0} contestants`);
-      } catch (contestantError) {
-        console.error('⚠️ Failed to generate dummy contestants:', contestantError);
-        console.error('   Error details:', {
-          name: contestantError instanceof Error ? contestantError.name : 'Unknown',
-          message: contestantError instanceof Error ? contestantError.message : String(contestantError),
-          stack: contestantError instanceof Error ? contestantError.stack : 'No stack trace'
-        });
-        // Don't fail the process - just log the error and continue
-      }
+      // TODO: Temporarily disabled automatic generation due to cache issues
+      console.log('ℹ️ Automatic dummy contestant generation temporarily disabled');
+      console.log('   Navigate to tournament and use manual generation if needed');
       
       // Navigate to the newly created tournament
       navigate(`/tournaments/${newTournament.id}`);
