@@ -506,19 +506,21 @@ export class ContestantService {
       const contestantsPerQuadrant = Math.ceil(maxContestants / 4);
       
       const dummyContestants: CreateContestantData[] = [];
+      let globalSeed = 1;
       
       for (let quadrantIndex = 0; quadrantIndex < 4; quadrantIndex++) {
         const quadrantLetter = quadrants[quadrantIndex].charAt(0).toUpperCase();
         const quadrantNumber = quadrantIndex + 1;
         
         // Generate contestants for this quadrant
-        for (let seed = 1; seed <= contestantsPerQuadrant && dummyContestants.length < maxContestants; seed++) {
+        for (let localSeed = 1; localSeed <= contestantsPerQuadrant && dummyContestants.length < maxContestants; localSeed++) {
           dummyContestants.push({
-            name: `${quadrantLetter}${seed}`,
-            description: `Dummy contestant for ${quadrants[quadrantIndex]} quadrant, seed ${seed}`,
-            seed: seed,
+            name: `${quadrantLetter}${globalSeed}`,
+            description: `Dummy contestant for ${quadrants[quadrantIndex]} quadrant, global seed ${globalSeed}`,
+            seed: globalSeed,
             quadrant: quadrantNumber
           });
+          globalSeed++;
         }
       }
       
