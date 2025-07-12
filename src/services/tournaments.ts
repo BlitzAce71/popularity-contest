@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { AdminService } from '@/services/admin';
+import { ContestantService } from '@/services/contestants';
 import type { Tournament, CreateTournamentData, FilterOptions, SortOptions, PaginatedResponse } from '@/types';
 
 export class TournamentService {
@@ -175,7 +176,22 @@ export class TournamentService {
             throw legacyError;
           }
           
-          console.log('✅ Tournament created with legacy column names');
+          console.log('✅ Tournament created with legacy column names, generating dummy contestants...');
+          
+          // Automatically generate dummy contestants for the tournament
+          try {
+            const quadrantNames = tournamentData.quadrant_names || ['A', 'B', 'C', 'D'];
+            await ContestantService.generateDummyContestants(
+              legacyData.id,
+              legacyData.max_contestants,
+              quadrantNames as [string, string, string, string]
+            );
+            console.log('✅ Dummy contestants generated successfully');
+          } catch (contestantError) {
+            console.error('⚠️ Failed to generate dummy contestants:', contestantError);
+            // Don't fail tournament creation if dummy contestant generation fails
+          }
+          
           return legacyData;
         }
         
@@ -198,14 +214,44 @@ export class TournamentService {
             throw retryError;
           }
           
-          console.log('⚠️ Tournament created without quadrant_names (database schema needs update)');
+          console.log('⚠️ Tournament created without quadrant_names (database schema needs update), generating dummy contestants...');
+          
+          // Automatically generate dummy contestants for the tournament
+          try {
+            await ContestantService.generateDummyContestants(
+              retryData.id,
+              retryData.max_contestants,
+              ['A', 'B', 'C', 'D'] // Use default names since quadrant_names aren't available
+            );
+            console.log('✅ Dummy contestants generated successfully');
+          } catch (contestantError) {
+            console.error('⚠️ Failed to generate dummy contestants:', contestantError);
+            // Don't fail tournament creation if dummy contestant generation fails
+          }
+          
           return retryData;
         }
         
         throw error;
       }
       
-      console.log('🎉 Tournament created successfully, returning:', data);
+      console.log('🎉 Tournament created successfully, generating dummy contestants...');
+      
+      // Automatically generate dummy contestants for the tournament
+      try {
+        const quadrantNames = tournamentData.quadrant_names || ['A', 'B', 'C', 'D'];
+        await ContestantService.generateDummyContestants(
+          data.id,
+          data.max_contestants,
+          quadrantNames as [string, string, string, string]
+        );
+        console.log('✅ Dummy contestants generated successfully');
+      } catch (contestantError) {
+        console.error('⚠️ Failed to generate dummy contestants:', contestantError);
+        // Don't fail tournament creation if dummy contestant generation fails
+      }
+      
+      console.log('🎉 Tournament creation complete, returning:', data);
       return data;
     } catch (error) {
       console.error('💥 TournamentService.createTournament error:', error);

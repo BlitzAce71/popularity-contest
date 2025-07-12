@@ -489,6 +489,85 @@ export class ContestantService {
     }
   }
 
+  // Generate dummy contestants with quadrant/seed naming (A1, A2, B1, B2, etc.)
+  static async generateDummyContestants(
+    tournamentId: string,
+    maxContestants: number,
+    quadrantNames?: [string, string, string, string]
+  ): Promise<Contestant[]> {
+    try {
+      console.log(`🤖 Generating ${maxContestants} dummy contestants for tournament ${tournamentId}`);
+      
+      // Default quadrant names if not provided
+      const defaultQuadrantNames: [string, string, string, string] = ['A', 'B', 'C', 'D'];
+      const quadrants = quadrantNames || defaultQuadrantNames;
+      
+      // Calculate contestants per quadrant
+      const contestantsPerQuadrant = Math.ceil(maxContestants / 4);
+      
+      const dummyContestants: CreateContestantData[] = [];
+      
+      for (let quadrantIndex = 0; quadrantIndex < 4; quadrantIndex++) {
+        const quadrantLetter = quadrants[quadrantIndex].charAt(0).toUpperCase();
+        const quadrantNumber = quadrantIndex + 1;
+        
+        // Generate contestants for this quadrant
+        for (let seed = 1; seed <= contestantsPerQuadrant && dummyContestants.length < maxContestants; seed++) {
+          dummyContestants.push({
+            name: `${quadrantLetter}${seed}`,
+            description: `Dummy contestant for ${quadrants[quadrantIndex]} quadrant, seed ${seed}`,
+            seed: seed,
+            quadrant: quadrantNumber
+          });
+        }
+      }
+      
+      console.log(`📋 Generated ${dummyContestants.length} dummy contestants`);
+      
+      // Create all contestants using the bulk creation method
+      const insertData = dummyContestants.map((contestant, index) => ({
+        tournament_id: tournamentId,
+        name: contestant.name,
+        description: contestant.description,
+        seed: index + 1, // Sequential seeding for now
+        quadrant: contestant.quadrant,
+      }));
+
+      const { data, error } = await supabase
+        .from('contestants')
+        .insert(insertData)
+        .select();
+
+      if (error) {
+        // Handle quadrant column not existing gracefully
+        if (error.code === '42703' || error.message?.includes('column') || error.message?.includes('quadrant')) {
+          console.warn('Quadrant column not ready yet, creating without quadrant:', error.message);
+          
+          // Try insert without quadrant field
+          const basicInsertData = insertData.map(({ quadrant, ...rest }) => rest);
+          
+          const { data: retryData, error: retryError } = await supabase
+            .from('contestants')
+            .insert(basicInsertData)
+            .select();
+            
+          if (retryError) throw retryError;
+          
+          console.log(`✅ Created ${retryData?.length || 0} dummy contestants (without quadrant info)`);
+          return retryData || [];
+        }
+        
+        throw error;
+      }
+
+      console.log(`✅ Created ${data?.length || 0} dummy contestants with quadrant info`);
+      return data || [];
+    } catch (error) {
+      console.error('Error generating dummy contestants:', error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to generate dummy contestants');
+    }
+  }
+
   // Check if user can manage contestants for this tournament
   static async canManageContestants(tournamentId: string): Promise<boolean> {
     try {
