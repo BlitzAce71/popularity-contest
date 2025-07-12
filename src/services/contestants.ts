@@ -498,6 +498,20 @@ export class ContestantService {
     try {
       console.log(`🤖 Generating ${maxContestants} dummy contestants for tournament ${tournamentId}`);
       
+      // First, clear any existing contestants for this tournament to avoid conflicts
+      console.log('🧹 Clearing any existing contestants for this tournament...');
+      const { error: deleteError } = await supabase
+        .from('contestants')
+        .delete()
+        .eq('tournament_id', tournamentId);
+      
+      if (deleteError) {
+        console.warn('Warning: Could not clear existing contestants:', deleteError);
+        // Continue anyway - might be no existing contestants
+      } else {
+        console.log('✅ Cleared existing contestants (if any)');
+      }
+      
       // Default quadrant names if not provided
       const defaultQuadrantNames: [string, string, string, string] = ['A', 'B', 'C', 'D'];
       const quadrants = quadrantNames || defaultQuadrantNames;
@@ -508,9 +522,6 @@ export class ContestantService {
       const dummyContestants: CreateContestantData[] = [];
       let globalSeed = 1;
       
-      // Add timestamp to ensure uniqueness across all tournaments/attempts
-      const timestamp = Date.now().toString().slice(-6); // Last 6 digits of timestamp
-      
       for (let quadrantIndex = 0; quadrantIndex < 4; quadrantIndex++) {
         const quadrantLetter = quadrants[quadrantIndex].charAt(0).toUpperCase();
         const quadrantNumber = quadrantIndex + 1;
@@ -518,8 +529,8 @@ export class ContestantService {
         // Generate contestants for this quadrant
         for (let localSeed = 1; localSeed <= contestantsPerQuadrant && dummyContestants.length < maxContestants; localSeed++) {
           dummyContestants.push({
-            name: `${quadrantLetter}${globalSeed}_${timestamp}`,
-            description: `Dummy contestant for ${quadrants[quadrantIndex]} quadrant, global seed ${globalSeed}`,
+            name: `${quadrantLetter}${globalSeed}`,
+            description: `Dummy contestant for ${quadrants[quadrantIndex]} quadrant, seed ${globalSeed}`,
             seed: globalSeed,
             quadrant: quadrantNumber
           });
