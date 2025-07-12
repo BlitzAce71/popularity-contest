@@ -103,9 +103,26 @@ const CreateTournament: React.FC = () => {
       
       console.log('✅ Tournament created successfully:', newTournament);
       
-      // TODO: Temporarily disabled automatic generation due to cache issues
-      console.log('ℹ️ Automatic dummy contestant generation temporarily disabled');
-      console.log('   Navigate to tournament and use manual generation if needed');
+      // Automatically generate dummy contestants for the tournament
+      console.log('🤖 Auto-generating dummy contestants...');
+      try {
+        const quadrantNames: [string, string, string, string] = [
+          data.quadrant_1_name,
+          data.quadrant_2_name,
+          data.quadrant_3_name,
+          data.quadrant_4_name
+        ];
+        
+        await ContestantService.generateDummyContestants(
+          newTournament.id,
+          newTournament.max_contestants,
+          quadrantNames
+        );
+        console.log('✅ Auto-generation completed successfully');
+      } catch (contestantError) {
+        console.error('⚠️ Auto-generation failed:', contestantError);
+        // Don't fail the process - user can use manual generation
+      }
       
       // Navigate to the newly created tournament
       navigate(`/tournaments/${newTournament.id}`);
