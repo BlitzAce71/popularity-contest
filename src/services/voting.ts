@@ -392,18 +392,18 @@ export class VotingService {
   }
 
   // Get vote counts for all matchups in a tournament (both active and completed)
-  // PERFORMANCE OPTIMIZED: Uses pre-calculated vote counts from matchups table
-  // instead of manually counting votes (was 189 queries for 64-contestant tournament, now just 1)
+  // PERFORMANCE OPTIMIZED: Single query to get all votes, then aggregate in memory
+  // instead of separate queries per matchup (was 189 queries for 64-contestant tournament, now just 2)
   static async getLiveVoteCounts(tournamentId: string): Promise<Record<string, {
     contestant1Votes: number;
     contestant2Votes: number;
     totalVotes: number;
   }>> {
     try {
-      // Get all matchups with pre-calculated vote counts in a single efficient query
+      // Get all matchups for this tournament to know the contestants
       const { data: matchups, error: matchupsError } = await supabase
         .from('matchups')
-        .select('id, contestant1_votes, contestant2_votes, total_votes')
+        .select('id, contestant1_id, contestant2_id')
         .eq('tournament_id', tournamentId);
 
       if (matchupsError) throw matchupsError;
@@ -412,15 +412,52 @@ export class VotingService {
         return {};
       }
 
-      // Transform the pre-calculated vote counts into the expected format
+      const matchupIds = matchups.map(m => m.id);
+
+      // Get all votes for all matchups in a single query (excluding admin votes for consistency)
+      const { data: votes, error: votesError } = await supabase
+        .from('votes')
+        .select('matchup_id, selected_contestant_id')
+        .in('matchup_id', matchupIds)
+        .eq('is_admin_vote', false);
+
+      if (votesError) throw votesError;
+
+      // Create a lookup map for matchup contestants
+      const matchupContestants: Record<string, { contestant1_id: string; contestant2_id: string }> = {};
+      for (const matchup of matchups) {
+        matchupContestants[matchup.id] = {
+          contestant1_id: matchup.contestant1_id,
+          contestant2_id: matchup.contestant2_id
+        };
+      }
+
+      // Aggregate votes by matchup
       const voteCounts: Record<string, any> = {};
       
+      // Initialize all matchups with 0 votes
       for (const matchup of matchups) {
         voteCounts[matchup.id] = {
-          contestant1Votes: matchup.contestant1_votes || 0,
-          contestant2Votes: matchup.contestant2_votes || 0,
-          totalVotes: matchup.total_votes || 0,
+          contestant1Votes: 0,
+          contestant2Votes: 0,
+          totalVotes: 0,
         };
+      }
+
+      // Count the votes
+      for (const vote of votes || []) {
+        const matchupId = vote.matchup_id;
+        const contestants = matchupContestants[matchupId];
+        
+        if (!contestants) continue;
+
+        if (vote.selected_contestant_id === contestants.contestant1_id) {
+          voteCounts[matchupId].contestant1Votes++;
+        } else if (vote.selected_contestant_id === contestants.contestant2_id) {
+          voteCounts[matchupId].contestant2Votes++;
+        }
+        
+        voteCounts[matchupId].totalVotes++;
       }
 
       return voteCounts;
