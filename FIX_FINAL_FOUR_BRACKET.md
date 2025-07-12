@@ -3,8 +3,21 @@
 ## Issue
 The current bracket generation creates Final Four matchups as **A vs B** and **C vs D** (adjacent quadrants), but standard tournament brackets should have **A vs C** and **B vs D** (crossover pattern).
 
-## Root Cause
+## Root Cause  
 The database RPC function `generate_single_elimination_bracket` is setting up the quarterfinals and/or advancement logic incorrectly.
+
+## Database Schema Analysis (Confirmed via Query)
+**Actual table structures:**
+- `rounds`: `id, tournament_id, round_number, name, status, start_date, end_date, created_at, updated_at`
+- `matchups`: `id, round_id, tournament_id, match_number, contestant1_id, contestant2_id, winner_id, status, created_at, updated_at, position`
+- `contestants`: `id, tournament_id, name, description, image_url, seed, is_active, eliminated_at, created_at, updated_at, quadrant`
+
+**Tournament Structure:**
+- 64 contestants divided into 4 quadrants (16 each)
+- Quadrant 1: Seeds 1-16 (Region A)
+- Quadrant 2: Seeds 17-32 (Region B)  
+- Quadrant 3: Seeds 33-48 (Region C)
+- Quadrant 4: Seeds 49-64 (Region D)
 
 ## Current Problematic Flow
 ```
@@ -31,32 +44,52 @@ The `generate_single_elimination_bracket` function in Supabase needs to be modif
 ### Option 1: Fix the Advancement Logic
 ```sql
 -- Update the function to change how quarterfinal winners advance to semifinals
--- This assumes the current quarterfinals are set up correctly but advancement is wrong
+-- Based on actual schema: matchups table has position, round_id, tournament_id columns
 
 CREATE OR REPLACE FUNCTION generate_single_elimination_bracket(tournament_uuid UUID)
 RETURNS VOID AS $$
 DECLARE
-    -- ... existing variable declarations ...
+    quarterfinal_round_id UUID;
+    semifinal_round_id UUID;
+    final_round_id UUID;
+    contestants_count INTEGER;
+    round_count INTEGER;
 BEGIN
-    -- ... existing bracket generation logic ...
+    -- Get contestant count for this tournament
+    SELECT COUNT(*) INTO contestants_count 
+    FROM contestants 
+    WHERE tournament_id = tournament_uuid AND is_active = true;
     
-    -- MODIFIED SECTION: Fix semifinal advancement
-    -- When creating semifinals, ensure crossover pattern:
-    -- SF1: QF1 winner vs QF3 winner (A vs C)
-    -- SF2: QF2 winner vs QF4 winner (B vs D)
+    -- Calculate number of rounds needed
+    round_count := CEIL(LOG(2, contestants_count));
     
-    -- Instead of the current logic, use:
-    -- (This is pseudo-code - actual implementation depends on current function structure)
+    -- Clear existing rounds and matchups
+    DELETE FROM matchups WHERE tournament_id = tournament_uuid;
+    DELETE FROM rounds WHERE tournament_id = tournament_uuid;
     
-    -- Create semifinal 1: QF1 winner vs QF3 winner
-    INSERT INTO matchups (round_id, position, match_number, status)
-    VALUES (semifinals_round_id, 1, 1, 'upcoming');
+    -- Create rounds (this part likely exists in current function)
+    -- ... standard round creation logic ...
     
-    -- Create semifinal 2: QF2 winner vs QF4 winner  
-    INSERT INTO matchups (round_id, position, match_number, status)
-    VALUES (semifinals_round_id, 2, 2, 'upcoming');
+    -- CRITICAL FIX: When creating semifinals, ensure proper crossover
+    -- Get the semifinal round ID
+    SELECT id INTO semifinal_round_id 
+    FROM rounds 
+    WHERE tournament_id = tournament_uuid AND name = 'Semifinals';
     
-    -- ... rest of function ...
+    -- Create semifinals with CROSSOVER pattern:
+    -- SF1: QF1 winner vs QF3 winner (Quadrant A vs Quadrant C)
+    INSERT INTO matchups (round_id, tournament_id, position, match_number, status)
+    VALUES (semifinal_round_id, tournament_uuid, 1, 1, 'upcoming');
+    
+    -- SF2: QF2 winner vs QF4 winner (Quadrant B vs Quadrant D)  
+    INSERT INTO matchups (round_id, tournament_id, position, match_number, status)
+    VALUES (semifinal_round_id, tournament_uuid, 2, 2, 'upcoming');
+    
+    -- The key is ensuring the advancement logic connects:
+    -- QF position 1 + QF position 3 → SF position 1
+    -- QF position 2 + QF position 4 → SF position 2
+    -- Instead of the current: QF1+QF2→SF1, QF3+QF4→SF2
+    
 END;
 $$ LANGUAGE plpgsql;
 ```
