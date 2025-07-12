@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useVoting } from '@/hooks/voting/useVoting';
 import { getFileUrl } from '@/lib/supabase';
 import Button from '@/components/ui/Button';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { Crown, Users, Clock, CheckCircle } from 'lucide-react';
 
 interface Contestant {
@@ -28,7 +27,6 @@ interface MatchupCardProps {
   matchup: Matchup;
   canVote?: boolean;
   showVotingInterface?: boolean;
-  loading?: boolean;
   compact?: boolean;
   className?: string;
   onSelectionChange?: (matchupId: string, contestantId: string | null) => void;
@@ -40,7 +38,6 @@ const MatchupCard: React.FC<MatchupCardProps> = ({
   matchup,
   canVote = false,
   showVotingInterface = false,
-  loading = false,
   compact = false,
   className = '',
   onSelectionChange,
@@ -298,12 +295,6 @@ const MatchupCard: React.FC<MatchupCardProps> = ({
         </div>
       )}
 
-      {/* Loading indicator */}
-      {loading && (
-        <div className="flex justify-center py-2">
-          <LoadingSpinner size="sm" />
-        </div>
-      )}
     </div>
   );
 };
