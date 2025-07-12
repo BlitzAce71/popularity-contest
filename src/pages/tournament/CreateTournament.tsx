@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { TournamentService } from '@/services/tournaments';
+import { ContestantService } from '@/services/contestants';
 import { useAuth } from '@/contexts/AuthContext';
 import Button from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
@@ -101,6 +102,27 @@ const CreateTournament: React.FC = () => {
       const newTournament = await Promise.race([createPromise, timeoutPromise]);
       
       console.log('✅ Tournament created successfully:', newTournament);
+      
+      // Automatically generate dummy contestants for the tournament
+      console.log('🤖 Generating dummy contestants...');
+      try {
+        const quadrantNames: [string, string, string, string] = [
+          data.quadrant_1_name,
+          data.quadrant_2_name,
+          data.quadrant_3_name,
+          data.quadrant_4_name
+        ];
+        
+        await ContestantService.generateDummyContestants(
+          newTournament.id,
+          newTournament.max_contestants,
+          quadrantNames
+        );
+        console.log('✅ Dummy contestants generated successfully');
+      } catch (contestantError) {
+        console.error('⚠️ Failed to generate dummy contestants:', contestantError);
+        // Don't fail the process - just log the error and continue
+      }
       
       // Navigate to the newly created tournament
       navigate(`/tournaments/${newTournament.id}`);

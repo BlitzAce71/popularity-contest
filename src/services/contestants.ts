@@ -524,12 +524,12 @@ export class ContestantService {
       
       console.log(`📋 Generated ${dummyContestants.length} dummy contestants`);
       
-      // Create all contestants using the bulk creation method
+      // Create all contestants using direct database insert (works in frontend with authentication)
       const insertData = dummyContestants.map((contestant, index) => ({
         tournament_id: tournamentId,
         name: contestant.name,
         description: contestant.description,
-        seed: index + 1, // Sequential seeding for now
+        seed: index + 1, // Sequential seeding
         quadrant: contestant.quadrant,
       }));
 
