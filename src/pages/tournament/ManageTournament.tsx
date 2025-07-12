@@ -332,6 +332,7 @@ const ManageTournament: React.FC = () => {
               onRefresh={refresh}
               showAddForm={showAddContestant}
               onToggleAddForm={setShowAddContestant}
+              onGenerateDummyContestants={handleGenerateDummyContestants}
             />
           )}
           {activeTab === 'settings' && (
@@ -358,7 +359,8 @@ const ContestantManagement: React.FC<{
   onRefresh: () => void;
   showAddForm: boolean;
   onToggleAddForm: (show: boolean) => void;
-}> = ({ tournament, onRefresh, showAddForm, onToggleAddForm }) => {
+  onGenerateDummyContestants: () => void;
+}> = ({ tournament, onRefresh, showAddForm, onToggleAddForm, onGenerateDummyContestants }) => {
   const [contestants, setContestants] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -460,7 +462,7 @@ const ContestantManagement: React.FC<{
           
           {contestants.length === 0 && (
             <Button
-              onClick={handleGenerateDummyContestants}
+              onClick={onGenerateDummyContestants}
               variant="outline"
               className="flex items-center gap-2"
               disabled={loading}
