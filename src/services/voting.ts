@@ -392,16 +392,18 @@ export class VotingService {
   }
 
   // Get vote counts for all matchups in a tournament (both active and completed)
+  // PERFORMANCE OPTIMIZED: Uses pre-calculated vote counts from matchups table
+  // instead of manually counting votes (was 189 queries for 64-contestant tournament, now just 1)
   static async getLiveVoteCounts(tournamentId: string): Promise<Record<string, {
     contestant1Votes: number;
     contestant2Votes: number;
     totalVotes: number;
   }>> {
     try {
-      // Get all matchups for this tournament (both active and completed)
+      // Get all matchups with pre-calculated vote counts in a single efficient query
       const { data: matchups, error: matchupsError } = await supabase
         .from('matchups')
-        .select('id')
+        .select('id, contestant1_votes, contestant2_votes, total_votes')
         .eq('tournament_id', tournamentId);
 
       if (matchupsError) throw matchupsError;
@@ -410,43 +412,14 @@ export class VotingService {
         return {};
       }
 
-      const matchupIds = matchups.map(m => m.id);
-
-      // Calculate vote counts excluding admin tie-breaker votes
+      // Transform the pre-calculated vote counts into the expected format
       const voteCounts: Record<string, any> = {};
       
-      for (const matchupId of matchupIds) {
-        // Get matchup details to know which contestant is which
-        const { data: matchupData } = await supabase
-          .from('matchups')
-          .select('contestant1_id, contestant2_id')
-          .eq('id', matchupId)
-          .single();
-          
-        if (!matchupData) continue;
-        
-        // Count regular votes (exclude admin votes) for each contestant
-        const { data: contestant1Votes } = await supabase
-          .from('votes')
-          .select('id')
-          .eq('matchup_id', matchupId)
-          .eq('selected_contestant_id', matchupData.contestant1_id)
-          .eq('is_admin_vote', false);
-          
-        const { data: contestant2Votes } = await supabase
-          .from('votes')
-          .select('id')
-          .eq('matchup_id', matchupId)
-          .eq('selected_contestant_id', matchupData.contestant2_id)
-          .eq('is_admin_vote', false);
-          
-        const c1Count = contestant1Votes?.length || 0;
-        const c2Count = contestant2Votes?.length || 0;
-        
-        voteCounts[matchupId] = {
-          contestant1Votes: c1Count,
-          contestant2Votes: c2Count,
-          totalVotes: c1Count + c2Count,
+      for (const matchup of matchups) {
+        voteCounts[matchup.id] = {
+          contestant1Votes: matchup.contestant1_votes || 0,
+          contestant2Votes: matchup.contestant2_votes || 0,
+          totalVotes: matchup.total_votes || 0,
         };
       }
 
