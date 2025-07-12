@@ -269,7 +269,10 @@ export const useVoteHistory = (page: number = 1, pageSize: number = 20) => {
   };
 };
 
-export const useLiveVoteCounts = (tournamentId: string | undefined) => {
+export const useLiveVoteCounts = (
+  tournamentId: string | undefined, 
+  tournamentStatus?: string
+) => {
   const [voteCounts, setVoteCounts] = useState<VoteCounts>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -281,8 +284,15 @@ export const useLiveVoteCounts = (tournamentId: string | undefined) => {
       return;
     }
 
+    // Skip loading indicator for completed tournaments - vote counts won't change
+    if (tournamentStatus === 'completed') {
+      setLoading(false);
+    }
+
     try {
-      setLoading(true);
+      if (tournamentStatus !== 'completed') {
+        setLoading(true);
+      }
       setError(null);
 
       const data = await VotingService.getLiveVoteCounts(tournamentId);
@@ -297,18 +307,18 @@ export const useLiveVoteCounts = (tournamentId: string | undefined) => {
 
   useEffect(() => {
     fetchVoteCounts();
-  }, [tournamentId]);
+  }, [tournamentId, tournamentStatus]);
 
-  // Subscribe to real-time updates
+  // Subscribe to real-time updates (only for active tournaments)
   useEffect(() => {
-    if (!tournamentId) return;
+    if (!tournamentId || tournamentStatus === 'completed') return;
 
     const unsubscribe = VotingService.subscribeToVoteUpdates(tournamentId, () => {
       fetchVoteCounts(); // Refetch on updates
     });
 
     return unsubscribe;
-  }, [tournamentId]);
+  }, [tournamentId, tournamentStatus]);
 
   const refresh = () => {
     fetchVoteCounts();

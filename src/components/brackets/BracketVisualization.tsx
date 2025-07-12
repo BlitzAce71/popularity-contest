@@ -82,7 +82,7 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
   className = '',
 }) => {
   const { bracketData, loading: bracketLoading, error } = useBracketData(tournamentId);
-  const { voteCounts, loading: voteLoading } = useLiveVoteCounts(tournamentId);
+  const { voteCounts, loading: voteLoading } = useLiveVoteCounts(tournamentId, bracketData?.tournament?.status);
   const [selectedRound, setSelectedRound] = useState<number | null>(null);
   const [selections, setSelections] = useState<Record<string, string>>({});
 
