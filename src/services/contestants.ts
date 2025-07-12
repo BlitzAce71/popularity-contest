@@ -508,6 +508,9 @@ export class ContestantService {
       const dummyContestants: CreateContestantData[] = [];
       let globalSeed = 1;
       
+      // Add timestamp to ensure uniqueness across all tournaments/attempts
+      const timestamp = Date.now().toString().slice(-6); // Last 6 digits of timestamp
+      
       for (let quadrantIndex = 0; quadrantIndex < 4; quadrantIndex++) {
         const quadrantLetter = quadrants[quadrantIndex].charAt(0).toUpperCase();
         const quadrantNumber = quadrantIndex + 1;
@@ -515,7 +518,7 @@ export class ContestantService {
         // Generate contestants for this quadrant
         for (let localSeed = 1; localSeed <= contestantsPerQuadrant && dummyContestants.length < maxContestants; localSeed++) {
           dummyContestants.push({
-            name: `${quadrantLetter}${globalSeed}`,
+            name: `${quadrantLetter}${globalSeed}_${timestamp}`,
             description: `Dummy contestant for ${quadrants[quadrantIndex]} quadrant, global seed ${globalSeed}`,
             seed: globalSeed,
             quadrant: quadrantNumber
