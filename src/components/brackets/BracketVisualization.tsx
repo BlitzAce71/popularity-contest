@@ -336,7 +336,17 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
                 <div className="space-y-4">
                   <MatchupCard
                     matchup={matchup}
-                    canVote={canVote && currentRound.isActive && matchup.status === 'active'}
+                    canVote={(() => {
+                      const result = canVote && currentRound.isActive && matchup.status === 'active';
+                      console.log('BracketVisualization canVote calculation:', {
+                        parentCanVote: canVote,
+                        currentRoundIsActive: currentRound.isActive,
+                        matchupStatus: matchup.status,
+                        finalResult: result,
+                        matchupId: matchup.id
+                      });
+                      return result;
+                    })()}
                     showVotingInterface={showVotingInterface}
                     onSelectionChange={hasRoundVoting ? handleContestantSelect : undefined}
                     externalSelection={hasRoundVoting ? selections[matchup.id] : undefined}

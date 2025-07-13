@@ -67,6 +67,15 @@ const TournamentDetail: React.FC = () => {
 
   const canManage = user?.id === tournament?.created_by || user?.is_admin;
   const isActive = tournament.status === 'active';
+  
+  // Debug voting permissions
+  console.log('TournamentDetail Voting Debug:', {
+    isAuthenticated,
+    isActive, 
+    tournamentStatus: tournament.status,
+    canVoteResult: isAuthenticated && isActive,
+    user: user ? { id: user.id, email: user.email } : null
+  });
 
   const getStatusColor = () => {
     switch (tournament.status) {
