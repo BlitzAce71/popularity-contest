@@ -279,6 +279,7 @@ const TournamentDetail: React.FC = () => {
                 canVote={isAuthenticated && isActive}
                 showVotingInterface={isActive}
                 onSelectionsChange={setLiveSelections}
+                tournament={tournament}
               />
             )}
           </>

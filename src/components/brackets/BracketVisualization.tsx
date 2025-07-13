@@ -14,6 +14,7 @@ interface BracketVisualizationProps {
   showVotingInterface?: boolean;
   className?: string;
   onSelectionsChange?: (selections: Record<string, string>) => void;
+  tournament?: any;
 }
 
 interface RoundVotingInterfaceProps {
@@ -83,6 +84,7 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
   showVotingInterface = false,
   className = '',
   onSelectionsChange,
+  tournament,
 }) => {
   const { bracketData, loading: bracketLoading, error } = useBracketData(tournamentId);
   const { voteCounts, loading: voteLoading } = useLiveVoteCounts(tournamentId, bracketData?.tournament?.status);
@@ -359,7 +361,7 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
                     showVotingInterface={showVotingInterface}
                     onSelectionChange={hasRoundVoting ? handleContestantSelect : undefined}
                     externalSelection={hasRoundVoting ? selections[matchup.id] : undefined}
-                    quadrantNames={bracketData?.tournament?.quadrant_names || ['Region A', 'Region B', 'Region C', 'Region D']}
+                    quadrantNames={tournament?.quadrant_names || bracketData?.tournament?.quadrant_names || ['Region A', 'Region B', 'Region C', 'Region D']}
                   />
                   
                   {/* Next Round Preview */}
