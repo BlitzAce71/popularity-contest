@@ -194,7 +194,7 @@ const TournamentList: React.FC = () => {
                       <div className="absolute top-4 right-4">
                         <Link
                           to={`/tournaments/${tournament.id}/manage`}
-                          className="p-2 rounded-full bg-black/50 hover:bg-black/70 text-white transition-colors"
+                          className="p-1.5 rounded-full bg-black/50 hover:bg-black/70 text-white transition-colors flex items-center justify-center"
                           title="Manage Tournament"
                         >
                           <Settings className="w-4 h-4" />
@@ -224,7 +224,7 @@ const TournamentList: React.FC = () => {
                       <div className="absolute top-4 right-4">
                         <Link
                           to={`/tournaments/${tournament.id}/manage`}
-                          className="p-2 rounded-full bg-white/80 hover:bg-white text-primary-600 hover:text-primary-700 transition-colors shadow-sm"
+                          className="p-1.5 rounded-full bg-white/80 hover:bg-white text-primary-600 hover:text-primary-700 transition-colors shadow-sm flex items-center justify-center"
                           title="Manage Tournament"
                         >
                           <Settings className="w-4 h-4" />
