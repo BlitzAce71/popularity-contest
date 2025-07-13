@@ -6,7 +6,7 @@ import Button from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import EmptyState from '@/components/ui/EmptyState';
-import { Plus, Trophy, Users, Calendar, Filter, Search, Settings } from 'lucide-react';
+import { Plus, Trophy, Users, Calendar, Filter, Search, Settings, BarChart3 } from 'lucide-react';
 
 const TournamentList: React.FC = () => {
   const { isAuthenticated, isAdmin, user } = useAuth();
@@ -90,12 +90,20 @@ const TournamentList: React.FC = () => {
           </p>
         </div>
         {isAdmin && (
-          <Link to="/tournaments/create">
-            <Button className="flex items-center gap-2">
-              <Plus className="w-4 h-4" />
-              Create Tournament
-            </Button>
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link to="/admin">
+              <Button variant="outline" className="flex items-center gap-2">
+                <BarChart3 className="w-4 h-4" />
+                Admin Dashboard
+              </Button>
+            </Link>
+            <Link to="/tournaments/create">
+              <Button className="flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                Create Tournament
+              </Button>
+            </Link>
+          </div>
         )}
       </div>
 

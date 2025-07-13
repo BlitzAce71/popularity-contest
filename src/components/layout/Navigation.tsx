@@ -11,13 +11,9 @@ const Navigation: React.FC = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
-  const navigation = [
-    { name: 'Tournaments', href: '/tournaments' },
-  ];
+  const navigation = [];
 
-  const adminNavigation = [
-    { name: 'Dashboard', href: '/admin' },
-  ];
+  const adminNavigation = [];
 
   return (
     <nav className="bg-white shadow-sm border-b">
@@ -33,38 +29,7 @@ const Navigation: React.FC = () => {
           </div>
 
           <div className="hidden md:flex items-center space-x-8">
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={`text-sm font-medium transition-colors ${
-                  isActive(item.href)
-                    ? 'text-primary-600'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                {item.name}
-              </Link>
-            ))}
-
-            {user?.is_admin && (
-              <div className="flex items-center space-x-4">
-                <span className="text-gray-300">|</span>
-                {adminNavigation.map((item) => (
-                  <Link
-                    key={item.name}
-                    to={item.href}
-                    className={`text-sm font-medium transition-colors ${
-                      isActive(item.href)
-                        ? 'text-primary-600'
-                        : 'text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    {item.name}
-                  </Link>
-                ))}
-              </div>
-            )}
+            {/* Navigation links removed - home logo provides navigation to tournaments */}
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
@@ -121,40 +86,7 @@ const Navigation: React.FC = () => {
       {mobileMenuOpen && (
         <div className="md:hidden">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t">
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={`block px-3 py-2 rounded-md text-base font-medium ${
-                  isActive(item.href)
-                    ? 'text-primary-600 bg-primary-50'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                }`}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {item.name}
-              </Link>
-            ))}
-
-            {user?.is_admin && (
-              <>
-                <div className="border-t border-gray-200 my-2" />
-                {adminNavigation.map((item) => (
-                  <Link
-                    key={item.name}
-                    to={item.href}
-                    className={`block px-3 py-2 rounded-md text-base font-medium ${
-                      isActive(item.href)
-                        ? 'text-primary-600 bg-primary-50'
-                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                    }`}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {item.name}
-                  </Link>
-                ))}
-              </>
-            )}
+            {/* Navigation links removed - home logo provides navigation to tournaments */}
 
             <div className="border-t border-gray-200 my-2" />
             
