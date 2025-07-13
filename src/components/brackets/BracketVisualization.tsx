@@ -359,6 +359,7 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
                     showVotingInterface={showVotingInterface}
                     onSelectionChange={hasRoundVoting ? handleContestantSelect : undefined}
                     externalSelection={hasRoundVoting ? selections[matchup.id] : undefined}
+                    quadrantNames={bracketData?.tournament?.quadrant_names || ['Region A', 'Region B', 'Region C', 'Region D']}
                   />
                   
                   {/* Next Round Preview */}

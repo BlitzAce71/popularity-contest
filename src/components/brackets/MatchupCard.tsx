@@ -8,6 +8,8 @@ interface Contestant {
   id: string;
   name: string;
   image_url?: string;
+  seed?: number;
+  quadrant?: 1 | 2 | 3 | 4;
 }
 
 interface Matchup {
@@ -32,6 +34,7 @@ interface MatchupCardProps {
   onSelectionChange?: (matchupId: string, contestantId: string | null) => void;
   externalSelection?: string | null;
   disableIndividualVoting?: boolean;
+  quadrantNames?: string[];
 }
 
 const MatchupCard: React.FC<MatchupCardProps> = ({
@@ -43,6 +46,7 @@ const MatchupCard: React.FC<MatchupCardProps> = ({
   onSelectionChange,
   externalSelection,
   disableIndividualVoting = false,
+  quadrantNames = ['Region A', 'Region B', 'Region C', 'Region D'],
 }) => {
   const [selectedContestant, setSelectedContestant] = useState<string | null>(null);
   const { 
@@ -76,6 +80,14 @@ const MatchupCard: React.FC<MatchupCardProps> = ({
     if (success) {
       setSelectedContestant(null);
     }
+  };
+
+  const getContestantQuadrantDisplay = (contestant: Contestant) => {
+    const quadrantName = contestant.quadrant 
+      ? quadrantNames[contestant.quadrant - 1] || `Quadrant ${contestant.quadrant}`
+      : 'Unknown';
+    const seed = contestant.seed || '?';
+    return `${quadrantName} • Seed ${seed}`;
   };
 
   const handleContestantSelect = (contestantId: string) => {
@@ -163,6 +175,13 @@ const MatchupCard: React.FC<MatchupCardProps> = ({
         )}
 
         <div className="flex flex-col items-center gap-3">
+          {/* Quadrant and Seed Info */}
+          <div className="text-center">
+            <div className="text-xs text-gray-500 font-medium">
+              {getContestantQuadrantDisplay(contestant)}
+            </div>
+          </div>
+          
           {/* Contestant image - Larger square format */}
           {contestant.image_url ? (
             <img
