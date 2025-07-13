@@ -6,10 +6,10 @@ import Button from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import EmptyState from '@/components/ui/EmptyState';
-import { Plus, Trophy, Users, Calendar, Filter, Search } from 'lucide-react';
+import { Plus, Trophy, Users, Calendar, Filter, Search, Settings } from 'lucide-react';
 
 const TournamentList: React.FC = () => {
-  const { isAuthenticated, isAdmin } = useAuth();
+  const { isAuthenticated, isAdmin, user } = useAuth();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'completed'>('all');
@@ -42,6 +42,10 @@ const TournamentList: React.FC = () => {
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
+  };
+
+  const canManageTournament = (tournament: any) => {
+    return user?.id === tournament.created_by || user?.is_admin;
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -185,9 +189,21 @@ const TournamentList: React.FC = () => {
                         </div>
                       </div>
                     </div>
+                    {/* Settings button for tournaments with images */}
+                    {canManageTournament(tournament) && (
+                      <div className="absolute top-4 right-4">
+                        <Link
+                          to={`/tournaments/${tournament.id}/manage`}
+                          className="p-2 rounded-full bg-black/50 hover:bg-black/70 text-white transition-colors"
+                          title="Manage Tournament"
+                        >
+                          <Settings className="w-4 h-4" />
+                        </Link>
+                      </div>
+                    )}
                   </>
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
+                  <div className="w-full h-full bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center relative">
                     <div className="text-center">
                       <Trophy className="w-16 h-16 text-primary-400 mx-auto mb-2" />
                       <h3 className="text-xl font-semibold text-primary-700 mb-1">
@@ -203,6 +219,18 @@ const TournamentList: React.FC = () => {
                         </span>
                       </div>
                     </div>
+                    {/* Settings button for tournaments without images */}
+                    {canManageTournament(tournament) && (
+                      <div className="absolute top-4 right-4">
+                        <Link
+                          to={`/tournaments/${tournament.id}/manage`}
+                          className="p-2 rounded-full bg-white/80 hover:bg-white text-primary-600 hover:text-primary-700 transition-colors shadow-sm"
+                          title="Manage Tournament"
+                        >
+                          <Settings className="w-4 h-4" />
+                        </Link>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
