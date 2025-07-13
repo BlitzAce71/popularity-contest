@@ -39,5 +39,8 @@ CREATE TRIGGER tournament_slug_trigger
 -- (This will help verify the trigger is working)
 UPDATE tournaments 
 SET name = name  -- This should trigger slug regeneration
-WHERE slug IS NULL OR slug = ''
-LIMIT 1;
+WHERE id IN (
+    SELECT id FROM tournaments 
+    WHERE slug IS NULL OR slug = '' 
+    LIMIT 1
+);
