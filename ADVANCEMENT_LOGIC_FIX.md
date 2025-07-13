@@ -22,7 +22,10 @@ DROP FUNCTION IF EXISTS generate_single_elimination_bracket(UUID);
 
 -- Now create the corrected function with proper advancement logic
 CREATE OR REPLACE FUNCTION generate_single_elimination_bracket(tournament_uuid UUID)
-RETURNS VOID AS $$
+RETURNS VOID
+SECURITY DEFINER -- This allows the function to run with elevated permissions
+SET search_path = public
+AS $$
 DECLARE
     tournament_row RECORD;
     contestants_count INTEGER;
