@@ -262,6 +262,13 @@ BEGIN
 END;
 $$;
 
+-- Drop existing functions to avoid return type conflicts
+DROP FUNCTION IF EXISTS advance_to_next_round(uuid);
+DROP FUNCTION IF EXISTS force_advance_round(uuid);
+DROP FUNCTION IF EXISTS setup_final_four_matchups(uuid, uuid, uuid);
+DROP FUNCTION IF EXISTS reset_tournament_bracket(uuid);
+DROP FUNCTION IF EXISTS finalize_matchup(uuid);
+
 -- Create function to advance tournament to next round
 CREATE OR REPLACE FUNCTION advance_to_next_round(tournament_uuid UUID)
 RETURNS BOOLEAN
