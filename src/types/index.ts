@@ -112,6 +112,7 @@ export interface AdminDashboardData {
   total_users: number;
   total_votes: number;
   recent_activity: ActivityLog[];
+  tournaments: Tournament[];
 }
 
 export interface ActivityLog {

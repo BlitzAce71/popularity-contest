@@ -401,16 +401,6 @@ const AdminDashboard: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
           <p className="text-gray-600">Manage tournaments, users, and system settings</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
-            <BarChart3 className="w-4 h-4" />
-            Export Data
-          </Button>
-          <Button variant="outline" size="sm">
-            <Settings className="w-4 h-4" />
-            System Status
-          </Button>
-        </div>
       </div>
 
       {/* Tab Navigation */}

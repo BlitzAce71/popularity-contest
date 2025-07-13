@@ -48,6 +48,13 @@ export class AdminService {
         .from('votes')
         .select('*', { count: 'exact', head: true });
 
+      // Get tournaments list for admin dashboard
+      const { data: tournaments } = await supabase
+        .from('tournaments')
+        .select('id, name, description, status, current_contestants, max_contestants, created_at')
+        .order('created_at', { ascending: false })
+        .limit(20);
+
       // Get recent activity (mock for now - you could implement a proper activity log)
       const recentActivity: ActivityLog[] = [
         {
@@ -65,6 +72,7 @@ export class AdminService {
         total_users: totalUsers || 0,
         total_votes: totalVotes || 0,
         recent_activity: recentActivity,
+        tournaments: tournaments || [],
       };
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
