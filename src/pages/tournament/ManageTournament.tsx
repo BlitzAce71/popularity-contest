@@ -206,13 +206,20 @@ const ManageTournament: React.FC = () => {
       case 'registration':
         return (
           <Button 
-            onClick={() => {
-              console.log('🖱️ Start Tournament button clicked!');
+            onClick={(e) => {
+              console.log('🖱️🖱️🖱️ START TOURNAMENT BUTTON CLICKED!!! 🖱️🖱️🖱️');
+              console.log('🖱️ Event object:', e);
+              console.log('🖱️ Button element:', e.target);
               console.log(`🖱️ Button disabled state: ${statusLoading || (tournament.current_contestants || 0) < 2}`);
               console.log(`🖱️ statusLoading: ${statusLoading}`);
               console.log(`🖱️ current_contestants: ${tournament.current_contestants}`);
+              e.preventDefault();
+              e.stopPropagation();
+              console.log('🖱️ About to call handleStatusChange');
               handleStatusChange('active');
             }}
+            onMouseDown={() => console.log('🖱️ Mouse down on Start Tournament button')}
+            onMouseUp={() => console.log('🖱️ Mouse up on Start Tournament button')}
             disabled={statusLoading || (tournament.current_contestants || 0) < 2}
             className="flex items-center gap-2"
           >
@@ -1296,9 +1303,14 @@ const BracketManagement: React.FC<{ tournament: any; onRefresh: () => void }> = 
   }, [tournament.id]);
 
   const handleStartTournament = async () => {
+    console.log('🎯 handleStartTournament called! (This is the button you are clicking)');
+    console.log('🎯 About to show confirmation dialog');
+    
     if (!window.confirm('Are you sure you want to start this tournament? This will generate the bracket and make it active.')) {
+      console.log('🎯 User cancelled confirmation dialog');
       return;
     }
+    console.log('🎯 User confirmed, proceeding with tournament start');
 
     try {
       setStartingTournament(true);
