@@ -247,7 +247,7 @@ export class VotingService {
   }
 
   // Get voting status for user in a tournament
-  static async getVotingStatus(tournamentId: string): Promise<{
+  static async getVotingStatus(identifier: string): Promise<{
     totalMatchups: number;
     votedMatchups: number;
     availableMatchups: number;
@@ -263,6 +263,21 @@ export class VotingService {
           completionPercentage: 0,
         };
       }
+
+      // First get the tournament to find the actual tournament ID
+      // Check if identifier is a UUID pattern
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier);
+      
+      const { data: tournament, error: tournamentError } = await supabase
+        .from('tournaments')
+        .select('id')
+        .eq(isUUID ? 'id' : 'slug', identifier)
+        .single();
+
+      if (tournamentError) throw tournamentError;
+      if (!tournament) throw new Error('Tournament not found');
+
+      const tournamentId = tournament.id;
 
       // Get all active matchups in tournament
       const { data: activeMatchups, error: matchupsError } = await supabase

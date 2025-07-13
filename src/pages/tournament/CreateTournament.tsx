@@ -102,10 +102,6 @@ const CreateTournament: React.FC = () => {
       const newTournament = await Promise.race([createPromise, timeoutPromise]);
       
       console.log('✅ Tournament created successfully:', newTournament);
-      alert('DEBUG: Tournament created! Check console for details.');
-      console.error('🚨 FORCED DEBUG - newTournament:', JSON.stringify(newTournament, null, 2));
-      console.error('🚨 SLUG VALUE:', newTournament?.slug);
-      console.error('🚨 ID VALUE:', newTournament?.id);
       
       // Automatically generate dummy contestants for the tournament
       console.log('🤖 Auto-generating dummy contestants...');
