@@ -1351,29 +1351,15 @@ const EditContestantModal: React.FC<{
                   type="number"
                   value={formData.seed}
                   onChange={(e) => setFormData({ ...formData, seed: parseInt(e.target.value) || 1 })}
-                  className="input-field mt-1"
+                  className="input-field mt-1 bg-gray-100"
                   min="1"
                   max="999"
                   required
-                  disabled={loading}
+                  disabled={true}
+                  readOnly
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  {(() => {
-                    const maxSeedsPerQuadrant = Math.ceil(tournament.max_contestants / 4);
-                    const nextSeed = getNextSeedForQuadrant(formData.quadrant || 1);
-                    const seedTaken = contestants.some(c => c.seed === formData.seed && c.quadrant === formData.quadrant && c.id !== contestant.id);
-                    const seedTooHigh = formData.seed > maxSeedsPerQuadrant;
-                    
-                    if (seedTaken) {
-                      return `⚠️ Seed ${formData.seed} is already taken in this quadrant`;
-                    } else if (seedTooHigh) {
-                      return `⚠️ Max seed for this quadrant is ${maxSeedsPerQuadrant} (${tournament.max_contestants} participants ÷ 4 quadrants)`;
-                    } else if (nextSeed > maxSeedsPerQuadrant) {
-                      return `⚠️ This quadrant is full (max ${maxSeedsPerQuadrant} seeds)`;
-                    } else {
-                      return `Next available: ${nextSeed} (max ${maxSeedsPerQuadrant} per quadrant)`;
-                    }
-                  })()}
+                  Seed cannot be edited after contestant creation
                 </p>
               </div>
               <div>
