@@ -102,6 +102,9 @@ const CreateTournament: React.FC = () => {
       const newTournament = await Promise.race([createPromise, timeoutPromise]);
       
       console.log('✅ Tournament created successfully:', newTournament);
+      console.log('🔍 DEBUG: Full newTournament object:', newTournament);
+      console.log('🔍 DEBUG: newTournament.slug:', newTournament?.slug);
+      console.log('🔍 DEBUG: newTournament.id:', newTournament?.id);
       
       // Automatically generate dummy contestants for the tournament
       console.log('🤖 Auto-generating dummy contestants...');
@@ -125,7 +128,13 @@ const CreateTournament: React.FC = () => {
       }
       
       // Navigate to the newly created tournament
-      navigate(`/tournaments/${newTournament.slug}`);
+      if (newTournament?.slug) {
+        console.log('✅ Using slug for navigation:', newTournament.slug);
+        navigate(`/tournaments/${newTournament.slug}`);
+      } else {
+        console.log('⚠️ No slug found, falling back to ID:', newTournament?.id);
+        navigate(`/tournaments/${newTournament?.id}`);
+      }
       
       console.log('🎯 Navigation completed');
     } catch (error) {
