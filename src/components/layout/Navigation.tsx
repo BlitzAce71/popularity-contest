@@ -13,7 +13,6 @@ const Navigation: React.FC = () => {
 
   const navigation = [
     { name: 'Tournaments', href: '/tournaments' },
-    { name: 'My Votes', href: '/my-votes' },
   ];
 
   const adminNavigation = [

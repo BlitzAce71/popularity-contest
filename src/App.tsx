@@ -11,7 +11,6 @@ import TournamentDetail from '@/pages/tournament/TournamentDetail';
 import CreateTournament from '@/pages/tournament/CreateTournament';
 import ManageTournament from '@/pages/tournament/ManageTournament';
 import StatsPage from '@/pages/stats/StatsPage';
-import MyVotesPage from '@/pages/votes/MyVotesPage';
 import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
 import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage';
@@ -54,11 +53,6 @@ const App: React.FC = () => {
                   <Route path="/tournaments/:id/stats" element={
                     <ErrorRecovery>
                       <StatsPage />
-                    </ErrorRecovery>
-                  } />
-                  <Route path="/my-votes" element={
-                    <ErrorRecovery>
-                      <MyVotesPage />
                     </ErrorRecovery>
                   } />
                   <Route path="/auth/login" element={<LoginPage />} />

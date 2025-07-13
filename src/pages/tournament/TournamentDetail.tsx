@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useTournament, useTournamentStats } from '@/hooks/tournaments/useTournament';
+import { useTournament } from '@/hooks/tournaments/useTournament';
 import { useVotingStatus } from '@/hooks/voting/useVoting';
 import { useAuth } from '@/contexts/AuthContext';
 import Button from '@/components/ui/Button';
@@ -15,21 +15,18 @@ import {
   Users, 
   Calendar, 
   Clock, 
-  Share2, 
   Settings,
-  BarChart3 
 } from 'lucide-react';
 
 const TournamentDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { user, isAuthenticated, isAdmin } = useAuth();
-  const [activeTab, setActiveTab] = useState<'bracket' | 'info' | 'stats'>('bracket');
+  const [activeTab, setActiveTab] = useState<'bracket' | 'info'>('bracket');
 
   const { tournament, loading: tournamentLoading, error: tournamentError, refresh } = useTournament(id);
-  const { stats, loading: statsLoading } = useTournamentStats(id);
   const { status: votingStatus, loading: votingLoading } = useVotingStatus(id);
 
-  const loading = tournamentLoading || statsLoading || votingLoading;
+  const loading = tournamentLoading || votingLoading;
   const error = tournamentError;
 
   if (loading && !tournament) {
@@ -90,18 +87,6 @@ const TournamentDetail: React.FC = () => {
     }
   };
 
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: tournament.name,
-        text: tournament.description,
-        url: window.location.href,
-      });
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      // You could show a toast notification here
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -128,14 +113,6 @@ const TournamentDetail: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Link to={`/tournaments/${id}/stats`}>
-                  <Button variant="outline" size="sm" className="bg-white/90 text-gray-800 border-white/20 hover:bg-white">
-                    <BarChart3 className="w-4 h-4" />
-                  </Button>
-                </Link>
-                <Button variant="outline" size="sm" onClick={handleShare} className="bg-white/90 text-gray-800 border-white/20 hover:bg-white">
-                  <Share2 className="w-4 h-4" />
-                </Button>
                 {canManage && (
                   <Link to={`/tournaments/${id}/manage`}>
                     <Button variant="outline" size="sm" className="bg-white/90 text-gray-800 border-white/20 hover:bg-white">
@@ -190,14 +167,6 @@ const TournamentDetail: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <Link to={`/tournaments/${id}/stats`}>
-              <Button variant="outline" size="sm">
-                <BarChart3 className="w-4 h-4" />
-              </Button>
-            </Link>
-            <Button variant="outline" size="sm" onClick={handleShare}>
-              <Share2 className="w-4 h-4" />
-            </Button>
             
             {canManage && (
               <Link to={`/tournaments/${id}/manage`}>
@@ -285,17 +254,6 @@ const TournamentDetail: React.FC = () => {
           >
             Info
           </button>
-          <button
-            onClick={() => setActiveTab('stats')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'stats'
-                ? 'border-primary-500 text-primary-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            <BarChart3 className="w-4 h-4 inline mr-1" />
-            Stats
-          </button>
         </nav>
       </div>
 
@@ -327,69 +285,6 @@ const TournamentDetail: React.FC = () => {
           <TournamentInfo tournament={tournament} />
         )}
 
-        {activeTab === 'stats' && (
-          <div className="space-y-6">
-            {stats ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="card p-6">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <Users className="h-8 w-8 text-primary-600" />
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-500">Total Participants</p>
-                      <p className="text-2xl font-semibold text-gray-900">{stats.totalParticipants}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="card p-6">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <Trophy className="h-8 w-8 text-green-600" />
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-500">Total Votes</p>
-                      <p className="text-2xl font-semibold text-gray-900">{stats.totalVotes}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="card p-6">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <Clock className="h-8 w-8 text-blue-600" />
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-500">Completed Matches</p>
-                      <p className="text-2xl font-semibold text-gray-900">
-                        {stats.completedMatchups}/{stats.totalMatchups}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="card p-6">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <BarChart3 className="h-8 w-8 text-purple-600" />
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-500">Progress</p>
-                      <p className="text-2xl font-semibold text-gray-900">
-                        {stats.completionPercentage}%
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center py-12">
-                <LoadingSpinner size="lg" />
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );

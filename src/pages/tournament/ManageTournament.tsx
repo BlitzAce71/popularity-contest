@@ -25,14 +25,13 @@ import {
   FastForward,
   AlertTriangle
 } from 'lucide-react';
-import BracketView from '@/components/tournament/BracketView';
 import { CreateContestantData } from '@/types';
 
 const ManageTournament: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'contestants' | 'settings' | 'bracket'>('contestants');
+  const [activeTab, setActiveTab] = useState<'contestants' | 'settings'>('contestants');
   const [showAddContestant, setShowAddContestant] = useState(false);
   const [loading, setLoading] = useState(false);
   const [statusLoading, setStatusLoading] = useState(false);
@@ -251,14 +250,6 @@ const ManageTournament: React.FC = () => {
                 )}
               </Button>
             )}
-            <Button 
-              onClick={() => handleStatusChange('completed')}
-              disabled={statusLoading}
-              className="flex items-center gap-2"
-            >
-              <Trophy className="w-4 h-4" />
-              Complete Tournament
-            </Button>
           </div>
         );
       default:
@@ -354,7 +345,6 @@ const ManageTournament: React.FC = () => {
           {[
             { id: 'contestants', label: 'Contestants', icon: Users },
             { id: 'settings', label: 'Settings', icon: Settings },
-            { id: 'bracket', label: 'Bracket', icon: Trophy },
           ].map(({ id, label, icon: Icon }) => (
             <button
               key={id}
@@ -386,12 +376,6 @@ const ManageTournament: React.FC = () => {
           )}
           {activeTab === 'settings' && (
             <TournamentSettings 
-              tournament={tournament}
-              onRefresh={refresh}
-            />
-          )}
-          {activeTab === 'bracket' && (
-            <BracketManagement 
               tournament={tournament}
               onRefresh={refresh}
             />
@@ -1280,111 +1264,6 @@ const TournamentSettings: React.FC<{ tournament: any; onRefresh: () => void }> =
   );
 };
 
-const BracketManagement: React.FC<{ tournament: any; onRefresh: () => void }> = ({ tournament, onRefresh }) => {
-  const [contestants, setContestants] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [startingTournament, setStartingTournament] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchContestants = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await ContestantService.getContestants(tournament.id);
-      setContestants(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch contestants');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  React.useEffect(() => {
-    fetchContestants();
-  }, [tournament.id]);
-
-  const handleStartTournament = async () => {
-    console.log('🎯 handleStartTournament called! (This is the button you are clicking)');
-    console.log('🎯 About to show confirmation dialog');
-    
-    if (!window.confirm('Are you sure you want to start this tournament? This will generate the bracket and make it active.')) {
-      console.log('🎯 User cancelled confirmation dialog');
-      return;
-    }
-    console.log('🎯 User confirmed, proceeding with tournament start');
-
-    try {
-      setStartingTournament(true);
-      setError(null);
-      await TournamentService.startTournament(tournament.id);
-      onRefresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to start tournament');
-    } finally {
-      setStartingTournament(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-96">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="text-center py-12">
-        <div className="text-red-600 mb-4">Error: {error}</div>
-        <Button onClick={fetchContestants} variant="outline">
-          Try Again
-        </Button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900">Bracket Visualization</h2>
-          <p className="text-gray-600">
-            Visual representation of tournament bracket with {contestants.length} contestants
-          </p>
-        </div>
-        
-        {(tournament.status === 'draft' || tournament.status === 'registration') && contestants.length >= 2 && (
-          <Button
-            onClick={handleStartTournament}
-            disabled={startingTournament}
-            className="flex items-center gap-2"
-          >
-            {startingTournament ? (
-              <>
-                <LoadingSpinner size="sm" />
-                Starting...
-              </>
-            ) : (
-              <>
-                <Play className="w-4 h-4" />
-                Start Tournament
-              </>
-            )}
-          </Button>
-        )}
-      </div>
-      
-      {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-sm text-red-600">{error}</p>
-        </div>
-      )}
-      
-      <BracketView contestants={contestants} tournament={tournament} />
-    </div>
-  );
-};
 
 // Edit Contestant Modal Component
 const EditContestantModal: React.FC<{
