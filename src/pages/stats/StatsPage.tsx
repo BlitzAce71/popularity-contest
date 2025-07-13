@@ -158,7 +158,7 @@ const StatsPage: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link to={`/tournaments/${id}`}>
+          <Link to={`/tournaments/${tournament?.slug}`}>
             <Button variant="outline" size="sm">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Tournament

@@ -125,7 +125,7 @@ const CreateTournament: React.FC = () => {
       }
       
       // Navigate to the newly created tournament
-      navigate(`/tournaments/${newTournament.id}`);
+      navigate(`/tournaments/${newTournament.slug}`);
       
       console.log('🎯 Navigation completed');
     } catch (error) {

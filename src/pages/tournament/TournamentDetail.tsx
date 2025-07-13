@@ -115,7 +115,7 @@ const TournamentDetail: React.FC = () => {
               </div>
               <div className="flex items-center gap-2">
                 {canManage && (
-                  <Link to={`/tournaments/${id}/manage`}>
+                  <Link to={`/tournaments/${tournament?.slug}/manage`}>
                     <Button variant="outline" size="sm" className="bg-white/90 text-gray-800 border-white/20 hover:bg-white">
                       <Settings className="w-4 h-4" />
                     </Button>
@@ -170,7 +170,7 @@ const TournamentDetail: React.FC = () => {
           <div className="flex items-center gap-2">
             
             {canManage && (
-              <Link to={`/tournaments/${id}/manage`}>
+              <Link to={`/tournaments/${tournament?.slug}/manage`}>
                 <Button variant="outline" size="sm">
                   <Settings className="w-4 h-4" />
                 </Button>

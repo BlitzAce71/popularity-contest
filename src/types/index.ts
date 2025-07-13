@@ -13,6 +13,7 @@ export interface Tournament {
   id: string;
   name: string;
   description: string;
+  slug: string; // URL-friendly slug for SEO-friendly URLs
   image_url?: string;
   status: 'draft' | 'active' | 'completed' | 'cancelled';
   start_date: string;

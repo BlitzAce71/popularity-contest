@@ -62,8 +62,43 @@ export class TournamentService {
     }
   }
 
-  // Get single tournament with full details
-  static async getTournament(id: string): Promise<Tournament> {
+  // Get single tournament with full details (supports both UUID and slug)
+  static async getTournament(identifier: string): Promise<Tournament> {
+    try {
+      // Check if identifier is a UUID pattern
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier);
+      
+      const { data, error } = await supabase
+        .from('tournaments')
+        .select(`
+          *,
+          users!created_by(username),
+          contestants(*),
+          rounds(
+            *,
+            matchups(
+              *,
+              contestant1:contestants!contestant1_id(*),
+              contestant2:contestants!contestant2_id(*),
+              winner:contestants!winner_id(*)
+            )
+          )
+        `)
+        .eq(isUUID ? 'id' : 'slug', identifier)
+        .single();
+
+      if (error) throw error;
+      if (!data) throw new Error('Tournament not found');
+
+      return data;
+    } catch (error) {
+      console.error('Error fetching tournament:', error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to fetch tournament');
+    }
+  }
+
+  // Get tournament by ID only (for cases where UUID is specifically needed)
+  static async getTournamentById(id: string): Promise<Tournament> {
     try {
       const { data, error } = await supabase
         .from('tournaments')
@@ -89,7 +124,39 @@ export class TournamentService {
 
       return data;
     } catch (error) {
-      console.error('Error fetching tournament:', error);
+      console.error('Error fetching tournament by ID:', error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to fetch tournament');
+    }
+  }
+
+  // Get tournament by slug only
+  static async getTournamentBySlug(slug: string): Promise<Tournament> {
+    try {
+      const { data, error } = await supabase
+        .from('tournaments')
+        .select(`
+          *,
+          users!created_by(username),
+          contestants(*),
+          rounds(
+            *,
+            matchups(
+              *,
+              contestant1:contestants!contestant1_id(*),
+              contestant2:contestants!contestant2_id(*),
+              winner:contestants!winner_id(*)
+            )
+          )
+        `)
+        .eq('slug', slug)
+        .single();
+
+      if (error) throw error;
+      if (!data) throw new Error('Tournament not found');
+
+      return data;
+    } catch (error) {
+      console.error('Error fetching tournament by slug:', error);
       throw new Error(error instanceof Error ? error.message : 'Failed to fetch tournament');
     }
   }

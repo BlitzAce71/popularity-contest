@@ -193,7 +193,7 @@ const TournamentList: React.FC = () => {
                     {canManageTournament(tournament) && (
                       <div className="absolute top-4 right-4">
                         <Link
-                          to={`/tournaments/${tournament.id}/manage`}
+                          to={`/tournaments/${tournament.slug}/manage`}
                           className="p-1.5 rounded-full bg-black/50 hover:bg-black/70 text-white transition-colors flex items-center justify-center"
                           title="Manage Tournament"
                         >
@@ -223,7 +223,7 @@ const TournamentList: React.FC = () => {
                     {canManageTournament(tournament) && (
                       <div className="absolute top-4 right-4">
                         <Link
-                          to={`/tournaments/${tournament.id}/manage`}
+                          to={`/tournaments/${tournament.slug}/manage`}
                           className="p-1.5 rounded-full bg-white/80 hover:bg-white text-primary-600 hover:text-primary-700 transition-colors shadow-sm flex items-center justify-center"
                           title="Manage Tournament"
                         >
@@ -260,7 +260,7 @@ const TournamentList: React.FC = () => {
                 </div>
 
                 <div className="pt-4 border-t">
-                  <Link to={`/tournaments/${tournament.id}`}>
+                  <Link to={`/tournaments/${tournament.slug}`}>
                     <Button variant="outline" className="w-full">
                       {tournament.status === 'active' ? 'Vote Now' : 'View Details'}
                     </Button>

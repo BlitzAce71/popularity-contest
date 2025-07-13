@@ -82,7 +82,7 @@ const ManageTournament: React.FC = () => {
         <p className="text-gray-600 mb-4">
           You don't have permission to manage this tournament.
         </p>
-        <Link to={`/tournaments/${id}`}>
+        <Link to={`/tournaments/${tournament?.slug}`}>
           <Button variant="outline">Back to Tournament</Button>
         </Link>
       </div>
@@ -291,7 +291,7 @@ const ManageTournament: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link
-                to={`/tournaments/${id}`}
+                to={`/tournaments/${tournament?.slug}`}
                 className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
               >
                 <ArrowLeft className="w-4 h-4 mr-1" />
@@ -329,7 +329,7 @@ const ManageTournament: React.FC = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link
-              to={`/tournaments/${id}`}
+              to={`/tournaments/${tournament?.slug}`}
               className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
             >
               <ArrowLeft className="w-4 h-4 mr-1" />
@@ -364,7 +364,7 @@ const ManageTournament: React.FC = () => {
           
           {/* Vote Button */}
           {tournament.status === 'active' && (
-            <Link to={`/tournaments/${id}`}>
+            <Link to={`/tournaments/${tournament?.slug}`}>
               <Button variant="outline" className="flex items-center gap-2">
                 <Trophy className="w-4 h-4" />
                 Vote on Tournament
