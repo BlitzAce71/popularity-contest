@@ -24,6 +24,52 @@ const AdminDashboard: React.FC = () => {
   const { dashboardData, loading: dashboardLoading, error: dashboardError, refresh: refreshDashboard } = useAdminDashboard();
   const { users, loading: usersLoading, error: usersError, deleteUser, updateUserAdminStatus, refresh: refreshUsers } = useUserAdmin();
   const [activeTab, setActiveTab] = useState<'overview' | 'tournaments' | 'users' | 'settings'>('overview');
+  
+  // Settings state (moved from renderSettings function)
+  const [settingsData, setSettingsData] = useState({
+    siteName: 'Popularity Contest',
+    defaultTournamentFormat: 'single-elimination',
+    allowPublicRegistration: true,
+    requireEmailVerification: true
+  });
+  const [settingsSaving, setSettingsSaving] = useState(false);
+  const [settingsMessage, setSettingsMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
+
+  // Load settings from localStorage on component mount
+  React.useEffect(() => {
+    const savedSettings = localStorage.getItem('admin_settings');
+    if (savedSettings) {
+      try {
+        const parsed = JSON.parse(savedSettings);
+        setSettingsData(prev => ({ ...prev, ...parsed }));
+      } catch (error) {
+        console.error('Error loading settings:', error);
+      }
+    }
+  }, []);
+
+  const handleSettingsSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSettingsSaving(true);
+    setSettingsMessage(null);
+
+    try {
+      // For now, we'll just simulate saving to localStorage since there's no backend
+      localStorage.setItem('admin_settings', JSON.stringify(settingsData));
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setSettingsMessage({ type: 'success', text: 'Settings saved successfully!' });
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSettingsMessage(null), 3000);
+    } catch (error) {
+      setSettingsMessage({ type: 'error', text: 'Failed to save settings. Please try again.' });
+    } finally {
+      setSettingsSaving(false);
+    }
+  };
 
   if (!user?.is_admin) {
     return (
@@ -328,50 +374,7 @@ const AdminDashboard: React.FC = () => {
   );
 
   const renderSettings = () => {
-    const [settingsData, setSettingsData] = useState({
-      siteName: 'Popularity Contest',
-      defaultTournamentFormat: 'single-elimination',
-      allowPublicRegistration: true,
-      requireEmailVerification: true
-    });
-    const [settingsSaving, setSettingsSaving] = useState(false);
-    const [settingsMessage, setSettingsMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
 
-    const handleSettingsSubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
-      setSettingsSaving(true);
-      setSettingsMessage(null);
-
-      try {
-        // For now, we'll just simulate saving to localStorage since there's no backend
-        localStorage.setItem('admin_settings', JSON.stringify(settingsData));
-        
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        setSettingsMessage({ type: 'success', text: 'Settings saved successfully!' });
-        
-        // Clear success message after 3 seconds
-        setTimeout(() => setSettingsMessage(null), 3000);
-      } catch (error) {
-        setSettingsMessage({ type: 'error', text: 'Failed to save settings. Please try again.' });
-      } finally {
-        setSettingsSaving(false);
-      }
-    };
-
-    // Load settings from localStorage on component mount
-    React.useEffect(() => {
-      const savedSettings = localStorage.getItem('admin_settings');
-      if (savedSettings) {
-        try {
-          const parsed = JSON.parse(savedSettings);
-          setSettingsData(prev => ({ ...prev, ...parsed }));
-        } catch (error) {
-          console.error('Error loading settings:', error);
-        }
-      }
-    }, []);
 
     return (
       <div className="space-y-6">
