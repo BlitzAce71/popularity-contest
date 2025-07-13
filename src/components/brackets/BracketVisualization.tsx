@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useBracketData } from '@/hooks/tournaments/useTournament';
 import { useLiveVoteCounts, useVoting, useBatchVoting } from '@/hooks/voting/useVoting';
+import { getFileUrl } from '@/lib/supabase';
 import type { BracketRound, BracketMatchup } from '@/types';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Button from '@/components/ui/Button';
@@ -362,7 +363,7 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
                       <div className="flex items-center gap-2">
                         {matchup.winner.image_url && (
                           <img
-                            src={matchup.winner.image_url}
+                            src={getFileUrl('contestant-images', matchup.winner.image_url)}
                             alt={matchup.winner.name}
                             className="w-8 h-8 rounded-full object-cover"
                           />
@@ -418,7 +419,7 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
               <div className="space-y-4">
                 {winner.image_url && (
                   <img
-                    src={winner.image_url}
+                    src={getFileUrl('contestant-images', winner.image_url)}
                     alt={winner.name}
                     className="w-24 h-24 object-cover rounded-full mx-auto border-4 border-yellow-400 shadow-lg"
                   />
