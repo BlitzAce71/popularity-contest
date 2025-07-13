@@ -5,6 +5,10 @@ export interface User {
   first_name: string;
   last_name: string;
   is_admin: boolean;
+  is_moderator?: boolean;
+  tournaments_count?: number;
+  total_votes?: number;
+  last_activity?: string;
   created_at: string;
   updated_at: string;
 }
