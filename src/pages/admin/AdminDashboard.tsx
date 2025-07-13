@@ -327,57 +327,158 @@ const AdminDashboard: React.FC = () => {
     </div>
   );
 
-  const renderSettings = () => (
-    <div className="space-y-6">
-      <h3 className="text-lg font-semibold text-gray-900">System Settings</h3>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="card p-6">
-          <h4 className="text-base font-medium text-gray-900 mb-4">General Settings</h4>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Site Name</label>
-              <input
-                type="text"
-                className="input-field mt-1"
-                defaultValue="Popularity Contest"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Default Tournament Format</label>
-              <select className="input-field mt-1">
-                <option value="single-elimination">Single Elimination</option>
-                <option value="double-elimination">Double Elimination</option>
-                <option value="round-robin">Round Robin</option>
-              </select>
-            </div>
-            <Button size="sm">Save Changes</Button>
-          </div>
-        </div>
+  const renderSettings = () => {
+    const [settingsData, setSettingsData] = useState({
+      siteName: 'Popularity Contest',
+      defaultTournamentFormat: 'single-elimination',
+      allowPublicRegistration: true,
+      requireEmailVerification: true
+    });
+    const [settingsSaving, setSettingsSaving] = useState(false);
+    const [settingsMessage, setSettingsMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
 
-        <div className="card p-6">
-          <h4 className="text-base font-medium text-gray-900 mb-4">User Registration</h4>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-700">Allow Public Registration</p>
-                <p className="text-xs text-gray-500">Let users sign up without invitation</p>
-              </div>
-              <input type="checkbox" className="h-4 w-4" defaultChecked />
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-700">Require Email Verification</p>
-                <p className="text-xs text-gray-500">Users must verify email before participating</p>
-              </div>
-              <input type="checkbox" className="h-4 w-4" defaultChecked />
-            </div>
-            <Button size="sm">Save Changes</Button>
+    const handleSettingsSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setSettingsSaving(true);
+      setSettingsMessage(null);
+
+      try {
+        // For now, we'll just simulate saving to localStorage since there's no backend
+        localStorage.setItem('admin_settings', JSON.stringify(settingsData));
+        
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        setSettingsMessage({ type: 'success', text: 'Settings saved successfully!' });
+        
+        // Clear success message after 3 seconds
+        setTimeout(() => setSettingsMessage(null), 3000);
+      } catch (error) {
+        setSettingsMessage({ type: 'error', text: 'Failed to save settings. Please try again.' });
+      } finally {
+        setSettingsSaving(false);
+      }
+    };
+
+    // Load settings from localStorage on component mount
+    React.useEffect(() => {
+      const savedSettings = localStorage.getItem('admin_settings');
+      if (savedSettings) {
+        try {
+          const parsed = JSON.parse(savedSettings);
+          setSettingsData(prev => ({ ...prev, ...parsed }));
+        } catch (error) {
+          console.error('Error loading settings:', error);
+        }
+      }
+    }, []);
+
+    return (
+      <div className="space-y-6">
+        <h3 className="text-lg font-semibold text-gray-900">System Settings</h3>
+        
+        {settingsMessage && (
+          <div className={`p-4 rounded-md ${
+            settingsMessage.type === 'success' 
+              ? 'bg-green-50 border border-green-200 text-green-800' 
+              : 'bg-red-50 border border-red-200 text-red-800'
+          }`}>
+            {settingsMessage.text}
           </div>
-        </div>
+        )}
+        
+        <form onSubmit={handleSettingsSubmit}>
+          <div className="card p-6 space-y-8">
+            {/* General Settings */}
+            <div>
+              <h4 className="text-base font-medium text-gray-900 mb-4">General Settings</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Site Name</label>
+                  <input
+                    type="text"
+                    value={settingsData.siteName}
+                    onChange={(e) => setSettingsData(prev => ({ ...prev, siteName: e.target.value }))}
+                    className="input-field"
+                    placeholder="Enter site name"
+                    disabled={settingsSaving}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">This name appears in the browser title and navigation</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Default Tournament Format</label>
+                  <select 
+                    value={settingsData.defaultTournamentFormat}
+                    onChange={(e) => setSettingsData(prev => ({ ...prev, defaultTournamentFormat: e.target.value }))}
+                    className="input-field"
+                    disabled={settingsSaving}
+                  >
+                    <option value="single-elimination">Single Elimination</option>
+                    <option value="double-elimination">Double Elimination</option>
+                    <option value="round-robin">Round Robin</option>
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">Default format for new tournaments</p>
+                </div>
+              </div>
+            </div>
+
+            {/* User Registration Settings */}
+            <div>
+              <h4 className="text-base font-medium text-gray-900 mb-4">User Registration</h4>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Allow Public Registration</p>
+                    <p className="text-xs text-gray-500">Let users sign up without invitation</p>
+                  </div>
+                  <input 
+                    type="checkbox" 
+                    checked={settingsData.allowPublicRegistration}
+                    onChange={(e) => setSettingsData(prev => ({ ...prev, allowPublicRegistration: e.target.checked }))}
+                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                    disabled={settingsSaving}
+                  />
+                </div>
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Require Email Verification</p>
+                    <p className="text-xs text-gray-500">Users must verify email before participating</p>
+                  </div>
+                  <input 
+                    type="checkbox" 
+                    checked={settingsData.requireEmailVerification}
+                    onChange={(e) => setSettingsData(prev => ({ ...prev, requireEmailVerification: e.target.checked }))}
+                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                    disabled={settingsSaving}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Single Save Button */}
+            <div className="pt-6 border-t">
+              <div className="flex justify-end">
+                <Button
+                  type="submit"
+                  disabled={settingsSaving}
+                  className="flex items-center gap-2"
+                >
+                  {settingsSaving ? (
+                    <>
+                      <LoadingSpinner size="sm" />
+                      Saving...
+                    </>
+                  ) : (
+                    'Save All Settings'
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </form>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="space-y-6">
