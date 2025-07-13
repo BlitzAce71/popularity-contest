@@ -311,7 +311,7 @@ BEGIN
     IF NOT FOUND THEN
         -- Tournament is complete
         UPDATE tournaments 
-        SET status = 'completed', completed_at = NOW()
+        SET status = 'completed'
         WHERE id = tournament_uuid;
         
         UPDATE rounds 
@@ -383,24 +383,42 @@ BEGIN
         WHERE round_id = current_round_record.id 
         AND winner_id IS NULL
     LOOP
-        -- Determine winner based on votes
-        IF matchup_record.contestant1_votes > matchup_record.contestant2_votes THEN
-            UPDATE matchups 
-            SET winner_id = matchup_record.contestant1_id, status = 'completed', completed_at = NOW()
-            WHERE id = matchup_record.id;
-            winners_declared := winners_declared + 1;
-        ELSIF matchup_record.contestant2_votes > matchup_record.contestant1_votes THEN
-            UPDATE matchups 
-            SET winner_id = matchup_record.contestant2_id, status = 'completed', completed_at = NOW()
-            WHERE id = matchup_record.id;
-            winners_declared := winners_declared + 1;
-        ELSE
-            -- Handle ties by selecting contestant1 (or implement other tie-breaking logic)
-            UPDATE matchups 
-            SET winner_id = matchup_record.contestant1_id, status = 'completed', completed_at = NOW()
-            WHERE id = matchup_record.id;
-            ties_resolved := ties_resolved + 1;
-        END IF;
+        -- Count votes for each contestant
+        DECLARE
+            contestant1_vote_count INTEGER := 0;
+            contestant2_vote_count INTEGER := 0;
+        BEGIN
+            -- Count votes for contestant1
+            SELECT COUNT(*) INTO contestant1_vote_count
+            FROM votes 
+            WHERE matchup_id = matchup_record.id 
+            AND selected_contestant_id = matchup_record.contestant1_id;
+            
+            -- Count votes for contestant2
+            SELECT COUNT(*) INTO contestant2_vote_count
+            FROM votes 
+            WHERE matchup_id = matchup_record.id 
+            AND selected_contestant_id = matchup_record.contestant2_id;
+            
+            -- Determine winner based on vote counts
+            IF contestant1_vote_count > contestant2_vote_count THEN
+                UPDATE matchups 
+                SET winner_id = matchup_record.contestant1_id, status = 'completed'
+                WHERE id = matchup_record.id;
+                winners_declared := winners_declared + 1;
+            ELSIF contestant2_vote_count > contestant1_vote_count THEN
+                UPDATE matchups 
+                SET winner_id = matchup_record.contestant2_id, status = 'completed'
+                WHERE id = matchup_record.id;
+                winners_declared := winners_declared + 1;
+            ELSE
+                -- Handle ties by selecting contestant1 (or implement other tie-breaking logic)
+                UPDATE matchups 
+                SET winner_id = matchup_record.contestant1_id, status = 'completed'
+                WHERE id = matchup_record.id;
+                ties_resolved := ties_resolved + 1;
+            END IF;
+        END;
     END LOOP;
     
     -- Now advance to next round
@@ -516,7 +534,7 @@ BEGIN
     
     -- Reset tournament status
     UPDATE tournaments 
-    SET status = 'setup', completed_at = NULL
+    SET status = 'draft'
     WHERE id = tournament_uuid;
     
     RAISE NOTICE 'Tournament bracket reset successfully';
@@ -532,9 +550,7 @@ SET search_path = public
 AS $$
 BEGIN
     UPDATE matchups 
-    SET 
-        status = 'completed',
-        completed_at = NOW()
+    SET status = 'completed'
     WHERE id = matchup_uuid;
     
     RAISE NOTICE 'Matchup finalized successfully';
