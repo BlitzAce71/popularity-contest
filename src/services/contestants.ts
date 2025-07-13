@@ -520,21 +520,21 @@ export class ContestantService {
       const contestantsPerQuadrant = Math.ceil(maxContestants / 4);
       
       const dummyContestants: CreateContestantData[] = [];
-      let globalSeed = 1;
+      let globalNameCounter = 1; // For unique naming only
       
       for (let quadrantIndex = 0; quadrantIndex < 4; quadrantIndex++) {
         const quadrantLetter = quadrants[quadrantIndex].charAt(0).toUpperCase();
         const quadrantNumber = quadrantIndex + 1;
         
-        // Generate contestants for this quadrant
+        // Generate contestants for this quadrant with proper per-quadrant seeding
         for (let localSeed = 1; localSeed <= contestantsPerQuadrant && dummyContestants.length < maxContestants; localSeed++) {
           dummyContestants.push({
-            name: `${quadrantLetter}${globalSeed}`,
-            description: `Dummy contestant for ${quadrants[quadrantIndex]} quadrant, seed ${globalSeed}`,
-            seed: globalSeed,
+            name: `${quadrantLetter}${globalNameCounter}`,
+            description: `Dummy contestant for ${quadrants[quadrantIndex]} quadrant, seed ${localSeed}`,
+            seed: localSeed, // Use local seed within quadrant (1, 2, etc.)
             quadrant: quadrantNumber
           });
-          globalSeed++;
+          globalNameCounter++;
         }
       }
       
