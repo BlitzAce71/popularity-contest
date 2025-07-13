@@ -187,21 +187,7 @@ const AdminDashboard: React.FC = () => {
                     {new Date(tournament.created_at).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex items-center gap-2 justify-end">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          // TODO: Implement tournament status toggle
-                          console.log('Toggle tournament status:', tournament.id);
-                        }}
-                      >
-                        {tournament.status === 'active' ? 'Pause' : 'Activate'}
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        Edit
-                      </Button>
-                    </div>
+                    {/* Actions removed - no non-functional buttons */}
                   </td>
                 </tr>
               )) || (
