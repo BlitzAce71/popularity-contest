@@ -377,13 +377,6 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
                 {/* Separator between matchups - not shown after the last matchup */}
                 {index < filteredMatchups.length - 1 && (
                   <div className="mt-8 pt-8 border-t border-gray-200">
-                    <div className="flex items-center justify-center">
-                      <div className="bg-gray-100 rounded-full px-4 py-2">
-                        <span className="text-sm font-medium text-gray-600">
-                          Matchup {index + 2}
-                        </span>
-                      </div>
-                    </div>
                   </div>
                 )}
               </div>
