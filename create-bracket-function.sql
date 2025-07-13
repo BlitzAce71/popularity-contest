@@ -63,7 +63,8 @@ BEGIN
         -- Create matchups for this round
         FOR i IN 1..match_count LOOP
             INSERT INTO matchups (round_id, tournament_id, position, match_number, status)
-            VALUES (round_id, tournament_uuid, i, i, 'upcoming');
+            VALUES (round_id, tournament_uuid, i, i, 
+                CASE WHEN current_round = 1 THEN 'active' ELSE 'upcoming' END);
         END LOOP;
         
         -- Next round has half the contestants
