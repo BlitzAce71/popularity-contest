@@ -34,7 +34,7 @@ const ManageTournament: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'contestants' | 'settings' | 'bracket'>('contestants');
   const [showAddContestant, setShowAddContestant] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [statusLoading, setStatusLoading] = useState(false);
   const [forceAdvancing, setForceAdvancing] = useState(false);
 
   const { tournament, loading: tournamentLoading, error: tournamentError, refresh } = useTournament(id);
@@ -93,7 +93,7 @@ const ManageTournament: React.FC = () => {
     if (!id) return;
     
     try {
-      setLoading(true);
+      setStatusLoading(true);
       
       // If we're starting the tournament (draft -> active), generate the bracket first
       if (newStatus === 'active' && tournament?.status === 'draft') {
@@ -124,7 +124,7 @@ const ManageTournament: React.FC = () => {
       console.error('Error updating tournament status:', error);
       alert(`Failed to update tournament status: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
-      setLoading(false);
+      setStatusLoading(false);
     }
   };
 
@@ -190,7 +190,7 @@ const ManageTournament: React.FC = () => {
         return (
           <Button 
             onClick={() => handleStatusChange('active')}
-            disabled={loading || (tournament.current_contestants || 0) < 2}
+            disabled={statusLoading || (tournament.current_contestants || 0) < 2}
             className="flex items-center gap-2"
           >
             <Play className="w-4 h-4" />
@@ -222,7 +222,7 @@ const ManageTournament: React.FC = () => {
             )}
             <Button 
               onClick={() => handleStatusChange('completed')}
-              disabled={loading}
+              disabled={statusLoading}
               className="flex items-center gap-2"
             >
               <Trophy className="w-4 h-4" />
