@@ -34,6 +34,7 @@ const ManageTournament: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'contestants' | 'settings' | 'bracket'>('contestants');
   const [showAddContestant, setShowAddContestant] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [statusLoading, setStatusLoading] = useState(false);
   const [forceAdvancing, setForceAdvancing] = useState(false);
 
