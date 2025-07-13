@@ -22,6 +22,7 @@ const TournamentDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { user, isAuthenticated, isAdmin } = useAuth();
   const [activeTab, setActiveTab] = useState<'bracket' | 'info'>('bracket');
+  const [liveSelections, setLiveSelections] = useState<Record<string, string>>({});
 
   const { tournament, loading: tournamentLoading, error: tournamentError, refresh } = useTournament(id);
   const { status: votingStatus, loading: votingLoading } = useVotingStatus(id);
@@ -220,6 +221,7 @@ const TournamentDetail: React.FC = () => {
           tournamentId={id}
           votingStatus={votingStatus}
           className="bg-blue-50 border border-blue-200 rounded-lg"
+          liveSelections={liveSelections}
         />
       )}
 
@@ -276,6 +278,7 @@ const TournamentDetail: React.FC = () => {
                 tournamentId={id!} 
                 canVote={isAuthenticated && isActive}
                 showVotingInterface={isActive}
+                onSelectionsChange={setLiveSelections}
               />
             )}
           </>

@@ -13,6 +13,7 @@ interface BracketVisualizationProps {
   canVote?: boolean;
   showVotingInterface?: boolean;
   className?: string;
+  onSelectionsChange?: (selections: Record<string, string>) => void;
 }
 
 interface RoundVotingInterfaceProps {
@@ -81,6 +82,7 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
   canVote = false,
   showVotingInterface = false,
   className = '',
+  onSelectionsChange,
 }) => {
   const { bracketData, loading: bracketLoading, error } = useBracketData(tournamentId);
   const { voteCounts, loading: voteLoading } = useLiveVoteCounts(tournamentId, bracketData?.tournament?.status);
@@ -89,15 +91,21 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
 
   const handleContestantSelect = (matchupId: string, contestantId: string | null) => {
     setSelections(prev => {
+      let newSelections;
       if (contestantId === null) {
-        const newSelections = { ...prev };
+        newSelections = { ...prev };
         delete newSelections[matchupId];
-        return newSelections;
+      } else {
+        newSelections = {
+          ...prev,
+          [matchupId]: contestantId
+        };
       }
-      return {
-        ...prev,
-        [matchupId]: contestantId
-      };
+      
+      // Notify parent of selection changes for live progress updates
+      onSelectionsChange?.(newSelections);
+      
+      return newSelections;
     });
   };
 

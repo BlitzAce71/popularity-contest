@@ -12,12 +12,14 @@ interface VotingProgressProps {
   tournamentId?: string;
   votingStatus: VotingStatus;
   className?: string;
+  liveSelections?: Record<string, string>;
 }
 
 const VotingProgress: React.FC<VotingProgressProps> = ({
   tournamentId,
   votingStatus,
   className = '',
+  liveSelections = {},
 }) => {
   const { 
     totalMatchups, 
@@ -26,9 +28,14 @@ const VotingProgress: React.FC<VotingProgressProps> = ({
     completionPercentage: rawCompletionPercentage 
   } = votingStatus;
   
+  // Calculate live progress including current selections
+  const liveSelectionCount = Object.keys(liveSelections).length;
+  const liveVotedMatchups = votedMatchups + liveSelectionCount;
+  const liveCompletionPercentage = totalMatchups > 0 ? (liveVotedMatchups / totalMatchups) * 100 : 0;
+  
   // Additional safeguards to prevent negative values and cap percentages
-  const availableMatchups = Math.max(0, rawAvailableMatchups);
-  const completionPercentage = Math.min(100, Math.max(0, rawCompletionPercentage));
+  const availableMatchups = Math.max(0, rawAvailableMatchups - liveSelectionCount);
+  const completionPercentage = Math.min(100, Math.max(0, liveCompletionPercentage));
 
   if (totalMatchups === 0) {
     return null;
@@ -41,13 +48,15 @@ const VotingProgress: React.FC<VotingProgressProps> = ({
   };
 
   const getStatusMessage = () => {
-    if (availableMatchups === 0 && votedMatchups === totalMatchups) {
+    if (availableMatchups === 0 && liveVotedMatchups === totalMatchups) {
       return "You've voted in all available matchups! 🎉";
     }
     if (availableMatchups === 0) {
-      return "No matchups available for voting right now.";
+      return liveSelectionCount > 0 
+        ? `${liveSelectionCount} selection${liveSelectionCount !== 1 ? 's' : ''} ready to submit!`
+        : "No matchups available for voting right now.";
     }
-    if (votedMatchups === 0) {
+    if (liveVotedMatchups === 0) {
       return `${availableMatchups} matchup${availableMatchups !== 1 ? 's' : ''} available for voting.`;
     }
     return `${availableMatchups} more matchup${availableMatchups !== 1 ? 's' : ''} to vote on.`;
@@ -76,7 +85,7 @@ const VotingProgress: React.FC<VotingProgressProps> = ({
         
         <div className="text-right">
           <div className="text-lg font-semibold text-gray-900">
-            {votedMatchups}/{totalMatchups}
+            {liveVotedMatchups}/{totalMatchups}
           </div>
           <div className="text-sm text-gray-600">matchups</div>
         </div>
@@ -104,6 +113,13 @@ const VotingProgress: React.FC<VotingProgressProps> = ({
             <CheckCircle className="w-4 h-4 text-green-600" />
             <span>{votedMatchups} voted</span>
           </div>
+          
+          {liveSelectionCount > 0 && (
+            <div className="flex items-center gap-1">
+              <Clock className="w-4 h-4 text-orange-600" />
+              <span>{liveSelectionCount} selected</span>
+            </div>
+          )}
           
           {availableMatchups > 0 && (
             <div className="flex items-center gap-1">
