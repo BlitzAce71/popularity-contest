@@ -368,12 +368,49 @@ export class TournamentService {
     status: 'draft' | 'registration' | 'active' | 'completed' | 'cancelled'
   ): Promise<void> {
     try {
-      const { error } = await supabase
+      const { data, error, count } = await supabase
         .from('tournaments')
         .update({ status })
-        .eq('id', id);
+        .eq('id', id)
+        .select();
 
       if (error) throw error;
+      
+      // Check if any rows were actually updated
+      if (!data || data.length === 0) {
+        // Verify user is authenticated
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          throw new Error('Authentication required. Please log in to manage tournaments.');
+        }
+        
+        // Check if tournament exists and user has permission
+        const { data: tournament } = await supabase
+          .from('tournaments')
+          .select('created_by')
+          .eq('id', id)
+          .single();
+          
+        if (!tournament) {
+          throw new Error('Tournament not found.');
+        }
+        
+        // Check if user is admin
+        const { data: userProfile } = await supabase
+          .from('users')
+          .select('is_admin')
+          .eq('id', user.id)
+          .single();
+          
+        const isAdmin = userProfile?.is_admin || false;
+        const isOwner = tournament.created_by === user.id;
+        
+        if (!isOwner && !isAdmin) {
+          throw new Error('Permission denied. You can only manage tournaments you created or if you are an admin.');
+        }
+        
+        throw new Error('Failed to update tournament status. The tournament may be protected by database constraints.');
+      }
     } catch (error) {
       console.error('Error updating tournament status:', error);
       throw new Error(error instanceof Error ? error.message : 'Failed to update tournament status');

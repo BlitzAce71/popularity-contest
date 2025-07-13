@@ -98,13 +98,31 @@ const ManageTournament: React.FC = () => {
       // If we're starting the tournament (draft -> active), generate the bracket first
       if (newStatus === 'active' && tournament?.status === 'draft') {
         await TournamentService.startTournament(id);
+        // Explicitly update the status to active after starting the tournament
+        await TournamentService.updateTournamentStatus(id, 'active');
       } else {
         await TournamentService.updateTournamentStatus(id, newStatus as any);
       }
       
+      // Refresh and verify the change took effect
       refresh();
+      
+      // Check if the status actually changed after a brief delay
+      setTimeout(async () => {
+        try {
+          const updatedTournament = await TournamentService.getTournament(id);
+          if (updatedTournament.status !== newStatus) {
+            console.error('Tournament status change failed - possible authentication issue');
+            alert('Failed to update tournament status. Please make sure you are logged in and have permission to manage this tournament.');
+          }
+        } catch (verifyError) {
+          console.error('Error verifying status change:', verifyError);
+        }
+      }, 1000);
+      
     } catch (error) {
       console.error('Error updating tournament status:', error);
+      alert(`Failed to update tournament status: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
