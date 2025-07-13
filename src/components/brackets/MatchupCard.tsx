@@ -94,35 +94,35 @@ const MatchupCard: React.FC<MatchupCardProps> = ({
   };
 
   const getContestantCardClass = (contestantId: string) => {
-    const baseClass = "relative p-4 rounded-lg border transition-all duration-200";
+    const baseClass = "relative p-4 rounded-lg border-2 transition-all duration-200";
     
     if (!contestant1 || !contestant2) {
-      return `${baseClass} bg-gray-50 border-gray-200`;
+      return `${baseClass} bg-gray-50 border-gray-300`;
     }
 
     // Completed state
     if (isCompleted) {
       if (winner?.id === contestantId) {
-        return `${baseClass} bg-green-50 border-green-300 ring-2 ring-green-200`;
+        return `${baseClass} bg-green-50 border-green-400 ring-2 ring-green-200`;
       }
-      return `${baseClass} bg-gray-50 border-gray-200`;
+      return `${baseClass} bg-gray-50 border-gray-300`;
     }
 
     // Active voting state
     if (isActive && canVote && !hasVoted) {
       const currentSelection = onSelectionChange ? externalSelection : selectedContestant;
       if (currentSelection === contestantId) {
-        return `${baseClass} bg-primary-50 border-primary-300 ring-2 ring-primary-200 cursor-pointer`;
+        return `${baseClass} bg-primary-50 border-primary-400 ring-2 ring-primary-200 cursor-pointer`;
       }
-      return `${baseClass} bg-white border-gray-200 hover:border-primary-300 hover:bg-primary-25 cursor-pointer`;
+      return `${baseClass} bg-white border-gray-300 hover:border-primary-400 hover:bg-primary-25 cursor-pointer`;
     }
 
     // User has voted
     if (hasVoted && userVote?.selected_contestant_id === contestantId) {
-      return `${baseClass} bg-blue-50 border-blue-300 ring-2 ring-blue-200`;
+      return `${baseClass} bg-blue-50 border-blue-400 ring-2 ring-blue-200`;
     }
 
-    return `${baseClass} bg-white border-gray-200`;
+    return `${baseClass} bg-white border-gray-300`;
   };
 
   const renderContestant = (contestant: Contestant | undefined, isContestant1: boolean) => {
@@ -168,13 +168,13 @@ const MatchupCard: React.FC<MatchupCardProps> = ({
             <img
               src={getFileUrl('contestant-images', contestant.image_url)}
               alt={contestant.name}
-              className={`object-cover ${compact ? 'w-20 h-20' : 'w-24 h-24'} rounded-lg`}
+              className={`object-cover ${compact ? 'w-40 h-40' : 'w-48 h-48'} rounded-lg`}
             />
           ) : (
             <div className={`bg-gray-200 flex items-center justify-center rounded-lg ${
-              compact ? 'w-20 h-20' : 'w-24 h-24'
+              compact ? 'w-40 h-40' : 'w-48 h-48'
             }`}>
-              <Users className="w-8 h-8 text-gray-500" />
+              <Users className="w-16 h-16 text-gray-500" />
             </div>
           )}
 
@@ -214,21 +214,15 @@ const MatchupCard: React.FC<MatchupCardProps> = ({
   };
 
   return (
-    <div className={`space-y-4 ${className}`}>
-      {/* Matchup header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          {isActive && <Clock className="w-4 h-4 text-green-600" />}
-          {isCompleted && <CheckCircle className="w-4 h-4 text-gray-600" />}
-          <span className="capitalize">{status}</span>
-        </div>
-        
-        {totalVotes > 0 && (
+    <div className={`space-y-3 ${className}`}>
+      {/* Vote count header - only show if votes exist */}
+      {totalVotes > 0 && (
+        <div className="flex justify-end">
           <div className="text-sm text-gray-600">
             {totalVotes} vote{totalVotes !== 1 ? 's' : ''}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Contestants - Side by side layout */}
       <div className="flex items-center gap-6">

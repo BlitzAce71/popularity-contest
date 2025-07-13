@@ -327,14 +327,14 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
           </div>
 
           {/* Matchups List - Single column layout with separators */}
-          <div className="space-y-8">
+          <div className="space-y-6">
             {(currentRound.matchups || []).filter((matchup: BracketMatchup) => 
               matchup.contestant1 && matchup.contestant2 && 
               matchup.contestant1.name && matchup.contestant2.name &&
               matchup.contestant1.name !== 'TBD' && matchup.contestant2.name !== 'TBD'
             ).map((matchup: BracketMatchup, index: number, filteredMatchups: BracketMatchup[]) => (
               <div key={matchup.id}>
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <MatchupCard
                     matchup={matchup}
                     canVote={(() => {
@@ -376,7 +376,7 @@ const BracketVisualization: React.FC<BracketVisualizationProps> = ({
                 
                 {/* Separator between matchups - not shown after the last matchup */}
                 {index < filteredMatchups.length - 1 && (
-                  <div className="mt-8 pt-8 border-t border-gray-200">
+                  <div className="mt-6 pt-6 border-t-2 border-gray-400">
                   </div>
                 )}
               </div>
