@@ -202,7 +202,7 @@ export class TournamentService {
       const insertPromise = supabase
         .from('tournaments')
         .insert([insertData])
-        .select()
+        .select('*, users!created_by(username)') // Include slug and user info
         .single();
         
       const timeoutPromise = new Promise((_, reject) => 
@@ -235,7 +235,7 @@ export class TournamentService {
           const { data: legacyData, error: legacyError } = await supabase
             .from('tournaments')
             .insert([legacyInsertData])
-            .select()
+            .select('*, users!created_by(username)') // Include slug and user info
             .single();
 
           if (legacyError) {
