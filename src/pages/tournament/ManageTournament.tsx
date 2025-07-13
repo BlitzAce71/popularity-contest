@@ -90,21 +90,37 @@ const ManageTournament: React.FC = () => {
   }
 
   const handleStatusChange = async (newStatus: string) => {
-    if (!id) return;
+    console.log(`🔄 handleStatusChange called with status: ${newStatus}`);
+    console.log(`🔄 Tournament ID: ${id}`);
+    console.log(`🔄 Current tournament status: ${tournament?.status}`);
+    
+    if (!id) {
+      console.log('❌ No tournament ID, returning early');
+      return;
+    }
     
     try {
+      console.log('🔄 Setting status loading to true');
       setStatusLoading(true);
       
       // If we're starting the tournament (draft -> active), generate the bracket first
       if (newStatus === 'active' && tournament?.status === 'draft') {
+        console.log('🔄 Starting tournament - calling TournamentService.startTournament');
         await TournamentService.startTournament(id);
+        console.log('✅ TournamentService.startTournament completed');
+        
         // Explicitly update the status to active after starting the tournament
+        console.log('🔄 Updating tournament status to active');
         await TournamentService.updateTournamentStatus(id, 'active');
+        console.log('✅ Tournament status updated to active');
       } else {
+        console.log(`🔄 Updating tournament status to ${newStatus}`);
         await TournamentService.updateTournamentStatus(id, newStatus as any);
+        console.log(`✅ Tournament status updated to ${newStatus}`);
       }
       
       // Refresh and verify the change took effect
+      console.log('🔄 Refreshing tournament data');
       refresh();
       
       // Check if the status actually changed after a brief delay
@@ -121,9 +137,10 @@ const ManageTournament: React.FC = () => {
       }, 1000);
       
     } catch (error) {
-      console.error('Error updating tournament status:', error);
+      console.error('❌ Error updating tournament status:', error);
       alert(`Failed to update tournament status: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
+      console.log('🔄 Setting status loading to false');
       setStatusLoading(false);
     }
   };
@@ -189,7 +206,13 @@ const ManageTournament: React.FC = () => {
       case 'registration':
         return (
           <Button 
-            onClick={() => handleStatusChange('active')}
+            onClick={() => {
+              console.log('🖱️ Start Tournament button clicked!');
+              console.log(`🖱️ Button disabled state: ${statusLoading || (tournament.current_contestants || 0) < 2}`);
+              console.log(`🖱️ statusLoading: ${statusLoading}`);
+              console.log(`🖱️ current_contestants: ${tournament.current_contestants}`);
+              handleStatusChange('active');
+            }}
             disabled={statusLoading || (tournament.current_contestants || 0) < 2}
             className="flex items-center gap-2"
           >
