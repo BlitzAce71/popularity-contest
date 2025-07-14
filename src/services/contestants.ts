@@ -2,9 +2,32 @@ import { supabase, uploadFile, deleteFile, getFileUrl } from '@/lib/supabase';
 import type { Contestant, CreateContestantData } from '@/types';
 
 export class ContestantService {
+  // Helper method to convert slug to UUID if needed
+  private static async getUuidFromIdentifier(identifier: string): Promise<string> {
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier);
+    
+    if (isUUID) {
+      return identifier; // Already a UUID
+    }
+    
+    // Convert slug to UUID
+    const { data: tournament, error } = await supabase
+      .from('tournaments')
+      .select('id')
+      .eq('slug', identifier)
+      .single();
+
+    if (error) throw error;
+    if (!tournament) throw new Error('Tournament not found');
+
+    return tournament.id;
+  }
   // Get contestants for a tournament
-  static async getContestants(tournamentId: string): Promise<Contestant[]> {
+  static async getContestants(identifier: string): Promise<Contestant[]> {
     try {
+      // Convert slug to UUID if needed
+      const tournamentId = await this.getUuidFromIdentifier(identifier);
+      
       const { data, error } = await supabase
         .from('contestants')
         .select('*')
@@ -54,11 +77,13 @@ export class ContestantService {
 
   // Create new contestant
   static async createContestant(
-    tournamentId: string,
+    identifier: string,
     contestantData: CreateContestantData,
     imageFile?: File
   ): Promise<Contestant> {
     try {
+      // Convert slug to UUID if needed
+      const tournamentId = await this.getUuidFromIdentifier(identifier);
       let imageUrl: string | undefined;
 
       // Upload image if provided
@@ -491,12 +516,15 @@ export class ContestantService {
 
   // Generate dummy contestants with quadrant/seed naming (A1, A2, B1, B2, etc.)
   static async generateDummyContestants(
-    tournamentId: string,
+    identifier: string,
     maxContestants: number,
     quadrantNames?: [string, string, string, string]
   ): Promise<Contestant[]> {
     try {
-      console.log(`🤖 Generating ${maxContestants} dummy contestants for tournament ${tournamentId}`);
+      console.log(`🤖 Generating ${maxContestants} dummy contestants for tournament ${identifier}`);
+      
+      // Convert slug to UUID if needed
+      const tournamentId = await this.getUuidFromIdentifier(identifier);
       
       // First, clear any existing contestants for this tournament to avoid conflicts
       console.log('🧹 Clearing any existing contestants for this tournament...');
