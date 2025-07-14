@@ -2,6 +2,26 @@ import { supabase } from '@/lib/supabase';
 import type { AdminDashboardData, ActivityLog, User } from '@/types';
 
 export class AdminService {
+  // Helper method to convert slug to UUID if needed
+  private static async getUuidFromIdentifier(identifier: string): Promise<string> {
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier);
+    
+    if (isUUID) {
+      return identifier; // Already a UUID
+    }
+    
+    // Convert slug to UUID
+    const { data: tournament, error } = await supabase
+      .from('tournaments')
+      .select('id')
+      .eq('slug', identifier)
+      .single();
+
+    if (error) throw error;
+    if (!tournament) throw new Error('Tournament not found');
+
+    return tournament.id;
+  }
   // Check if current user is admin
   static async isAdmin(): Promise<boolean> {
     try {
@@ -81,13 +101,14 @@ export class AdminService {
   }
 
   // Advance tournament to next round (only if all matchups completed)
-  static async advanceToNextRound(tournamentId: string): Promise<void> {
+  static async advanceToNextRound(identifier: string): Promise<void> {
     try {
       const isAdminUser = await this.isAdmin();
       if (!isAdminUser) {
         throw new Error('Unauthorized: Admin access required');
       }
 
+      const tournamentId = await this.getUuidFromIdentifier(identifier);
       const { data, error } = await supabase.rpc('advance_to_next_round', {
         tournament_uuid: tournamentId,
       });
@@ -101,7 +122,7 @@ export class AdminService {
   }
 
   // Force advance tournament round by declaring winners for all active matchups
-  static async forceAdvanceRound(tournamentId: string): Promise<{
+  static async forceAdvanceRound(identifier: string): Promise<{
     success: boolean;
     winnersDeclared: number;
     tiesResolved: number;
@@ -114,6 +135,7 @@ export class AdminService {
         throw new Error('Unauthorized: Admin access required');
       }
 
+      const tournamentId = await this.getUuidFromIdentifier(identifier);
       const { data, error } = await supabase.rpc('force_advance_round', {
         tournament_uuid: tournamentId,
       });
@@ -201,13 +223,14 @@ export class AdminService {
   }
 
   // Reset tournament bracket
-  static async resetTournamentBracket(tournamentId: string): Promise<void> {
+  static async resetTournamentBracket(identifier: string): Promise<void> {
     try {
       const isAdminUser = await this.isAdmin();
       if (!isAdminUser) {
         throw new Error('Unauthorized: Admin access required');
       }
 
+      const tournamentId = await this.getUuidFromIdentifier(identifier);
       const { error } = await supabase.rpc('reset_tournament_bracket', {
         tournament_uuid: tournamentId,
       });
@@ -363,13 +386,14 @@ export class AdminService {
   }
 
   // Get tournament management data
-  static async getTournamentManagementData(tournamentId: string): Promise<any> {
+  static async getTournamentManagementData(identifier: string): Promise<any> {
     try {
       const isAdminUser = await this.isAdmin();
       if (!isAdminUser) {
         throw new Error('Unauthorized: Admin access required');
       }
 
+      const tournamentId = await this.getUuidFromIdentifier(identifier);
       const { data, error } = await supabase
         .from('tournaments')
         .select(`
@@ -472,13 +496,14 @@ export class AdminService {
   }
 
   // Export tournament data
-  static async exportTournamentData(tournamentId: string): Promise<any> {
+  static async exportTournamentData(identifier: string): Promise<any> {
     try {
       const isAdminUser = await this.isAdmin();
       if (!isAdminUser) {
         throw new Error('Unauthorized: Admin access required');
       }
 
+      const tournamentId = await this.getUuidFromIdentifier(identifier);
       const { data, error } = await supabase
         .from('tournaments')
         .select(`
