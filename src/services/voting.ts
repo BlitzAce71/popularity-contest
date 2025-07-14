@@ -78,10 +78,24 @@ export class VotingService {
   }
 
   // Get all user votes for a tournament
-  static async getUserVotesForTournament(tournamentId: string): Promise<Vote[]> {
+  static async getUserVotesForTournament(identifier: string): Promise<Vote[]> {
     try {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) return [];
+
+      // Convert slug to UUID if needed
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier);
+      
+      const { data: tournament, error: tournamentError } = await supabase
+        .from('tournaments')
+        .select('id')
+        .eq(isUUID ? 'id' : 'slug', identifier)
+        .single();
+
+      if (tournamentError) throw tournamentError;
+      if (!tournament) throw new Error('Tournament not found');
+
+      const tournamentId = tournament.id;
 
       const { data, error } = await supabase
         .from('votes')
@@ -409,12 +423,26 @@ export class VotingService {
   // Get vote counts for all matchups in a tournament (both active and completed)
   // PERFORMANCE OPTIMIZED: Single query to get all votes, then aggregate in memory
   // instead of separate queries per matchup (was 189 queries for 64-contestant tournament, now just 2)
-  static async getLiveVoteCounts(tournamentId: string): Promise<Record<string, {
+  static async getLiveVoteCounts(identifier: string): Promise<Record<string, {
     contestant1Votes: number;
     contestant2Votes: number;
     totalVotes: number;
   }>> {
     try {
+      // Convert slug to UUID if needed
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier);
+      
+      const { data: tournament, error: tournamentError } = await supabase
+        .from('tournaments')
+        .select('id')
+        .eq(isUUID ? 'id' : 'slug', identifier)
+        .single();
+
+      if (tournamentError) throw tournamentError;
+      if (!tournament) throw new Error('Tournament not found');
+
+      const tournamentId = tournament.id;
+
       // Get all matchups for this tournament to know the contestants
       const { data: matchups, error: matchupsError } = await supabase
         .from('matchups')
@@ -576,7 +604,7 @@ export class VotingService {
   }
 
   // Get tie-breaking opportunities for admins
-  static async getTieBreakingOpportunities(tournamentId: string): Promise<{
+  static async getTieBreakingOpportunities(identifier: string): Promise<{
     matchupId: string;
     contestant1: any;
     contestant2: any;
@@ -597,6 +625,20 @@ export class VotingService {
         .single();
 
       if (!userData?.is_admin) return [];
+
+      // Convert slug to UUID if needed
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier);
+      
+      const { data: tournament, error: tournamentError } = await supabase
+        .from('tournaments')
+        .select('id')
+        .eq(isUUID ? 'id' : 'slug', identifier)
+        .single();
+
+      if (tournamentError) throw tournamentError;
+      if (!tournament) throw new Error('Tournament not found');
+
+      const tournamentId = tournament.id;
 
       // Get active matchups with close vote counts
       const { data: matchups, error } = await supabase
