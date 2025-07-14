@@ -174,7 +174,15 @@ const TournamentInfo: React.FC<TournamentInfoProps> = ({ tournament }) => {
           </div>
         ) : contestants.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {contestants.map((contestant) => (
+            {contestants
+              .sort((a, b) => {
+                // Sort by quadrant first, then by seed (both ascending)
+                if (a.quadrant !== b.quadrant) {
+                  return (a.quadrant || 1) - (b.quadrant || 1);
+                }
+                return (a.seed || 0) - (b.seed || 0);
+              })
+              .map((contestant) => (
               <div key={contestant.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                 {contestant.image_url ? (
                   <img

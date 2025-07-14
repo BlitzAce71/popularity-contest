@@ -226,7 +226,15 @@ const StatsPage: React.FC = () => {
         </h2>
         
         <div className="space-y-6">
-          {statsData.participants.map((participant) => (
+          {statsData.participants
+            .sort((a, b) => {
+              // Sort by quadrant first, then by seed (both ascending)
+              if (a.quadrant !== b.quadrant) {
+                return (a.quadrant || 1) - (b.quadrant || 1);
+              }
+              return (a.seed || 0) - (b.seed || 0);
+            })
+            .map((participant) => (
             <div key={participant.id} className="border rounded-lg p-6">
               {/* Participant Header */}
               <div className="flex items-center justify-between mb-4">
