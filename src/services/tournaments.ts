@@ -303,10 +303,11 @@ export class TournamentService {
 
   // Update tournament
   static async updateTournament(
-    id: string,
+    identifier: string,
     updates: Partial<CreateTournamentData>
   ): Promise<Tournament> {
     try {
+      const tournamentId = await this.getUuidFromIdentifier(identifier);
       const updateData: Record<string, any> = {};
 
       if (updates.name) updateData.name = updates.name;
@@ -328,7 +329,7 @@ export class TournamentService {
       const { data, error } = await supabase
         .from('tournaments')
         .update(updateData)
-        .eq('id', id)
+        .eq('id', tournamentId)
         .select()
         .single();
 
@@ -344,7 +345,7 @@ export class TournamentService {
           const { data: retryData, error: retryError } = await supabase
             .from('tournaments')
             .update(basicUpdateData)
-            .eq('id', id)
+            .eq('id', tournamentId)
             .select()
             .single();
             
@@ -361,9 +362,10 @@ export class TournamentService {
   }
 
   // Delete tournament
-  static async deleteTournament(id: string): Promise<void> {
+  static async deleteTournament(identifier: string): Promise<void> {
     try {
-      const { error } = await supabase.from('tournaments').delete().eq('id', id);
+      const tournamentId = await this.getUuidFromIdentifier(identifier);
+      const { error } = await supabase.from('tournaments').delete().eq('id', tournamentId);
 
       if (error) throw error;
     } catch (error) {
@@ -456,14 +458,16 @@ export class TournamentService {
 
   // Update tournament status
   static async updateTournamentStatus(
-    id: string,
+    identifier: string,
     status: 'draft' | 'registration' | 'active' | 'completed' | 'cancelled'
   ): Promise<void> {
     try {
+      const tournamentId = await this.getUuidFromIdentifier(identifier);
+      
       const { data, error, count } = await supabase
         .from('tournaments')
         .update({ status })
-        .eq('id', id)
+        .eq('id', tournamentId)
         .select();
 
       if (error) throw error;
@@ -480,7 +484,7 @@ export class TournamentService {
         const { data: tournament } = await supabase
           .from('tournaments')
           .select('created_by')
-          .eq('id', id)
+          .eq('id', tournamentId)
           .single();
           
         if (!tournament) {
