@@ -31,7 +31,7 @@ const ManageTournament: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'contestants' | 'settings'>('contestants');
+  const [activeTab, setActiveTab] = useState<'contestants' | 'settings'>('settings');
   const [showAddContestant, setShowAddContestant] = useState(false);
   const [loading, setLoading] = useState(false);
   const [statusLoading, setStatusLoading] = useState(false);
@@ -344,8 +344,8 @@ const ManageTournament: React.FC = () => {
         <div className="flex items-center justify-between">
           <nav className="-mb-px flex space-x-8">
             {[
-              { id: 'contestants', label: 'Contestants', icon: Users },
               { id: 'settings', label: 'Settings', icon: Settings },
+              { id: 'contestants', label: 'Contestants', icon: Users },
             ].map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
