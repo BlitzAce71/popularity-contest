@@ -1102,16 +1102,12 @@ const TournamentSettings: React.FC<{ tournament: any; onRefresh: () => void }> =
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Bracket Type *
               </label>
-              <select
-                value={formData.bracket_type}
-                onChange={(e) => setFormData({ ...formData, bracket_type: e.target.value })}
-                className="input-field"
+              <input
+                value="Single Elimination"
+                readOnly
+                className="input-field bg-gray-50 text-gray-900"
                 disabled={loading}
-              >
-                <option value="single-elimination">Single Elimination</option>
-                <option value="double-elimination">Double Elimination</option>
-                <option value="round-robin">Round Robin</option>
-              </select>
+              />
             </div>
           </div>
 

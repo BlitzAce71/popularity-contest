@@ -410,16 +410,12 @@ const AdminDashboard: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Default Tournament Format</label>
-                  <select 
-                    value={settingsData.defaultTournamentFormat}
-                    onChange={(e) => setSettingsData(prev => ({ ...prev, defaultTournamentFormat: e.target.value }))}
-                    className="input-field"
+                  <input
+                    value="Single Elimination"
+                    readOnly
+                    className="input-field bg-gray-50 text-gray-900"
                     disabled={settingsSaving}
-                  >
-                    <option value="single-elimination">Single Elimination</option>
-                    <option value="double-elimination">Double Elimination</option>
-                    <option value="round-robin">Round Robin</option>
-                  </select>
+                  />
                   <p className="text-xs text-gray-500 mt-1">Default format for new tournaments</p>
                 </div>
               </div>
