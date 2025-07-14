@@ -227,17 +227,7 @@ const TournamentInfo: React.FC<TournamentInfoProps> = ({ tournament }) => {
         <div className="space-y-3 text-sm text-gray-700">
           <div className="flex gap-2">
             <span className="font-medium">Format:</span>
-            <span>
-              {tournament.bracket_type === 'single-elimination' && 
-                'Single elimination - lose once and you\'re out.'
-              }
-              {tournament.bracket_type === 'double-elimination' && 
-                'Double elimination - contestants have two chances.'
-              }
-              {tournament.bracket_type === 'round-robin' && 
-                'Round robin - everyone plays everyone else.'
-              }
-            </span>
+            <span>Single elimination - lose once and you're out.</span>
           </div>
           
           <div className="flex gap-2">

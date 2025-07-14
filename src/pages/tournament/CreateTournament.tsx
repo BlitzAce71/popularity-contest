@@ -26,7 +26,7 @@ const createTournamentSchema = z.object({
   start_date: z.string().min(1, 'Start date is required'),
   end_date: z.string().optional().or(z.literal('')),
   max_contestants: z.number().min(4, 'Minimum 4 contestants').max(128, 'Maximum 128 contestants'),
-  bracket_type: z.enum(['single-elimination', 'double-elimination', 'round-robin']),
+  bracket_type: z.literal('single-elimination'),
   is_public: z.boolean(),
   quadrant_1_name: z.string().min(1, 'Quadrant 1 name is required').max(50, 'Name too long'),
   quadrant_2_name: z.string().min(1, 'Quadrant 2 name is required').max(50, 'Name too long'),
@@ -305,11 +305,13 @@ const CreateTournament: React.FC = () => {
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Settings className="h-5 w-5 text-gray-400" />
                   </div>
-                  <select {...register('bracket_type')} className="input-field pl-10">
-                    <option value="single-elimination">Single Elimination</option>
-                    <option value="double-elimination">Double Elimination</option>
-                    <option value="round-robin">Round Robin</option>
-                  </select>
+                  <input 
+                    {...register('bracket_type')}
+                    value="single-elimination"
+                    readOnly
+                    className="input-field pl-10 bg-gray-50 text-gray-900"
+                    placeholder="Single Elimination"
+                  />
                 </div>
                 {errors.bracket_type && (
                   <p className="mt-1 text-sm text-red-600">{errors.bracket_type.message}</p>
