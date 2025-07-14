@@ -505,17 +505,15 @@ const ContestantManagement: React.FC<{
             Add Contestant
           </Button>
           
-          {contestants.length === 0 && (
-            <Button
-              onClick={onGenerateDummyContestants}
-              variant="outline"
-              className="flex items-center gap-2"
-              disabled={loading}
-            >
-              <Users className="w-4 h-4" />
-              Generate Dummy Contestants
-            </Button>
-          )}
+          <Button
+            onClick={onGenerateDummyContestants}
+            variant="outline"
+            className="flex items-center gap-2"
+            disabled={loading}
+          >
+            <Users className="w-4 h-4" />
+            Generate Dummy Contestants
+          </Button>
         </div>
       </div>
 
