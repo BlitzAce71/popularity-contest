@@ -148,7 +148,7 @@ const ManageTournament: React.FC = () => {
   const handleForceAdvanceRound = async () => {
     if (!id || !user?.is_admin) return;
     
-    const confirmMessage = `Force advance to next round?\n\nThis will:\n• Declare winners for all active matchups based on current vote leaders\n• Automatically resolve any ties (ties go to first contestant)\n• Advance the tournament to the next round\n\nThis action cannot be undone.`;
+    const confirmMessage = `Advance to next round?\n\nThis will:\n• Declare winners for all active matchups based on current vote leaders\n• Automatically resolve any ties (ties go to first contestant)\n• Advance the tournament to the next round\n\nThis action cannot be undone.`;
     
     if (!window.confirm(confirmMessage)) return;
     
@@ -245,7 +245,7 @@ const ManageTournament: React.FC = () => {
                 ) : (
                   <>
                     <FastForward className="w-4 h-4" />
-                    Force Advance Round
+                    Advance Round
                   </>
                 )}
               </Button>
