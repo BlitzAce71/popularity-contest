@@ -4,6 +4,26 @@ import { ContestantService } from '@/services/contestants';
 import type { Tournament, CreateTournamentData, FilterOptions, SortOptions, PaginatedResponse } from '@/types';
 
 export class TournamentService {
+  // Helper method to convert slug to UUID if needed
+  private static async getUuidFromIdentifier(identifier: string): Promise<string> {
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier);
+    
+    if (isUUID) {
+      return identifier; // Already a UUID
+    }
+    
+    // Convert slug to UUID
+    const { data: tournament, error } = await supabase
+      .from('tournaments')
+      .select('id')
+      .eq('slug', identifier)
+      .single();
+
+    if (error) throw error;
+    if (!tournament) throw new Error('Tournament not found');
+
+    return tournament.id;
+  }
   // Get tournaments with filtering, sorting, and pagination
   static async getTournaments(
     page: number = 1,
@@ -353,10 +373,11 @@ export class TournamentService {
   }
 
   // Get tournament statistics
-  static async getTournamentStats(id: string): Promise<any> {
+  static async getTournamentStats(identifier: string): Promise<any> {
     try {
+      const tournamentId = await this.getUuidFromIdentifier(identifier);
       const { data, error } = await supabase.rpc('get_tournament_stats', {
-        tournament_uuid: id,
+        tournament_uuid: tournamentId,
       });
 
       if (error) throw error;
@@ -368,10 +389,11 @@ export class TournamentService {
   }
 
   // Get participant performance data (round-by-round stats)
-  static async getParticipantPerformance(id: string): Promise<any> {
+  static async getParticipantPerformance(identifier: string): Promise<any> {
     try {
+      const tournamentId = await this.getUuidFromIdentifier(identifier);
       const { data, error } = await supabase.rpc('get_participant_performance', {
-        tournament_uuid: id,
+        tournament_uuid: tournamentId,
       });
 
       if (error) throw error;
@@ -383,11 +405,12 @@ export class TournamentService {
   }
 
   // Get bracket visualization data
-  static async getBracketData(id: string): Promise<any> {
+  static async getBracketData(identifier: string): Promise<any> {
     try {
-      console.log('Calling get_bracket_data with tournament_uuid:', id);
+      const tournamentId = await this.getUuidFromIdentifier(identifier);
+      console.log('Calling get_bracket_data with tournament_uuid:', tournamentId);
       const { data, error } = await supabase.rpc('get_bracket_data', {
-        tournament_uuid: id,
+        tournament_uuid: tournamentId,
       });
 
       console.log('Supabase response - data:', data, 'error:', error);
@@ -407,11 +430,13 @@ export class TournamentService {
   }
 
   // Start tournament (generate bracket)
-  static async startTournament(id: string): Promise<void> {
+  static async startTournament(identifier: string): Promise<void> {
     try {
+      const tournamentId = await this.getUuidFromIdentifier(identifier);
+
       // First check if tournament can start
       const { data: canStart, error: checkError } = await supabase.rpc('can_start_tournament', {
-        tournament_uuid: id,
+        tournament_uuid: tournamentId,
       });
 
       if (checkError) throw checkError;
@@ -419,7 +444,7 @@ export class TournamentService {
 
       // Generate bracket
       const { error } = await supabase.rpc('generate_single_elimination_bracket', {
-        tournament_uuid: id,
+        tournament_uuid: tournamentId,
       });
 
       if (error) throw error;
@@ -485,18 +510,20 @@ export class TournamentService {
   }
 
   // Reset tournament bracket and voting
-  static async resetTournament(id: string): Promise<void> {
+  static async resetTournament(identifier: string): Promise<void> {
     try {
+      const tournamentId = await this.getUuidFromIdentifier(identifier);
+      
       // First, reset the tournament data (clear votes, rounds, etc.)
       const { error: resetError } = await supabase.rpc('reset_tournament_bracket', {
-        tournament_uuid: id,
+        tournament_uuid: tournamentId,
       });
 
       if (resetError) throw resetError;
 
       // Then, regenerate the bracket
       const { error: generateError } = await supabase.rpc('generate_single_elimination_bracket', {
-        tournament_uuid: id,
+        tournament_uuid: tournamentId,
       });
 
       if (generateError) throw generateError;
