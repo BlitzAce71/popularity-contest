@@ -6,7 +6,7 @@ import Button from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import EmptyState from '@/components/ui/EmptyState';
-import { Plus, Trophy, Users, Calendar, Filter, Search, Settings, BarChart3 } from 'lucide-react';
+import { Plus, Trophy, Users, Filter, Search, Settings, BarChart3 } from 'lucide-react';
 
 const TournamentList: React.FC = () => {
   const { isAuthenticated, isAdmin, user } = useAuth();
@@ -259,12 +259,6 @@ const TournamentList: React.FC = () => {
                     <Users className="w-4 h-4" />
                     {tournament.current_contestants || 0}/{tournament.max_contestants}
                   </div>
-                  {tournament.start_date && (
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-4 h-4" />
-                      {new Date(tournament.start_date).toLocaleDateString()}
-                    </div>
-                  )}
                 </div>
 
                 <div className="pt-4 border-t">

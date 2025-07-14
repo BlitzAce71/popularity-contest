@@ -13,7 +13,6 @@ import {
   ArrowLeft, 
   Trophy, 
   Users, 
-  Calendar, 
   Clock, 
   Settings,
 } from 'lucide-react';
@@ -157,12 +156,6 @@ const TournamentDetail: React.FC = () => {
                   <Trophy className="w-4 h-4" />
                   {tournament.bracket_type?.replace('-', ' ') || 'Single elimination'}
                 </div>
-                {tournament.start_date && (
-                  <div className="flex items-center gap-1">
-                    <Calendar className="w-4 h-4" />
-                    Started {new Date(tournament.start_date).toLocaleDateString()}
-                  </div>
-                )}
               </div>
             </div>
           </div>
@@ -203,12 +196,6 @@ const TournamentDetail: React.FC = () => {
                   <Trophy className="w-4 h-4" />
                   {tournament.bracket_type?.replace('-', ' ') || 'Single elimination'}
                 </div>
-                {tournament.start_date && (
-                  <div className="flex items-center gap-1">
-                    <Calendar className="w-4 h-4" />
-                    Started {new Date(tournament.start_date).toLocaleDateString()}
-                  </div>
-                )}
               </div>
             </div>
           </div>

@@ -106,15 +106,6 @@ const TournamentInfo: React.FC<TournamentInfoProps> = ({ tournament }) => {
               </div>
             )}
 
-            {tournament.start_date && (
-              <div className="flex items-start gap-3">
-                <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
-                <div>
-                  <div className="text-sm font-medium text-gray-500">Started</div>
-                  <div className="text-gray-900">{formatDate(tournament.start_date)}</div>
-                </div>
-              </div>
-            )}
 
             {tournament.end_date && (
               <div className="flex items-start gap-3">
