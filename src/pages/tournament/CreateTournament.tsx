@@ -297,27 +297,10 @@ const CreateTournament: React.FC = () => {
                 )}
               </div>
 
-              <div>
-                <label htmlFor="bracket_type" className="block text-sm font-medium text-gray-700">
-                  Bracket Type *
-                </label>
-                <div className="mt-1 relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Settings className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input 
-                    {...register('bracket_type')}
-                    value="single-elimination"
-                    readOnly
-                    className="input-field pl-10 bg-gray-50 text-gray-900"
-                    placeholder="Single Elimination"
-                  />
-                </div>
-                {errors.bracket_type && (
-                  <p className="mt-1 text-sm text-red-600">{errors.bracket_type.message}</p>
-                )}
-              </div>
             </div>
+
+            {/* Hidden bracket type field */}
+            <input type="hidden" {...register('bracket_type')} value="single-elimination" />
 
             {/* Quadrant Names */}
             <div>

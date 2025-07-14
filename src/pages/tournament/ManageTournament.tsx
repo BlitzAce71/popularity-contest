@@ -1098,17 +1098,6 @@ const TournamentSettings: React.FC<{ tournament: any; onRefresh: () => void }> =
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Bracket Type *
-              </label>
-              <input
-                value="Single Elimination"
-                readOnly
-                className="input-field bg-gray-50 text-gray-900"
-                disabled={loading}
-              />
-            </div>
           </div>
 
           {/* Visibility */}
