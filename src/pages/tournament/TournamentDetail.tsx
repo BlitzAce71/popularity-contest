@@ -3,28 +3,48 @@ import { useParams, Link } from 'react-router-dom';
 import { useTournament } from '@/hooks/tournaments/useTournament';
 import { useVotingStatus } from '@/hooks/voting/useVoting';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSuggestions, useSuggestionVoting } from '@/hooks/suggestions';
 import Button from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import BracketVisualization from '@/components/brackets/BracketVisualization';
 import TournamentInfo from '@/components/tournaments/TournamentInfo';
 import VotingProgress from '@/components/voting/VotingProgress';
 import TieBreakerPanel from '@/components/admin/TieBreakerPanel';
+import SuggestionForm from '@/components/suggestions/SuggestionForm';
+import SuggestionList from '@/components/suggestions/SuggestionList';
+import type { SubmitSuggestionRequest } from '@/types';
 import { 
   ArrowLeft, 
   Trophy, 
   Users, 
   Clock, 
   Settings,
+  Lightbulb,
 } from 'lucide-react';
 
 const TournamentDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { user, isAuthenticated, isAdmin } = useAuth();
-  const [activeTab, setActiveTab] = useState<'bracket' | 'info'>('bracket');
+  const [activeTab, setActiveTab] = useState<'bracket' | 'info' | 'suggestions'>('bracket');
   const [liveSelections, setLiveSelections] = useState<Record<string, string>>({});
 
   const { tournament, loading: tournamentLoading, error: tournamentError, refresh } = useTournament(id);
   const { status: votingStatus, loading: votingLoading } = useVotingStatus(id);
+
+  // Suggestion hooks (only needed for draft tournaments)
+  const shouldLoadSuggestions = tournament?.status === 'draft';
+  const { 
+    suggestions, 
+    loading: suggestionsLoading, 
+    error: suggestionsError, 
+    total: suggestionsTotal,
+    submitSuggestion, 
+    refreshSuggestions,
+    hasMore: hasMoreSuggestions,
+    loadMore: loadMoreSuggestions
+  } = useSuggestions(shouldLoadSuggestions ? id : null);
+  
+  const { vote: voteSuggestion, isVotingLoading } = useSuggestionVoting();
 
   const loading = tournamentLoading || votingLoading;
   const error = tournamentError;
@@ -64,6 +84,18 @@ const TournamentDetail: React.FC = () => {
 
   const canManage = user?.id === tournament?.created_by || user?.is_admin;
   const isActive = tournament.status === 'active';
+  const isDraft = tournament.status === 'draft';
+
+  // Suggestion handlers
+  const handleSubmitSuggestion = async (data: SubmitSuggestionRequest) => {
+    if (!id) return false;
+    return await submitSuggestion({ ...data, tournament_id: id });
+  };
+
+  const handleVoteSuggestion = async (suggestionId: string) => {
+    if (!id) return;
+    await voteSuggestion(suggestionId, id);
+  };
   
   // Debug voting permissions
   console.log('TournamentDetail Voting Debug:', {
@@ -233,6 +265,19 @@ const TournamentDetail: React.FC = () => {
           >
             {isActive ? 'Vote' : 'Bracket'}
           </button>
+          {isDraft && (
+            <button
+              onClick={() => setActiveTab('suggestions')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
+                activeTab === 'suggestions'
+                  ? 'border-primary-500 text-primary-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <Lightbulb className="w-4 h-4" />
+              Suggestions ({suggestionsTotal || 0})
+            </button>
+          )}
           <button
             onClick={() => setActiveTab('info')}
             className={`py-2 px-1 border-b-2 font-medium text-sm ${
@@ -270,6 +315,56 @@ const TournamentDetail: React.FC = () => {
               />
             )}
           </>
+        )}
+
+        {activeTab === 'suggestions' && isDraft && (
+          <div className="space-y-6">
+            {/* Suggestions Header */}
+            <div className="text-center py-6 border-b border-gray-200">
+              <Lightbulb className="w-12 h-12 text-blue-600 mx-auto mb-3" />
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Contestant Suggestions
+              </h2>
+              <p className="text-gray-600 max-w-2xl mx-auto">
+                Help shape this tournament by suggesting contestants and voting on others' ideas. 
+                The most popular suggestions will be considered by the tournament organizer.
+              </p>
+            </div>
+
+            {/* Suggestion Form */}
+            {isAuthenticated && (
+              <SuggestionForm
+                onSubmit={handleSubmitSuggestion}
+                loading={suggestionsLoading}
+              />
+            )}
+
+            {/* Login prompt for unauthenticated users */}
+            {!isAuthenticated && (
+              <div className="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="text-gray-600 mb-4">
+                  Please log in to submit suggestions and vote on others' ideas.
+                </div>
+                <Link to="/login">
+                  <Button>Sign In</Button>
+                </Link>
+              </div>
+            )}
+
+            {/* Suggestions List */}
+            <SuggestionList
+              suggestions={suggestions}
+              loading={suggestionsLoading}
+              error={suggestionsError}
+              total={suggestionsTotal}
+              onVote={handleVoteSuggestion}
+              onRefresh={refreshSuggestions}
+              onLoadMore={hasMoreSuggestions ? loadMoreSuggestions : undefined}
+              isVotingLoading={isVotingLoading}
+              canVote={isAuthenticated}
+              hasMore={hasMoreSuggestions}
+            />
+          </div>
         )}
 
         {activeTab === 'info' && (

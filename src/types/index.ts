@@ -270,3 +270,107 @@ export interface TournamentStatistics {
   most_popular_contestant?: Contestant;
   participation_rate: number;
 }
+
+// =============================================================================
+// CONTESTANT SUGGESTIONS TYPES
+// =============================================================================
+
+export interface ContestantSuggestion {
+  id: string;
+  tournament_id: string;
+  suggested_by: string;
+  name: string;
+  description?: string;
+  image_url?: string;
+  vote_count: number;
+  status: 'pending' | 'approved' | 'rejected' | 'duplicate';
+  admin_notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SuggestionVote {
+  id: string;
+  suggestion_id: string;
+  user_id: string;
+  created_at: string;
+}
+
+export interface SuggestionWithVoteStatus extends ContestantSuggestion {
+  suggested_by_user: {
+    id: string;
+    username: string;
+  };
+  user_has_voted: boolean;
+  duplicate_count?: number;
+}
+
+export interface SubmitSuggestionRequest {
+  tournament_id: string;
+  name: string;
+  description?: string;
+  image_url?: string;
+}
+
+export interface GetSuggestionsRequest {
+  tournament_id: string;
+  page?: number;
+  page_size?: number;
+  sort_by?: 'votes' | 'newest' | 'oldest' | 'alphabetical';
+  status?: 'all' | 'pending' | 'approved' | 'rejected' | 'duplicate';
+  search?: string;
+}
+
+export interface SuggestionAnalytics {
+  total_suggestions: number;
+  unique_contributors: number;
+  total_votes: number;
+  average_votes_per_suggestion: number;
+  top_suggestions: Array<{
+    id: string;
+    name: string;
+    vote_count: number;
+    suggested_by_username: string;
+  }>;
+  top_contributors: Array<{
+    user_id: string;
+    username: string;
+    suggestion_count: number;
+    total_votes_received: number;
+  }>;
+  activity_timeline: Array<{
+    date: string;
+    suggestion_count: number;
+    vote_count: number;
+  }>;
+  status_breakdown: {
+    pending: number;
+    approved: number;
+    rejected: number;
+    duplicate: number;
+  };
+}
+
+export interface ModerateSuggestionRequest {
+  suggestion_id: string;
+  status: 'approved' | 'rejected' | 'duplicate';
+  admin_notes?: string;
+}
+
+export interface BulkModerationRequest {
+  suggestion_ids: string[];
+  action: 'approve' | 'reject' | 'delete';
+  admin_notes?: string;
+}
+
+export interface BulkModerationResponse {
+  success: number;
+  failed: number;
+  errors: string[];
+}
+
+export interface ConvertToContestantRequest {
+  suggestion_id: string;
+  quadrant: 1 | 2 | 3 | 4;
+  seed: number;
+}
