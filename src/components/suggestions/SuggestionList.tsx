@@ -188,7 +188,7 @@ const SuggestionList: React.FC<SuggestionListProps> = ({
         </div>
         {currentSortOption && (
           <div className="flex items-center gap-1">
-            <currentSortOption.icon className="w-4 h-4" />
+            {React.createElement(currentSortOption.icon, { className: "w-4 h-4" })}
             <span>Sorted by {currentSortOption.label}</span>
           </div>
         )}
