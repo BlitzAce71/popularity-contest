@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Button from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import ErrorBoundary from '@/components/ui/ErrorBoundary';
+import { getSettings, saveSettings } from '@/utils/settings';
 import { 
   Users, 
   Trophy, 
@@ -25,28 +26,38 @@ const AdminDashboard: React.FC = () => {
   const { users, loading: usersLoading, error: usersError, deleteUser, updateUserAdminStatus, refresh: refreshUsers } = useUserAdmin();
   const [activeTab, setActiveTab] = useState<'overview' | 'tournaments' | 'users' | 'settings'>('overview');
   
-  // Settings state (moved from renderSettings function)
-  const [settingsData, setSettingsData] = useState({
-    siteName: 'Popularity Contest',
-    defaultTournamentFormat: 'single-elimination',
-    allowPublicRegistration: true,
-    requireEmailVerification: true
-  });
+  // Settings state using the new settings utility
+  const [settingsData, setSettingsData] = useState(getSettings());
   const [settingsSaving, setSettingsSaving] = useState(false);
-  const [settingsMessage, setSettingsMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
+  const [settingsMessage, setSettingsMessage] = useState<{type: 'success' | 'error' | 'warning', text: string} | null>(null);
+  
+  // User management state
+  const [userMessage, setUserMessage] = useState<{type: 'success' | 'error' | 'warning', text: string} | null>(null);
 
   // Load settings from localStorage on component mount
   React.useEffect(() => {
-    const savedSettings = localStorage.getItem('admin_settings');
-    if (savedSettings) {
-      try {
-        const parsed = JSON.parse(savedSettings);
-        setSettingsData(prev => ({ ...prev, ...parsed }));
-      } catch (error) {
-        console.error('Error loading settings:', error);
-      }
-    }
+    setSettingsData(getSettings());
   }, []);
+
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm('Are you sure you want to remove this user? This action cannot be undone.')) {
+      return;
+    }
+
+    setUserMessage(null);
+    const result = await deleteUser(userId);
+    
+    if (result.success) {
+      if (result.warning) {
+        setUserMessage({ type: 'warning', text: result.warning });
+      } else {
+        setUserMessage({ type: 'success', text: 'User removed successfully.' });
+      }
+      // Clear message after 5 seconds for warnings, 3 seconds for success
+      setTimeout(() => setUserMessage(null), result.warning ? 5000 : 3000);
+    }
+    // Error messages are handled by the hook
+  };
 
   const handleSettingsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,8 +65,8 @@ const AdminDashboard: React.FC = () => {
     setSettingsMessage(null);
 
     try {
-      // For now, we'll just simulate saving to localStorage since there's no backend
-      localStorage.setItem('admin_settings', JSON.stringify(settingsData));
+      // Use the new settings utility which triggers navigation update
+      saveSettings(settingsData);
       
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -201,9 +212,6 @@ const AdminDashboard: React.FC = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Created
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -232,13 +240,10 @@ const AdminDashboard: React.FC = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {new Date(tournament.created_at).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    {/* Actions removed - no non-functional buttons */}
-                  </td>
                 </tr>
               )) || (
                 <tr>
-                  <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan={4} className="px-6 py-4 text-center text-gray-500">
                     No tournaments found
                   </td>
                 </tr>
@@ -254,11 +259,25 @@ const AdminDashboard: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900">User Management</h3>
-        <div className="flex gap-2">
-          <Button size="sm" variant="outline">Export Users</Button>
-          <Button size="sm">Invite User</Button>
-        </div>
       </div>
+
+      {userMessage && (
+        <div className={`p-4 rounded-md ${
+          userMessage.type === 'success' 
+            ? 'bg-green-50 border border-green-200 text-green-800'
+            : userMessage.type === 'warning'
+            ? 'bg-yellow-50 border border-yellow-200 text-yellow-800'
+            : 'bg-red-50 border border-red-200 text-red-800'
+        }`}>
+          {userMessage.text}
+        </div>
+      )}
+
+      {usersError && (
+        <div className="p-4 rounded-md bg-red-50 border border-red-200 text-red-800">
+          {usersError}
+        </div>
+      )}
 
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
@@ -339,20 +358,30 @@ const AdminDashboard: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center gap-2 justify-end">
-                      {!userData.is_moderator && !userData.is_admin && (
+                      {userData.is_admin ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => updateUserAdminStatus(userData.id, false)}
+                          className="text-orange-600 hover:text-orange-700"
+                        >
+                          Remove Admin
+                        </Button>
+                      ) : (
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => updateUserAdminStatus(userData.id, true)}
+                          className="text-blue-600 hover:text-blue-700"
                         >
-                          Make Moderator
+                          Make Admin
                         </Button>
                       )}
                       <Button
                         size="sm"
                         variant="outline"
                         className="text-red-600 hover:text-red-700"
-                        onClick={() => deleteUser(userData.id)}
+                        onClick={() => handleDeleteUser(userData.id)}
                       >
                         Remove
                       </Button>
@@ -383,7 +412,9 @@ const AdminDashboard: React.FC = () => {
         {settingsMessage && (
           <div className={`p-4 rounded-md ${
             settingsMessage.type === 'success' 
-              ? 'bg-green-50 border border-green-200 text-green-800' 
+              ? 'bg-green-50 border border-green-200 text-green-800'
+              : settingsMessage.type === 'warning'
+              ? 'bg-yellow-50 border border-yellow-200 text-yellow-800'
               : 'bg-red-50 border border-red-200 text-red-800'
           }`}>
             {settingsMessage.text}

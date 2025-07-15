@@ -361,14 +361,28 @@ export class AdminService {
   }
 
   // Delete user account (admin only)
-  static async deleteUser(userId: string): Promise<void> {
+  static async deleteUser(userId: string): Promise<{ success: boolean; warning?: string }> {
     try {
       const isAdminUser = await this.isAdmin();
       if (!isAdminUser) {
         throw new Error('Unauthorized: Admin access required');
       }
 
-      // First delete the user profile
+      // Check if user exists first
+      const { data: userToDelete, error: userCheckError } = await supabase
+        .from('users')
+        .select('id, email')
+        .eq('id', userId)
+        .single();
+
+      if (userCheckError) {
+        if (userCheckError.code === 'PGRST116') {
+          throw new Error('User not found');
+        }
+        throw userCheckError;
+      }
+
+      // Delete the user profile from users table
       const { error: profileError } = await supabase
         .from('users')
         .delete()
@@ -376,9 +390,11 @@ export class AdminService {
 
       if (profileError) throw profileError;
 
-      // Note: Deleting from auth.users requires admin service role key
-      // This should be done via a secure server endpoint or admin API
-      console.warn('User profile deleted, but auth record requires server-side deletion');
+      // Return success with warning about auth record
+      return {
+        success: true,
+        warning: 'User profile removed from database. Note: The user may still be able to log in until their authentication record is removed by a system administrator.'
+      };
     } catch (error) {
       console.error('Error deleting user:', error);
       throw new Error(error instanceof Error ? error.message : 'Failed to delete user');

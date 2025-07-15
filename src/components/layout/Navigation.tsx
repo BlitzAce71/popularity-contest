@@ -1,15 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import Button from '@/components/ui/Button';
+import { getSiteName } from '@/utils/settings';
 import { Trophy, User, LogOut, Menu, X } from 'lucide-react';
 
 const Navigation: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [siteName, setSiteName] = useState(getSiteName());
   const { user, signOut } = useAuth();
   const location = useLocation();
 
   const isActive = (path: string) => location.pathname === path;
+
+  // Listen for settings changes
+  useEffect(() => {
+    const handleSettingsChange = (event: CustomEvent) => {
+      setSiteName(event.detail.siteName);
+    };
+
+    window.addEventListener('settingsChanged', handleSettingsChange as EventListener);
+    return () => {
+      window.removeEventListener('settingsChanged', handleSettingsChange as EventListener);
+    };
+  }, []);
 
   const navigation = [];
 
@@ -23,7 +37,7 @@ const Navigation: React.FC = () => {
             <Link to="/" className="flex items-center space-x-2">
               <Trophy className="h-8 w-8 text-primary-600" />
               <span className="text-xl font-bold text-gray-900">
-                Popularity Contest
+                {siteName}
               </span>
             </Link>
           </div>

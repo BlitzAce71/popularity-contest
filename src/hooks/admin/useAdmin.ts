@@ -234,21 +234,24 @@ export const useUserAdmin = (page: number = 1, pageSize: number = 20, search?: s
     }
   };
 
-  const deleteUser = async (userId: string): Promise<boolean> => {
+  const deleteUser = async (userId: string): Promise<{ success: boolean; warning?: string }> => {
     try {
       setUpdating(true);
       setError(null);
 
-      await AdminService.deleteUser(userId);
+      const result = await AdminService.deleteUser(userId);
       
-      // Remove from local state
-      setUsers(prev => prev.filter(user => user.id !== userId));
-      setTotal(prev => prev - 1);
+      if (result.success) {
+        // Remove from local state
+        setUsers(prev => prev.filter(user => user.id !== userId));
+        setTotal(prev => prev - 1);
+      }
       
-      return true;
+      return result;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete user');
-      return false;
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete user';
+      setError(errorMessage);
+      return { success: false };
     } finally {
       setUpdating(false);
     }
