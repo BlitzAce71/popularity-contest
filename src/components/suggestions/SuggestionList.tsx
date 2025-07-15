@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import SuggestionCard from './SuggestionCard';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Button from '@/components/ui/Button';
-import { Search, Filter, RefreshCw, ChevronDown, TrendingUp, Clock, AlphabeticalSort, CheckCircle } from 'lucide-react';
+import { Search, Filter, RefreshCw, ChevronDown, TrendingUp, Clock, ArrowUpDown, CheckCircle } from 'lucide-react';
 import type { SuggestionWithVoteStatus } from '@/types';
 
 interface SuggestionListProps {
@@ -46,7 +46,7 @@ const SuggestionList: React.FC<SuggestionListProps> = ({
     { value: 'votes' as const, label: 'Most Votes', icon: TrendingUp },
     { value: 'newest' as const, label: 'Newest', icon: Clock },
     { value: 'oldest' as const, label: 'Oldest', icon: Clock },
-    { value: 'alphabetical' as const, label: 'A-Z', icon: AlphabeticalSort },
+    { value: 'alphabetical' as const, label: 'A-Z', icon: ArrowUpDown },
   ];
 
   const statusOptions = [
