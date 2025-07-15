@@ -15,11 +15,11 @@ interface UseSuggestionsOptions {
 }
 
 export const useSuggestions = (
-  tournamentId: string,
+  tournamentId: string | null,
   options: UseSuggestionsOptions = {}
 ) => {
   const [suggestions, setSuggestions] = useState<SuggestionWithVoteStatus[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!tournamentId);
   const [error, setError] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
   const [submitting, setSubmitting] = useState(false);
@@ -62,6 +62,11 @@ export const useSuggestions = (
   }, [tournamentId, page, pageSize, sortBy, status, search]);
 
   const submitSuggestion = async (suggestionData: SubmitSuggestionRequest): Promise<boolean> => {
+    if (!tournamentId) {
+      setError('Tournament ID is required');
+      return false;
+    }
+
     try {
       setSubmitting(true);
       setError(null);
@@ -118,7 +123,9 @@ export const useSuggestions = (
     submitSuggestion,
     updateSuggestionInList,
     removeSuggestionFromList,
-    refresh,
+    refreshSuggestions: refresh,
+    hasMore: false, // TODO: Implement pagination
+    loadMore: () => {}, // TODO: Implement pagination
     clearError,
   };
 };
