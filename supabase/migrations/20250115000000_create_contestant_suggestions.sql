@@ -128,7 +128,7 @@ CREATE POLICY "Public can view suggestions for public tournaments" ON contestant
     EXISTS (
       SELECT 1 FROM tournaments 
       WHERE tournaments.id = contestant_suggestions.tournament_id 
-      AND tournaments.visibility = 'public'
+      AND tournaments.is_public = true
     )
   );
 
@@ -140,7 +140,7 @@ CREATE POLICY "Users can view suggestions for accessible tournaments" ON contest
       EXISTS (
         SELECT 1 FROM tournaments 
         WHERE tournaments.id = contestant_suggestions.tournament_id 
-        AND (tournaments.visibility = 'public' OR tournaments.created_by = auth.uid())
+        AND (tournaments.is_public = true OR tournaments.created_by = auth.uid())
       )
     )
   );
@@ -155,7 +155,7 @@ CREATE POLICY "Users can create suggestions for draft tournaments" ON contestant
       SELECT 1 FROM tournaments 
       WHERE tournaments.id = tournament_id 
       AND tournaments.status = 'draft'
-      AND (tournaments.visibility = 'public' OR tournaments.created_by = auth.uid())
+      AND (tournaments.is_public = true OR tournaments.created_by = auth.uid())
     )
   );
 
@@ -231,7 +231,7 @@ CREATE POLICY "Users can view suggestion votes" ON suggestion_votes
       SELECT 1 FROM contestant_suggestions cs
       JOIN tournaments t ON cs.tournament_id = t.id
       WHERE cs.id = suggestion_id
-      AND (t.visibility = 'public' OR t.created_by = auth.uid())
+      AND (t.is_public = true OR t.created_by = auth.uid())
     )
   );
 
@@ -246,7 +246,7 @@ CREATE POLICY "Users can vote on accessible suggestions" ON suggestion_votes
       JOIN tournaments t ON cs.tournament_id = t.id
       WHERE cs.id = suggestion_id
       AND t.status = 'draft'
-      AND (t.visibility = 'public' OR t.created_by = auth.uid())
+      AND (t.is_public = true OR t.created_by = auth.uid())
     )
   );
 
@@ -277,7 +277,7 @@ SELECT
   t.name as tournament_name,
   t.status as tournament_status,
   t.created_by as tournament_creator_id,
-  t.visibility as tournament_visibility
+  t.is_public as tournament_is_public
 FROM contestant_suggestions cs
 JOIN users u ON cs.suggested_by = u.id
 JOIN tournaments t ON cs.tournament_id = t.id;
