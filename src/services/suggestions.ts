@@ -102,7 +102,7 @@ export class SuggestionService {
       // Check if tournament exists and is in draft status
       const { data: tournament, error: tournamentError } = await supabase
         .from('tournaments')
-        .select('id, status, visibility, created_by')
+        .select('id, status, is_public, created_by')
         .eq('id', tournamentUuid)
         .single();
 
