@@ -112,8 +112,17 @@ ALTER TABLE suggestion_votes ENABLE ROW LEVEL SECURITY;
 -- RLS POLICIES FOR CONTESTANT_SUGGESTIONS
 -- =============================================================================
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Public can view suggestions for public tournaments" ON contestant_suggestions;
+DROP POLICY IF EXISTS "Users can view suggestions for accessible tournaments" ON contestant_suggestions;
+DROP POLICY IF EXISTS "Users can create suggestions for draft tournaments" ON contestant_suggestions;
+DROP POLICY IF EXISTS "Users can update their own suggestions" ON contestant_suggestions;
+DROP POLICY IF EXISTS "Admins can update any suggestion" ON contestant_suggestions;
+DROP POLICY IF EXISTS "Users can delete their own suggestions" ON contestant_suggestions;
+DROP POLICY IF EXISTS "Admins can delete any suggestion" ON contestant_suggestions;
+
 -- Policy: Anyone can view suggestions for public tournaments
-CREATE OR REPLACE POLICY "Public can view suggestions for public tournaments" ON contestant_suggestions
+CREATE POLICY "Public can view suggestions for public tournaments" ON contestant_suggestions
   FOR SELECT
   USING (
     EXISTS (
@@ -124,7 +133,7 @@ CREATE OR REPLACE POLICY "Public can view suggestions for public tournaments" ON
   );
 
 -- Policy: Authenticated users can view suggestions for tournaments they have access to
-CREATE OR REPLACE POLICY "Users can view suggestions for accessible tournaments" ON contestant_suggestions
+CREATE POLICY "Users can view suggestions for accessible tournaments" ON contestant_suggestions
   FOR SELECT
   USING (
     auth.uid() IS NOT NULL AND (
@@ -137,7 +146,7 @@ CREATE OR REPLACE POLICY "Users can view suggestions for accessible tournaments"
   );
 
 -- Policy: Authenticated users can create suggestions for draft tournaments
-CREATE OR REPLACE POLICY "Users can create suggestions for draft tournaments" ON contestant_suggestions
+CREATE POLICY "Users can create suggestions for draft tournaments" ON contestant_suggestions
   FOR INSERT
   WITH CHECK (
     auth.uid() IS NOT NULL AND
@@ -151,7 +160,7 @@ CREATE OR REPLACE POLICY "Users can create suggestions for draft tournaments" ON
   );
 
 -- Policy: Users can update their own suggestions (if tournament is still draft)
-CREATE OR REPLACE POLICY "Users can update their own suggestions" ON contestant_suggestions
+CREATE POLICY "Users can update their own suggestions" ON contestant_suggestions
   FOR UPDATE
   USING (
     auth.uid() IS NOT NULL AND
@@ -164,7 +173,7 @@ CREATE OR REPLACE POLICY "Users can update their own suggestions" ON contestant_
   );
 
 -- Policy: Admins and tournament creators can update any suggestion
-CREATE OR REPLACE POLICY "Admins can update any suggestion" ON contestant_suggestions
+CREATE POLICY "Admins can update any suggestion" ON contestant_suggestions
   FOR UPDATE
   USING (
     auth.uid() IS NOT NULL AND (
@@ -178,7 +187,7 @@ CREATE OR REPLACE POLICY "Admins can update any suggestion" ON contestant_sugges
   );
 
 -- Policy: Users can delete their own suggestions (if tournament is draft)
-CREATE OR REPLACE POLICY "Users can delete their own suggestions" ON contestant_suggestions
+CREATE POLICY "Users can delete their own suggestions" ON contestant_suggestions
   FOR DELETE
   USING (
     auth.uid() IS NOT NULL AND
@@ -191,7 +200,7 @@ CREATE OR REPLACE POLICY "Users can delete their own suggestions" ON contestant_
   );
 
 -- Policy: Admins and tournament creators can delete any suggestion
-CREATE OR REPLACE POLICY "Admins can delete any suggestion" ON contestant_suggestions
+CREATE POLICY "Admins can delete any suggestion" ON contestant_suggestions
   FOR DELETE
   USING (
     auth.uid() IS NOT NULL AND (
@@ -208,8 +217,13 @@ CREATE OR REPLACE POLICY "Admins can delete any suggestion" ON contestant_sugges
 -- RLS POLICIES FOR SUGGESTION_VOTES
 -- =============================================================================
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Users can view suggestion votes" ON suggestion_votes;
+DROP POLICY IF EXISTS "Users can vote on accessible suggestions" ON suggestion_votes;
+DROP POLICY IF EXISTS "Users can remove their own votes" ON suggestion_votes;
+
 -- Policy: Users can view all votes (for transparency)
-CREATE OR REPLACE POLICY "Users can view suggestion votes" ON suggestion_votes
+CREATE POLICY "Users can view suggestion votes" ON suggestion_votes
   FOR SELECT
   USING (
     auth.uid() IS NOT NULL AND
@@ -222,7 +236,7 @@ CREATE OR REPLACE POLICY "Users can view suggestion votes" ON suggestion_votes
   );
 
 -- Policy: Users can vote on suggestions for accessible tournaments
-CREATE OR REPLACE POLICY "Users can vote on accessible suggestions" ON suggestion_votes
+CREATE POLICY "Users can vote on accessible suggestions" ON suggestion_votes
   FOR INSERT
   WITH CHECK (
     auth.uid() IS NOT NULL AND
@@ -237,7 +251,7 @@ CREATE OR REPLACE POLICY "Users can vote on accessible suggestions" ON suggestio
   );
 
 -- Policy: Users can remove their own votes
-CREATE OR REPLACE POLICY "Users can remove their own votes" ON suggestion_votes
+CREATE POLICY "Users can remove their own votes" ON suggestion_votes
   FOR DELETE
   USING (
     auth.uid() IS NOT NULL AND
