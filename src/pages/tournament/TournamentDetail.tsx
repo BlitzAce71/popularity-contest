@@ -106,6 +106,17 @@ const TournamentDetail: React.FC = () => {
     user: user ? { id: user.id, email: user.email } : null
   });
 
+  // Debug suggestions
+  if (isDraft) {
+    console.log('Suggestions Debug:', {
+      suggestions,
+      suggestionsType: typeof suggestions,
+      isArray: Array.isArray(suggestions),
+      suggestionsError,
+      suggestionsLoading
+    });
+  }
+
   const getStatusColor = () => {
     switch (tournament.status) {
       case 'active':

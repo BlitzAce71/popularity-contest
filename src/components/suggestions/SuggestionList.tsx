@@ -59,6 +59,11 @@ const SuggestionList: React.FC<SuggestionListProps> = ({
 
   // Filter and sort suggestions
   const filteredAndSortedSuggestions = useMemo(() => {
+    // Ensure suggestions is always an array
+    if (!Array.isArray(suggestions)) {
+      return [];
+    }
+    
     let filtered = suggestions;
 
     // Apply search filter
