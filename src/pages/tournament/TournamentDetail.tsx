@@ -94,7 +94,17 @@ const TournamentDetail: React.FC = () => {
 
   const handleVoteSuggestion = async (suggestionId: string) => {
     if (!id) return;
-    await voteSuggestion(suggestionId);
+    
+    // Call the vote function with a callback to update vote counts
+    const success = await voteSuggestion(suggestionId, (suggestionId, newVoteCount) => {
+      // Update the suggestion list with new vote count
+      // This should trigger a re-render with updated data
+      refreshSuggestions();
+    });
+    
+    if (success) {
+      console.log('Vote successful for suggestion:', suggestionId);
+    }
   };
   
   // Debug voting permissions

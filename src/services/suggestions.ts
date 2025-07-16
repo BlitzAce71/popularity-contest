@@ -251,7 +251,7 @@ export class SuggestionService {
         .select('id')
         .eq('suggestion_id', suggestionId)
         .eq('user_id', user.user.id)
-        .single();
+        .maybeSingle();
 
       if (existingVote) {
         throw new Error('You have already voted on this suggestion');
@@ -323,15 +323,24 @@ export class SuggestionService {
       // Convert identifier to UUID if needed
       const tournamentUuid = await this.getUuidFromIdentifier(tournamentId);
 
-      // Get all user votes for suggestions in this tournament
+      // First get all suggestions for this tournament
+      const { data: suggestions } = await supabase
+        .from('contestant_suggestions')
+        .select('id')
+        .eq('tournament_id', tournamentUuid);
+
+      if (!suggestions || suggestions.length === 0) {
+        return {};
+      }
+
+      const suggestionIds = suggestions.map(s => s.id);
+
+      // Then get user votes for those suggestions
       const { data: votes, error } = await supabase
         .from('suggestion_votes')
-        .select(`
-          suggestion_id,
-          contestant_suggestions!inner(tournament_id)
-        `)
+        .select('suggestion_id')
         .eq('user_id', user.user.id)
-        .eq('contestant_suggestions.tournament_id', tournamentUuid);
+        .in('suggestion_id', suggestionIds);
 
       if (error) throw error;
 
