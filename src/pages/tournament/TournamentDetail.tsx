@@ -40,6 +40,7 @@ const TournamentDetail: React.FC = () => {
     total: suggestionsTotal,
     submitSuggestion, 
     refreshSuggestions,
+    updateSuggestionInList,
     hasMore: hasMoreSuggestions,
     loadMore: loadMoreSuggestions
   } = useSuggestions(shouldLoadSuggestions ? id : null);
@@ -97,9 +98,11 @@ const TournamentDetail: React.FC = () => {
     
     // Call the vote function with a callback to update vote counts
     const success = await voteSuggestion(suggestionId, (suggestionId, newVoteCount) => {
-      // Update the suggestion list with new vote count
-      // This should trigger a re-render with updated data
-      refreshSuggestions();
+      // Update the suggestion list with new vote count and vote status
+      updateSuggestionInList(suggestionId, { 
+        vote_count: newVoteCount,
+        user_has_voted: true 
+      });
     });
     
     if (success) {
