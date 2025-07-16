@@ -388,23 +388,28 @@ export class AdminService {
         throw new Error('Unauthorized: Admin access required');
       }
 
-      // Use the enhanced database function for user deletion
-      const { data, error } = await supabase.rpc('delete_user_completely', {
-        user_uuid: userId
-      });
+      // First delete from users table
+      const { data: profileData, error: profileError } = await supabase
+        .from('users')
+        .delete()
+        .eq('id', userId);
 
-      if (error) throw error;
+      if (profileError) throw profileError;
 
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to delete user');
+      // Then delete from auth using admin API
+      const { data: authData, error: authError } = await supabase.auth.admin.deleteUser(userId);
+
+      if (authError) {
+        // If auth deletion fails, we should warn but not fail completely
+        console.warn('Auth deletion failed:', authError);
+        return {
+          success: true,
+          warning: 'User profile deleted successfully. Note: The authentication record still exists and requires manual deletion by a system administrator. The user may still appear in the list if they attempt to log in again.'
+        };
       }
 
-      // Return success with appropriate warning based on the result
       return {
-        success: true,
-        warning: data.auth_record_status === 'still_exists_requires_admin_deletion' 
-          ? 'User profile deleted successfully. Note: The authentication record still exists and requires manual deletion by a system administrator. The user may still appear in the list if they attempt to log in again.'
-          : undefined
+        success: true
       };
     } catch (error) {
       console.error('Error deleting user:', error);
