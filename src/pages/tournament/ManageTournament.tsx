@@ -644,15 +644,29 @@ const ContestantManagement: React.FC<{
                           </div>
                           
                           {/* Add Button */}
-                          <Button
-                            size="sm"
-                            onClick={() => handleConvertSuggestion(suggestion)}
-                            className="flex items-center gap-1 whitespace-nowrap"
-                            disabled={loading}
-                          >
-                            <ArrowRight className="w-3 h-3" />
-                            Add as Contestant
-                          </Button>
+                          {(() => {
+                            const isAlreadyAdded = contestants.some(c => c.name.toLowerCase() === suggestion.name.toLowerCase());
+                            return isAlreadyAdded ? (
+                              <Button
+                                size="sm"
+                                disabled
+                                className="flex items-center gap-1 whitespace-nowrap bg-green-100 text-green-800 border-green-200 hover:bg-green-100"
+                              >
+                                <ArrowRight className="w-3 h-3" />
+                                Added Contestant
+                              </Button>
+                            ) : (
+                              <Button
+                                size="sm"
+                                onClick={() => handleConvertSuggestion(suggestion)}
+                                className="flex items-center gap-1 whitespace-nowrap"
+                                disabled={loading}
+                              >
+                                <ArrowRight className="w-3 h-3" />
+                                Add as Contestant
+                              </Button>
+                            );
+                          })()}
                         </div>
                       </div>
                     </div>
