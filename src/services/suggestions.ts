@@ -66,10 +66,10 @@ export class SuggestionService {
       .from('contestant_suggestions')
       .select('*')
       .eq('tournament_id', tournamentId)
-      .ilike('name', name)
-      .single();
+      .eq('name', name.trim())
+      .maybeSingle();
 
-    if (error && error.code !== 'PGRST116') {
+    if (error) {
       throw error;
     }
 
@@ -174,8 +174,7 @@ export class SuggestionService {
         .from('contestant_suggestions')
         .select(`
           *,
-          suggested_by_user:users!suggested_by(id, username),
-          user_vote:suggestion_votes!left(user_id)
+          suggested_by_user:users!suggested_by(id, username)
         `, { count: 'exact' })
         .eq('tournament_id', tournamentUuid);
 
@@ -212,12 +211,23 @@ export class SuggestionService {
       const { data, error, count } = await query;
       if (error) throw error;
 
+      // Get user vote status for each suggestion if user is authenticated
+      let userVotes: string[] = [];
+      if (userId && data && data.length > 0) {
+        const suggestionIds = data.map((s: any) => s.id);
+        const { data: voteData } = await supabase
+          .from('suggestion_votes')
+          .select('suggestion_id')
+          .eq('user_id', userId)
+          .in('suggestion_id', suggestionIds);
+        
+        userVotes = voteData?.map((v: any) => v.suggestion_id) || [];
+      }
+
       // Process results to include vote status
       const processedData: SuggestionWithVoteStatus[] = (data || []).map((suggestion: any) => ({
         ...suggestion,
-        user_has_voted: userId ? 
-          suggestion.user_vote.some((vote: any) => vote.user_id === userId) : 
-          false,
+        user_has_voted: userVotes.includes(suggestion.id),
         duplicate_count: 0, // TODO: Calculate this if needed
       }));
 
