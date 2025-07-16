@@ -5,6 +5,7 @@ export interface User {
   first_name: string;
   last_name: string;
   is_admin: boolean;
+  can_create_tournaments?: boolean;
   is_moderator?: boolean;
   tournaments_count?: number;
   total_votes?: number;

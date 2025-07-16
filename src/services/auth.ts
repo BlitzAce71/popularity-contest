@@ -231,8 +231,14 @@ export class AuthService {
       const { data, error } = await Promise.race([dbPromise, dbTimeoutPromise]);
 
       if (error) {
-        // If user profile doesn't exist, create it
+        // If user profile doesn't exist, create it as fallback
+        // Note: This should normally be handled by the database trigger,
+        // but we keep this as a safety net for edge cases
         if (error.code === 'PGRST116') {
+          console.warn('User profile not found, creating as fallback. This may indicate a trigger issue.', {
+            userId: authUser.user.id,
+            email: authUser.user.email
+          });
           return await this.createUserProfile(authUser.user);
         }
         
@@ -263,25 +269,37 @@ export class AuthService {
     }
   }
 
-  // Create user profile (for users who signed up before the trigger was added)
+  // Create user profile (fallback for users who signed up before the trigger was added)
   static async createUserProfile(authUser: import('@supabase/supabase-js').User): Promise<User> {
     try {
+      console.log('Creating user profile fallback for:', {
+        id: authUser.id,
+        email: authUser.email,
+        metadata: authUser.user_metadata
+      });
+
       const { data, error } = await supabase
         .from('users')
         .insert([
           {
             id: authUser.id,
             email: authUser.email,
-            username: authUser.user_metadata?.username || authUser.email?.split('@')[0] || 'user',
-            first_name: authUser.user_metadata?.first_name || '',
-            last_name: authUser.user_metadata?.last_name || '',
+            username: authUser.user_metadata?.username || authUser.user_metadata?.firstName || authUser.email?.split('@')[0] || 'user',
+            first_name: authUser.user_metadata?.first_name || authUser.user_metadata?.firstName || '',
+            last_name: authUser.user_metadata?.last_name || authUser.user_metadata?.lastName || '',
             is_admin: false,
+            can_create_tournaments: false,
           },
         ])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error inserting user profile:', error);
+        throw error;
+      }
+      
+      console.log('User profile created successfully:', data);
       return data;
     } catch (error) {
       console.error('Error creating user profile:', error);

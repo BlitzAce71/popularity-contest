@@ -9,7 +9,7 @@ import EmptyState from '@/components/ui/EmptyState';
 import { Plus, Trophy, Users, Filter, Search, Settings, BarChart3 } from 'lucide-react';
 
 const TournamentList: React.FC = () => {
-  const { isAuthenticated, isAdmin, user } = useAuth();
+  const { isAuthenticated, isAdmin, canCreateTournaments, user } = useAuth();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'completed'>('all');
@@ -89,20 +89,24 @@ const TournamentList: React.FC = () => {
             Participate in popularity contests and vote for your favorites
           </p>
         </div>
-        {isAdmin && (
+        {(isAdmin || canCreateTournaments) && (
           <div className="flex items-center gap-3">
-            <Link to="/admin">
-              <Button variant="outline" className="flex items-center gap-2">
-                <BarChart3 className="w-4 h-4" />
-                Admin Dashboard
-              </Button>
-            </Link>
-            <Link to="/tournaments/create">
-              <Button className="flex items-center gap-2">
-                <Plus className="w-4 h-4" />
-                Create Tournament
-              </Button>
-            </Link>
+            {isAdmin && (
+              <Link to="/admin">
+                <Button variant="outline" className="flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4" />
+                  Admin Dashboard
+                </Button>
+              </Link>
+            )}
+            {canCreateTournaments && (
+              <Link to="/tournaments/create">
+                <Button className="flex items-center gap-2">
+                  <Plus className="w-4 h-4" />
+                  Create Tournament
+                </Button>
+              </Link>
+            )}
           </div>
         )}
       </div>

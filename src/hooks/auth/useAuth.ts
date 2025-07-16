@@ -272,6 +272,7 @@ export const useAuth = () => {
     refresh,
     isAuthenticated: !!user,
     isAdmin: user?.is_admin || false,
+    canCreateTournaments: user?.is_admin || user?.can_create_tournaments || false,
   };
 };
 

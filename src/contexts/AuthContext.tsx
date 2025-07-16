@@ -15,6 +15,7 @@ interface AuthContextType {
   refresh: () => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  canCreateTournaments: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

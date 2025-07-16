@@ -360,6 +360,26 @@ export class AdminService {
     }
   }
 
+  // Update user tournament creator permissions
+  static async updateUserTournamentCreatorStatus(userId: string, canCreateTournaments: boolean): Promise<void> {
+    try {
+      const isAdminUser = await this.isAdmin();
+      if (!isAdminUser) {
+        throw new Error('Unauthorized: Admin access required');
+      }
+
+      const { error } = await supabase
+        .from('users')
+        .update({ can_create_tournaments: canCreateTournaments })
+        .eq('id', userId);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating user tournament creator status:', error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to update user tournament creator status');
+    }
+  }
+
   // Delete user account (admin only)
   static async deleteUser(userId: string): Promise<{ success: boolean; warning?: string }> {
     try {
@@ -368,36 +388,80 @@ export class AdminService {
         throw new Error('Unauthorized: Admin access required');
       }
 
-      // Check if user exists first
-      const { data: userToDelete, error: userCheckError } = await supabase
-        .from('users')
-        .select('id, email')
-        .eq('id', userId)
-        .single();
+      // Use the enhanced database function for user deletion
+      const { data, error } = await supabase.rpc('delete_user_completely', {
+        user_uuid: userId
+      });
 
-      if (userCheckError) {
-        if (userCheckError.code === 'PGRST116') {
-          throw new Error('User not found');
-        }
-        throw userCheckError;
+      if (error) throw error;
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to delete user');
       }
 
-      // Delete the user profile from users table
-      const { error: profileError } = await supabase
-        .from('users')
-        .delete()
-        .eq('id', userId);
-
-      if (profileError) throw profileError;
-
-      // Return success with warning about auth record
+      // Return success with appropriate warning based on the result
       return {
         success: true,
-        warning: 'User profile removed from database. Note: The user may still be able to log in until their authentication record is removed by a system administrator.'
+        warning: data.auth_record_status === 'still_exists_requires_admin_deletion' 
+          ? 'User profile deleted successfully. Note: The authentication record still exists and requires manual deletion by a system administrator. The user may still appear in the list if they attempt to log in again.'
+          : undefined
       };
     } catch (error) {
       console.error('Error deleting user:', error);
       throw new Error(error instanceof Error ? error.message : 'Failed to delete user');
+    }
+  }
+
+  // Debug authentication issues
+  static async getAuthenticationDebugInfo(): Promise<any> {
+    try {
+      const isAdminUser = await this.isAdmin();
+      if (!isAdminUser) {
+        throw new Error('Unauthorized: Admin access required');
+      }
+
+      // Get orphaned auth users (auth users without profiles)
+      const { data: orphanedAuth, error: orphanedAuthError } = await supabase.rpc('get_orphaned_auth_users');
+      if (orphanedAuthError) throw orphanedAuthError;
+
+      // Get orphaned profiles (profiles without auth records)
+      const { data: orphanedProfiles, error: orphanedProfilesError } = await supabase.rpc('get_orphaned_user_profiles');
+      if (orphanedProfilesError) throw orphanedProfilesError;
+
+      // Get basic counts
+      const { count: authUsersCount } = await supabase
+        .from('users')
+        .select('*', { count: 'exact', head: true });
+
+      return {
+        user_profiles_count: authUsersCount || 0,
+        orphaned_auth_users: orphanedAuth || [],
+        orphaned_profiles: orphanedProfiles || [],
+        orphaned_auth_count: (orphanedAuth || []).length,
+        orphaned_profiles_count: (orphanedProfiles || []).length,
+        issues_found: (orphanedAuth || []).length > 0 || (orphanedProfiles || []).length > 0
+      };
+    } catch (error) {
+      console.error('Error getting authentication debug info:', error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to get authentication debug info');
+    }
+  }
+
+  // Recover missing user profiles
+  static async recoverMissingUserProfiles(): Promise<any> {
+    try {
+      const isAdminUser = await this.isAdmin();
+      if (!isAdminUser) {
+        throw new Error('Unauthorized: Admin access required');
+      }
+
+      const { data, error } = await supabase.rpc('recover_missing_user_profiles');
+      if (error) throw error;
+
+      return data;
+    } catch (error) {
+      console.error('Error recovering missing user profiles:', error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to recover missing user profiles');
     }
   }
 

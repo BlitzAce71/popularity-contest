@@ -234,6 +234,27 @@ export const useUserAdmin = (page: number = 1, pageSize: number = 20, search?: s
     }
   };
 
+  const updateUserTournamentCreatorStatus = async (userId: string, canCreateTournaments: boolean): Promise<boolean> => {
+    try {
+      setUpdating(true);
+      setError(null);
+
+      await AdminService.updateUserTournamentCreatorStatus(userId, canCreateTournaments);
+      
+      // Update local state
+      setUsers(prev => prev.map(user => 
+        user.id === userId ? { ...user, can_create_tournaments: canCreateTournaments } : user
+      ));
+      
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update tournament creator status');
+      return false;
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   const deleteUser = async (userId: string): Promise<{ success: boolean; warning?: string }> => {
     try {
       setUpdating(true);
@@ -272,6 +293,7 @@ export const useUserAdmin = (page: number = 1, pageSize: number = 20, search?: s
     updating,
     error,
     updateUserAdminStatus,
+    updateUserTournamentCreatorStatus,
     deleteUser,
     refresh,
     clearError,

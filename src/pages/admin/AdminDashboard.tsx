@@ -23,7 +23,7 @@ const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
   const { isAdmin } = useAdmin();
   const { dashboardData, loading: dashboardLoading, error: dashboardError, refresh: refreshDashboard } = useAdminDashboard();
-  const { users, loading: usersLoading, error: usersError, deleteUser, updateUserAdminStatus, refresh: refreshUsers } = useUserAdmin();
+  const { users, loading: usersLoading, error: usersError, deleteUser, updateUserAdminStatus, updateUserTournamentCreatorStatus, refresh: refreshUsers } = useUserAdmin();
   const [activeTab, setActiveTab] = useState<'overview' | 'tournaments' | 'users' | 'settings'>('overview');
   
   // Settings state using the new settings utility
@@ -320,15 +320,22 @@ const AdminDashboard: React.FC = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      userData.is_admin 
-                        ? 'bg-red-100 text-red-800'
-                        : userData.is_moderator
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {userData.is_admin ? 'Admin' : userData.is_moderator ? 'Moderator' : 'User'}
-                    </span>
+                    <div className="flex flex-col gap-1">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full w-fit ${
+                        userData.is_admin 
+                          ? 'bg-red-100 text-red-800'
+                          : userData.is_moderator
+                          ? 'bg-blue-100 text-blue-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {userData.is_admin ? 'Admin' : userData.is_moderator ? 'Moderator' : 'User'}
+                      </span>
+                      {userData.can_create_tournaments && !userData.is_admin && (
+                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 w-fit">
+                          Tournament Creator
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
@@ -357,7 +364,7 @@ const AdminDashboard: React.FC = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex items-center gap-2 justify-end">
+                    <div className="flex items-center gap-2 justify-end flex-wrap">
                       {userData.is_admin ? (
                         <Button
                           size="sm"
@@ -377,6 +384,29 @@ const AdminDashboard: React.FC = () => {
                           Make Admin
                         </Button>
                       )}
+                      
+                      {!userData.is_admin && (
+                        userData.can_create_tournaments ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => updateUserTournamentCreatorStatus(userData.id, false)}
+                            className="text-yellow-600 hover:text-yellow-700"
+                          >
+                            Remove Creator
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => updateUserTournamentCreatorStatus(userData.id, true)}
+                            className="text-green-600 hover:text-green-700"
+                          >
+                            Make Creator
+                          </Button>
+                        )
+                      )}
+                      
                       <Button
                         size="sm"
                         variant="outline"
