@@ -210,25 +210,6 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({ user, onUpdate }) => 
         </CardContent>
       </Card>
 
-      {/* Account Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-red-600">Danger Zone</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-              <h3 className="font-medium text-red-800 mb-2">Delete Account</h3>
-              <p className="text-sm text-red-600 mb-4">
-                Once you delete your account, there is no going back. This action cannot be undone.
-              </p>
-              <p className="text-xs text-red-500">
-                To delete your account, please contact an administrator.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };
