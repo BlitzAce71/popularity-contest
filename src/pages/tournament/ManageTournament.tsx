@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useTournament } from '@/hooks/tournaments/useTournament';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSuggestions } from '@/hooks/suggestions';
 import { ContestantService } from '@/services/contestants';
 import { TournamentService } from '@/services/tournaments';
 import { AdminService } from '@/services/admin';
@@ -23,9 +24,13 @@ import {
   GripVertical,
   Image,
   FastForward,
-  AlertTriangle
+  AlertTriangle,
+  Lightbulb,
+  Heart,
+  ArrowRight,
+  X
 } from 'lucide-react';
-import { CreateContestantData } from '@/types';
+import { CreateContestantData, SuggestionWithVoteStatus } from '@/types';
 
 const ManageTournament: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -410,6 +415,16 @@ const ContestantManagement: React.FC<{
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingContestant, setEditingContestant] = useState<any | null>(null);
+  const [prefilledSuggestion, setPrefilledSuggestion] = useState<SuggestionWithVoteStatus | null>(null);
+  const [showSuggestions, setShowSuggestions] = useState(true);
+
+  // Load suggestions for draft tournaments
+  const { 
+    suggestions, 
+    loading: suggestionsLoading, 
+    error: suggestionsError,
+    refreshSuggestions 
+  } = useSuggestions(tournament?.status === 'draft' ? tournament.id : null);
 
   const fetchContestants = async () => {
     try {
@@ -435,12 +450,18 @@ const ContestantManagement: React.FC<{
       await fetchContestants();
       onRefresh();
       onToggleAddForm(false);
+      setPrefilledSuggestion(null);
     } catch (error) {
       console.error('Error adding contestant:', error);
       setError(error instanceof Error ? error.message : 'Failed to add contestant');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleConvertSuggestion = (suggestion: SuggestionWithVoteStatus) => {
+    setPrefilledSuggestion(suggestion);
+    onToggleAddForm(true);
   };
 
   const handleDeleteContestant = async (contestantId: string) => {
@@ -527,11 +548,128 @@ const ContestantManagement: React.FC<{
       {showAddForm && (
         <AddContestantForm
           onSubmit={handleAddContestant}
-          onCancel={() => onToggleAddForm(false)}
+          onCancel={() => {
+            onToggleAddForm(false);
+            setPrefilledSuggestion(null);
+          }}
           loading={loading}
           contestants={contestants}
           tournament={tournament}
+          prefilledData={prefilledSuggestion}
         />
+      )}
+
+      {/* Suggestions Section (for draft tournaments) */}
+      {tournament.status === 'draft' && (
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Lightbulb className="w-5 h-5 text-blue-600" />
+              <h3 className="text-lg font-semibold text-gray-900">
+                Contestant Suggestions ({suggestions.length})
+              </h3>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowSuggestions(!showSuggestions)}
+              className="text-gray-600 hover:text-gray-900"
+            >
+              {showSuggestions ? 'Hide' : 'Show'} Suggestions
+            </Button>
+          </div>
+
+          {showSuggestions && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-blue-800 mb-4">
+                Here are contestant suggestions from users. Click "Add as Contestant" to use the suggestion data in the form.
+              </p>
+              
+              {suggestionsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <LoadingSpinner size="sm" />
+                  <span className="ml-2 text-sm text-gray-600">Loading suggestions...</span>
+                </div>
+              ) : suggestionsError ? (
+                <div className="text-red-600 text-sm">{suggestionsError}</div>
+              ) : suggestions.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Lightbulb className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                  <p>No suggestions yet. Users can submit suggestions from the tournament page.</p>
+                </div>
+              ) : (
+                <div className="grid gap-3">
+                  {suggestions
+                    .sort((a, b) => b.vote_count - a.vote_count)
+                    .slice(0, 10)
+                    .map((suggestion) => (
+                    <div
+                      key={suggestion.id}
+                      className="bg-white border border-gray-200 rounded-lg p-3 flex items-center gap-3"
+                    >
+                      {/* Image */}
+                      <div className="flex-shrink-0">
+                        {suggestion.image_url ? (
+                          <img
+                            src={suggestion.image_url}
+                            alt={suggestion.name}
+                            className="w-12 h-12 rounded-lg object-cover border border-gray-200"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center">
+                            <Image className="w-5 h-5 text-gray-400" />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-gray-900 truncate">{suggestion.name}</h4>
+                            {suggestion.description && (
+                              <p className="text-sm text-gray-600 truncate">{suggestion.description}</p>
+                            )}
+                            <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                              <span className="flex items-center gap-1">
+                                <Heart className="w-3 h-3" />
+                                {suggestion.vote_count} votes
+                              </span>
+                              <span>by @{suggestion.suggested_by_user.username}</span>
+                            </div>
+                          </div>
+                          
+                          {/* Add Button */}
+                          <Button
+                            size="sm"
+                            onClick={() => handleConvertSuggestion(suggestion)}
+                            className="flex items-center gap-1 whitespace-nowrap"
+                            disabled={loading}
+                          >
+                            <ArrowRight className="w-3 h-3" />
+                            Add as Contestant
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {suggestions.length > 10 && (
+                    <div className="text-center py-2">
+                      <span className="text-sm text-gray-500">
+                        Showing top 10 suggestions (sorted by votes)
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       )}
 
       {/* Contestants List */}
@@ -631,7 +769,8 @@ const AddContestantForm: React.FC<{
   loading: boolean;
   contestants: any[];
   tournament: any;
-}> = ({ onSubmit, onCancel, loading, contestants, tournament }) => {
+  prefilledData?: SuggestionWithVoteStatus | null;
+}> = ({ onSubmit, onCancel, loading, contestants, tournament, prefilledData }) => {
   // Calculate next available seed and quadrant globally (across all quadrants)
   const getNextAvailableSeedAndQuadrant = () => {
     const maxSeedsPerQuadrant = Math.ceil(tournament.max_contestants / 4);
@@ -667,13 +806,14 @@ const AddContestantForm: React.FC<{
   const [formData, setFormData] = useState<CreateContestantData>(() => {
     const nextAvailable = getNextAvailableSeedAndQuadrant();
     return {
-      name: '',
-      description: '',
+      name: prefilledData?.name || '',
+      description: prefilledData?.description || '',
       seed: nextAvailable.seed,
       quadrant: nextAvailable.quadrant,
     };
   });
   const [imageFile, setImageFile] = useState<File | undefined>();
+  const [imageUrl, setImageUrl] = useState<string>(prefilledData?.image_url || '');
 
   // Update seed and quadrant when contestants change
   React.useEffect(() => {
@@ -688,7 +828,12 @@ const AddContestantForm: React.FC<{
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.name.trim()) {
-      onSubmit(formData, imageFile);
+      // Include image_url if we have one from the suggestion and no file is uploaded
+      const submitData = {
+        ...formData,
+        image_url: !imageFile && imageUrl ? imageUrl : undefined
+      };
+      onSubmit(submitData, imageFile);
     }
   };
 
@@ -796,12 +941,52 @@ const AddContestantForm: React.FC<{
 
         <div>
           <label className="block text-sm font-medium text-gray-700">Image</label>
+          
+          {/* Show prefilled image if available */}
+          {imageUrl && !imageFile && (
+            <div className="mb-3">
+              <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <img
+                  src={imageUrl}
+                  alt="From suggestion"
+                  className="w-12 h-12 rounded-lg object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                  }}
+                />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-blue-900">Image from suggestion</p>
+                  <p className="text-xs text-blue-700">This image will be used unless you upload a new one</p>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setImageUrl('')}
+                  className="text-red-600 hover:text-red-800"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+          
           <input
             type="file"
             accept="image/*"
-            onChange={(e) => setImageFile(e.target.files?.[0])}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              setImageFile(file);
+              if (file) {
+                setImageUrl(''); // Clear URL when file is selected
+              }
+            }}
             className="input-field mt-1"
           />
+          <p className="text-xs text-gray-500 mt-1">
+            {imageUrl && !imageFile ? 'Upload a new file to replace the suggestion image' : 'Optional: Upload an image for this contestant'}
+          </p>
         </div>
 
         <div className="flex justify-end gap-3">
