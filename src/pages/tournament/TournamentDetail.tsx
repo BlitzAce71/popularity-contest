@@ -96,20 +96,43 @@ const TournamentDetail: React.FC = () => {
   const handleVoteSuggestion = async (suggestionId: string) => {
     if (!id) return;
     
-    // Get current vote status before toggling
+    // Get current suggestion and vote status before toggling
+    const currentSuggestion = suggestions.find(s => s.id === suggestionId);
     const currentlyVoted = hasUserVoted(suggestionId);
     
-    // Call the toggle vote function with a callback to update vote counts
-    const success = await toggleVote(suggestionId, (suggestionId, newVoteCount) => {
-      // Update the suggestion list with new vote count and toggled vote status
-      updateSuggestionInList(suggestionId, { 
-        vote_count: newVoteCount,
-        user_has_voted: !currentlyVoted // Opposite of current state since we're toggling
-      });
+    if (!currentSuggestion) {
+      console.error('Suggestion not found:', suggestionId);
+      return;
+    }
+    
+    // Calculate expected vote count change
+    const voteCountDelta = currentlyVoted ? -1 : 1;
+    const expectedVoteCount = Math.max(0, currentSuggestion.vote_count + voteCountDelta);
+    
+    // Apply optimistic update immediately
+    updateSuggestionInList(suggestionId, { 
+      vote_count: expectedVoteCount,
+      user_has_voted: !currentlyVoted
     });
     
-    if (success) {
-      console.log('Vote toggle successful for suggestion:', suggestionId);
+    // Call the toggle vote function
+    const success = await toggleVote(suggestionId, (suggestionId, serverVoteCount) => {
+      // Update with server response if different from our optimistic update
+      if (serverVoteCount !== expectedVoteCount) {
+        console.log(`Vote count mismatch for ${suggestionId}: expected ${expectedVoteCount}, got ${serverVoteCount}`);
+        updateSuggestionInList(suggestionId, { 
+          vote_count: serverVoteCount,
+          user_has_voted: !currentlyVoted
+        });
+      }
+    });
+    
+    if (!success) {
+      // Rollback optimistic update on failure
+      updateSuggestionInList(suggestionId, { 
+        vote_count: currentSuggestion.vote_count,
+        user_has_voted: currentlyVoted
+      });
     }
   };
   
