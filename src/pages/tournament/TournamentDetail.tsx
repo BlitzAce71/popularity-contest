@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useTournament } from '@/hooks/tournaments/useTournament';
 import { useVotingStatus } from '@/hooks/voting/useVoting';
@@ -29,6 +29,22 @@ const TournamentDetail: React.FC = () => {
   const [liveSelections, setLiveSelections] = useState<Record<string, string>>({});
 
   const { tournament, loading: tournamentLoading, error: tournamentError, refresh } = useTournament(id);
+
+  // Set default tab based on tournament status
+  const getDefaultTab = (): 'bracket' | 'info' | 'suggestions' => {
+    if (tournament?.status === 'draft') {
+      return 'suggestions'; // Suggestions first for draft tournaments
+    }
+    return 'bracket'; // Vote/Bracket first for active/completed tournaments
+  };
+
+  // Update active tab when tournament data loads
+  useEffect(() => {
+    if (tournament) {
+      const defaultTab = getDefaultTab();
+      setActiveTab(defaultTab);
+    }
+  }, [tournament?.status]); // Only re-run if tournament status changes
   const { status: votingStatus, loading: votingLoading } = useVotingStatus(id);
 
   // Suggestion hooks (only needed for draft tournaments)
