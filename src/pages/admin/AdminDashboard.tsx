@@ -469,16 +469,6 @@ const AdminDashboard: React.FC = () => {
                   />
                   <p className="text-xs text-gray-500 mt-1">This name appears in the browser title and navigation</p>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Default Tournament Format</label>
-                  <input
-                    value="Single Elimination"
-                    readOnly
-                    className="input-field bg-gray-50 text-gray-900"
-                    disabled={settingsSaving}
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Default format for new tournaments</p>
-                </div>
               </div>
             </div>
 
