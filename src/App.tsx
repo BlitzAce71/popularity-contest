@@ -15,6 +15,7 @@ import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
 import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage';
 import AdminDashboard from '@/pages/admin/AdminDashboard';
+import ProfilePage from '@/pages/profile/ProfilePage';
 import ConnectionTest from '@/components/debug/ConnectionTest';
 
 const App: React.FC = () => {
@@ -61,6 +62,11 @@ const App: React.FC = () => {
                   <Route path="/admin" element={
                     <ErrorRecovery>
                       <AdminDashboard />
+                    </ErrorRecovery>
+                  } />
+                  <Route path="/profile" element={
+                    <ErrorRecovery>
+                      <ProfilePage />
                     </ErrorRecovery>
                   } />
                   <Route path="/debug" element={<ConnectionTest />} />
