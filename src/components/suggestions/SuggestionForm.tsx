@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import Button from '@/components/ui/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { Plus, AlertCircle } from 'lucide-react';
+import { Plus, AlertCircle, Upload, X } from 'lucide-react';
+import { ImageUploadService } from '@/utils/imageUpload';
 import type { SubmitSuggestionRequest } from '@/types';
 
 interface SuggestionFormProps {
@@ -22,6 +23,10 @@ const SuggestionForm: React.FC<SuggestionFormProps> = ({
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const validateField = (field: string, value: string): string => {
     switch (field) {
@@ -63,6 +68,44 @@ const SuggestionForm: React.FC<SuggestionFormProps> = ({
     setErrors(prev => ({ ...prev, [field]: error }));
   };
 
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Clear any existing preview
+    if (previewUrl) {
+      ImageUploadService.revokePreviewUrl(previewUrl);
+    }
+
+    // Create preview
+    const preview = ImageUploadService.createPreviewUrl(file);
+    setPreviewUrl(preview);
+    setUploadedFile(file);
+
+    // Clear image_url field since we're using file upload
+    setFormData(prev => ({ ...prev, image_url: '' }));
+    setErrors(prev => ({ ...prev, image_url: '' }));
+  };
+
+  const handleRemoveFile = () => {
+    if (previewUrl) {
+      ImageUploadService.revokePreviewUrl(previewUrl);
+    }
+    setPreviewUrl('');
+    setUploadedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleImageUrlChange = (value: string) => {
+    // If user types URL, clear file upload
+    if (value && uploadedFile) {
+      handleRemoveFile();
+    }
+    handleInputChange('image_url', value);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -79,12 +122,37 @@ const SuggestionForm: React.FC<SuggestionFormProps> = ({
       return;
     }
 
+    let finalImageUrl = formData.image_url.trim();
+
+    // Upload file if one is selected
+    if (uploadedFile) {
+      setUploadLoading(true);
+      try {
+        const uploadResult = await ImageUploadService.uploadImage(uploadedFile, {
+          bucket: 'contestant-images',
+          folder: 'suggestions'
+        });
+
+        if (!uploadResult.success) {
+          setErrors({ image_url: uploadResult.error || 'Failed to upload image' });
+          return;
+        }
+
+        finalImageUrl = uploadResult.url || '';
+      } catch (error) {
+        setErrors({ image_url: 'Failed to upload image' });
+        return;
+      } finally {
+        setUploadLoading(false);
+      }
+    }
+
     // Submit the form
     const success = await onSubmit({
       tournament_id: '', // This will be set by the parent component
       name: formData.name.trim(),
       description: formData.description.trim() || undefined,
-      image_url: formData.image_url.trim() || undefined,
+      image_url: finalImageUrl || undefined,
     });
 
     // Clear form on successful submission
@@ -92,6 +160,7 @@ const SuggestionForm: React.FC<SuggestionFormProps> = ({
       setFormData({ name: '', description: '', image_url: '' });
       setErrors({});
       setTouched({});
+      handleRemoveFile();
     }
   };
 
@@ -170,16 +239,42 @@ const SuggestionForm: React.FC<SuggestionFormProps> = ({
           </div>
         </div>
 
-        {/* Image URL Field */}
+        {/* Image Upload/URL Field */}
         <div>
-          <label htmlFor="suggestion-image" className="block text-sm font-medium text-gray-700 mb-1">
-            Image URL (optional)
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Image (optional)
           </label>
+          
+          {/* Upload Button */}
+          <div className="flex items-center gap-4 mb-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={loading || uploadLoading}
+              className="flex items-center gap-2"
+            >
+              <Upload className="w-4 h-4" />
+              {uploadLoading ? 'Uploading...' : 'Upload Image'}
+            </Button>
+            <span className="text-sm text-gray-500">or enter URL below</span>
+          </div>
+
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/jpg,image/png,image/webp"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+
+          {/* URL input */}
           <input
             id="suggestion-image"
             type="url"
             value={formData.image_url}
-            onChange={(e) => handleInputChange('image_url', e.target.value)}
+            onChange={(e) => handleImageUrlChange(e.target.value)}
             onBlur={() => handleBlur('image_url')}
             placeholder="https://example.com/image.jpg"
             className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
@@ -187,49 +282,68 @@ const SuggestionForm: React.FC<SuggestionFormProps> = ({
                 ? 'border-red-300 bg-red-50' 
                 : 'border-gray-300'
             }`}
-            disabled={loading}
+            disabled={loading || uploadLoading || !!uploadedFile}
           />
+          
           {touched.image_url && errors.image_url && (
             <div className="flex items-center gap-1 mt-1">
               <AlertCircle className="w-4 h-4 text-red-500" />
               <span className="text-sm text-red-600">{errors.image_url}</span>
             </div>
           )}
+          
           <div className="text-xs text-gray-500 mt-1">
-            Supported formats: JPG, PNG, GIF, WebP
+            Upload: JPG, PNG, WebP (max 5MB) • URL: Direct image links
           </div>
         </div>
 
-        {/* Image Preview */}
-        {formData.image_url && !errors.image_url && (
+        {/* File Preview */}
+        {(previewUrl || (formData.image_url && !errors.image_url)) && (
           <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Preview</label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">Preview</label>
+              {uploadedFile && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleRemoveFile}
+                  className="text-red-600 hover:text-red-800 flex items-center gap-1"
+                >
+                  <X className="w-4 h-4" />
+                  Remove
+                </Button>
+              )}
+            </div>
             <div className="relative w-32 h-32 border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
               <img
-                src={formData.image_url}
+                src={previewUrl || formData.image_url}
                 alt="Preview"
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.style.display = 'none';
-                  setErrors(prev => ({ ...prev, image_url: 'Failed to load image' }));
+                  if (!uploadedFile) {
+                    setErrors(prev => ({ ...prev, image_url: 'Failed to load image' }));
+                  }
                 }}
               />
             </div>
           </div>
         )}
 
+
         {/* Submit Button */}
         <div className="flex justify-end pt-4 border-t border-gray-200">
           <Button
             type="submit"
-            disabled={!isFormValid() || loading}
+            disabled={!isFormValid() || loading || uploadLoading}
             className="flex items-center gap-2 min-w-[140px] justify-center"
           >
-            {loading ? (
+            {loading || uploadLoading ? (
               <>
                 <LoadingSpinner size="sm" />
-                Submitting...
+                {uploadLoading ? 'Uploading...' : 'Submitting...'}
               </>
             ) : (
               <>
