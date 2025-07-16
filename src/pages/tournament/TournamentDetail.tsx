@@ -45,7 +45,7 @@ const TournamentDetail: React.FC = () => {
     loadMore: loadMoreSuggestions
   } = useSuggestions(shouldLoadSuggestions ? id : null);
   
-  const { voteOnSuggestion: voteSuggestion, isVotingInProgress: isVotingLoading } = useSuggestionVoting(id || '');
+  const { toggleVote, hasUserVoted, isVotingInProgress: isVotingLoading } = useSuggestionVoting(id || '');
 
   const loading = tournamentLoading || votingLoading;
   const error = tournamentError;
@@ -96,17 +96,20 @@ const TournamentDetail: React.FC = () => {
   const handleVoteSuggestion = async (suggestionId: string) => {
     if (!id) return;
     
-    // Call the vote function with a callback to update vote counts
-    const success = await voteSuggestion(suggestionId, (suggestionId, newVoteCount) => {
-      // Update the suggestion list with new vote count and vote status
+    // Get current vote status before toggling
+    const currentlyVoted = hasUserVoted(suggestionId);
+    
+    // Call the toggle vote function with a callback to update vote counts
+    const success = await toggleVote(suggestionId, (suggestionId, newVoteCount) => {
+      // Update the suggestion list with new vote count and toggled vote status
       updateSuggestionInList(suggestionId, { 
         vote_count: newVoteCount,
-        user_has_voted: true 
+        user_has_voted: !currentlyVoted // Opposite of current state since we're toggling
       });
     });
     
     if (success) {
-      console.log('Vote successful for suggestion:', suggestionId);
+      console.log('Vote toggle successful for suggestion:', suggestionId);
     }
   };
   
@@ -386,7 +389,7 @@ const TournamentDetail: React.FC = () => {
               onVote={handleVoteSuggestion}
               onRefresh={refreshSuggestions}
               onLoadMore={hasMoreSuggestions ? loadMoreSuggestions : undefined}
-              isVotingLoading={isVotingLoading}
+              isVotingLoading={(suggestionId) => isVotingLoading(suggestionId)}
               canVote={isAuthenticated}
               hasMore={hasMoreSuggestions}
             />
