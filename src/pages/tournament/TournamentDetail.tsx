@@ -44,7 +44,7 @@ const TournamentDetail: React.FC = () => {
     loadMore: loadMoreSuggestions
   } = useSuggestions(shouldLoadSuggestions ? id : null);
   
-  const { vote: voteSuggestion, isVotingLoading } = useSuggestionVoting();
+  const { voteOnSuggestion: voteSuggestion, isVotingInProgress: isVotingLoading } = useSuggestionVoting(id || '');
 
   const loading = tournamentLoading || votingLoading;
   const error = tournamentError;
@@ -94,7 +94,7 @@ const TournamentDetail: React.FC = () => {
 
   const handleVoteSuggestion = async (suggestionId: string) => {
     if (!id) return;
-    await voteSuggestion(suggestionId, id);
+    await voteSuggestion(suggestionId);
   };
   
   // Debug voting permissions
@@ -113,7 +113,9 @@ const TournamentDetail: React.FC = () => {
       suggestionsType: typeof suggestions,
       isArray: Array.isArray(suggestions),
       suggestionsError,
-      suggestionsLoading
+      suggestionsLoading,
+      firstSuggestion: suggestions && suggestions.length > 0 ? suggestions[0] : null,
+      suggestionKeys: suggestions && suggestions.length > 0 ? Object.keys(suggestions[0]) : []
     });
   }
 
